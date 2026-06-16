@@ -46,12 +46,21 @@ const TrainerDashboard = () => {
   };
 
   useEffect(() => {
-    if (!db) return;
+    const firestore = db;
+    if (!firestore) return;
 
     // Real-time listener for ALL members (since trainers need to see the tribe)
-    const q = query(collection(db, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memberList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const memberList = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const isExpired = data.expiryDate && new Date(data.expiryDate) < new Date();
+        return {
+          id: doc.id,
+          ...data,
+          status: isExpired ? "expired" : (data.status || "active")
+        };
+      });
       setMembers(memberList);
 
       setStats([

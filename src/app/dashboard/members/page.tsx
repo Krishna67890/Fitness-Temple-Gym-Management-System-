@@ -34,21 +34,27 @@ const MembersPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
+    const firestore = db;
+    if (!firestore) return;
 
-    const q = query(collection(db, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memberList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        // Add defaults for missing fields from mock
-        plan: doc.data().membershipType || "Monthly",
-        status: doc.data().status || "Active",
-        joiningDate: doc.data().createdAt?.toDate().toISOString().split('T')[0] || "N/A",
-        expiryDate: doc.data().expiryDate || "N/A",
-        phone: doc.data().phone || "N/A",
-        name: doc.data().fullName || "Unknown Member"
-      }));
+      const memberList = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const expiryDate = data.expiryDate;
+        const isExpired = expiryDate && new Date(expiryDate) < new Date();
+
+        return {
+          id: doc.id,
+          ...data,
+          plan: data.membershipType || "Basic",
+          status: isExpired ? "Expired" : (data.status || "Active"),
+          joiningDate: data.createdAt?.toDate().toLocaleDateString('en-GB') || "N/A",
+          expiryDate: expiryDate ? new Date(expiryDate).toLocaleDateString('en-GB') : "N/A",
+          phone: data.mobile || "N/A",
+          name: data.fullName || "Unknown Member"
+        };
+      });
       setMembers(memberList);
       setLoading(false);
     });

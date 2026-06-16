@@ -16,7 +16,7 @@ import {
   UserPlus
 } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, onSnapshot, Timestamp, orderBy, addDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, Timestamp, orderBy, addDoc, getDocs } from "firebase/firestore";
 
 const AttendancePage = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -34,11 +34,12 @@ const AttendancePage = () => {
   ]);
 
   useEffect(() => {
-    if (!db) return;
+    const firestore = db;
+    if (!firestore) return;
 
     let attendanceUnsubscribe: (() => void) | undefined;
 
-    const membersUnsubscribe = onSnapshot(collection(db, "members"), (snapshot) => {
+    const membersUnsubscribe = onSnapshot(collection(firestore, "members"), (snapshot) => {
       const total = snapshot.size;
 
       const startOfDay = new Date(selectedDate);
@@ -47,7 +48,7 @@ const AttendancePage = () => {
       endOfDay.setHours(23, 59, 59, 999);
 
       const attendanceQuery = query(
-        collection(db, "attendance"),
+        collection(firestore, "attendance"),
         where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
         where("timestamp", "<=", Timestamp.fromDate(endOfDay)),
         orderBy("timestamp", "desc")
@@ -75,34 +76,59 @@ const AttendancePage = () => {
     };
   }, [selectedDate]);
 
-  const handleSimulatedScan = async () => {
-    if (!db) return;
+  const markAttendance = async (memberId: string) => {
+    const firestore = db;
+    if (!firestore) return;
     setIsScanning(true);
 
-    // Simulate a scan delay
-    setTimeout(async () => {
-      try {
-        const mockMemberId = "FT-" + Math.floor(1000 + Math.random() * 9000);
-        const mockMemberName = "Test Member";
+    try {
+      // Find member in Firestore
+      const membersRef = collection(firestore, "members");
+      const q = query(membersRef, where("memberId", "==", memberId));
+      const querySnapshot = await getDocs(q);
 
-        const attendanceRef = collection(db, "attendance");
-        await addDoc(attendanceRef, {
-          memberId: mockMemberId,
-          memberName: mockMemberName,
-          timestamp: Timestamp.now(),
-          checkInTime: Timestamp.now(),
-          status: "Present",
-          duration: "---"
-        });
-
+      if (querySnapshot.empty) {
+        alert("Member not found!");
         setIsScanning(false);
-        setIsScannerOpen(false);
-        alert(`Attendance marked for ${mockMemberName} (${mockMemberId})`);
-      } catch (error) {
-        console.error("Error marking attendance:", error);
-        setIsScanning(false);
+        return;
       }
-    }, 1500);
+
+      const memberDoc = querySnapshot.docs[0];
+      const memberData = memberDoc.data();
+
+      // Check for expiry
+      if (memberData.expiryDate && new Date(memberData.expiryDate) < new Date()) {
+        alert(`Access Denied: Membership for ${memberData.fullName} has expired!`);
+        setIsScanning(false);
+        return;
+      }
+
+      const attendanceRef = collection(firestore, "attendance");
+      await addDoc(attendanceRef, {
+        memberId: memberId,
+        memberName: memberData.fullName,
+        timestamp: Timestamp.now(),
+        checkInTime: Timestamp.now(),
+        status: "Present",
+        duration: "---"
+      });
+
+      alert(`Attendance marked for ${memberData.fullName}`);
+      setIsScannerOpen(false);
+      setIsManualModalOpen(false);
+      setManualMemberId("");
+    } catch (error) {
+      console.error("Error marking attendance:", error);
+      alert("Failed to mark attendance.");
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleSimulatedScan = () => {
+    // For demo: scan a random member from the list if available, or a known test ID
+    const testId = "FT-DEMO";
+    markAttendance(testId);
   };
 
   const exportDailyReport = () => {
@@ -190,30 +216,7 @@ const AttendancePage = () => {
                   />
                 </div>
                 <button
-                  onClick={async () => {
-                    if(!manualMemberId) return;
-                    setIsScanning(true);
-                    // Mock search and add
-                    setTimeout(async () => {
-                        try {
-                            const attendanceRef = collection(db, "attendance");
-                            await addDoc(attendanceRef, {
-                              memberId: manualMemberId,
-                              memberName: "Manual Entry " + manualMemberId,
-                              timestamp: Timestamp.now(),
-                              checkInTime: Timestamp.now(),
-                              status: "Present",
-                              duration: "---"
-                            });
-                            setIsScanning(false);
-                            setIsManualModalOpen(false);
-                            setManualMemberId("");
-                            alert("Attendance marked successfully!");
-                        } catch(e) {
-                            setIsScanning(false);
-                        }
-                    }, 1000);
-                  }}
+                  onClick={() => markAttendance(manualMemberId)}
                   className="btn-primary w-full py-4 uppercase font-black italic"
                 >
                   {isScanning ? "Verifying..." : "Mark Present"}

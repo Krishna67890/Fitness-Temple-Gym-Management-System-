@@ -60,21 +60,26 @@ const OwnerDashboard = () => {
   ]);
 
   useEffect(() => {
-    if (!db) return;
+    const firestore = db;
+    if (!firestore) return;
 
     // Real-time members listener
-    const q = query(collection(db, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const memberList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMembers(memberList);
 
       const count = snapshot.size;
-      const activeCount = memberList.filter((m: any) => m.status === "active").length;
+      const activeCount = memberList.filter((m: any) => {
+        const isExpired = m.expiryDate && new Date(m.expiryDate) < new Date();
+        return !isExpired && (m.status === "active" || !m.status);
+      }).length;
 
       // Calculate approximate revenue
       const revenue = memberList.reduce((acc: number, m: any) => {
         const amount = m.membershipType === "basic" ? 700 : 1800;
-        return acc + (m.status === "active" ? amount : 0);
+        const isExpired = m.expiryDate && new Date(m.expiryDate) < new Date();
+        return acc + (!isExpired ? amount : 0);
       }, 0);
 
       const pendingRenewals = memberList.filter((m: any) => {
@@ -233,36 +238,43 @@ const OwnerDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {members.slice(0, 5).map((member, i) => (
-                <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black italic text-xs">
-                        {member.fullName?.charAt(0) || "U"}
+              {members.slice(0, 5).map((member, i) => {
+                const isExpired = member.expiryDate && new Date(member.expiryDate) < new Date();
+                const status = isExpired ? "Expired" : (member.status || "Active");
+
+                return (
+                  <tr key={i} className="group hover:bg-white/[0.02] transition-colors">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black italic text-xs">
+                          {member.fullName?.charAt(0) || "U"}
+                        </div>
+                        <div>
+                          <p className="font-bold text-sm">{member.fullName}</p>
+                          <p className="text-[10px] text-gray-600 font-bold tracking-widest uppercase">{member.memberId}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">{member.fullName}</p>
-                        <p className="text-[10px] text-gray-600 font-bold tracking-widest uppercase">{member.memberId}</p>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{member.membershipType}</span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className={`px-3 py-1 ${isExpired ? "bg-red-500/10 text-red-500" : "bg-green-500/10 text-green-500"} text-[10px] font-black uppercase tracking-widest rounded-lg`}>
+                        {status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4">
+                      <p className="text-sm font-black text-white">₹{member.membershipType === "basic" ? 700 : 1800}</p>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-500 hover:text-white"><Edit size={16} /></button>
+                        <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-500 hover:text-primary"><Trash2 size={16} /></button>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{member.membershipType}</span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className="px-3 py-1 bg-green-500/10 text-green-500 text-[10px] font-black uppercase tracking-widest rounded-lg">Active</span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <p className="text-sm font-black text-white">₹{member.membershipType === "basic" ? 700 : 1800}</p>
-                  </td>
-                  <td className="py-4 px-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-500 hover:text-white"><Edit size={16} /></button>
-                      <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-500 hover:text-primary"><Trash2 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

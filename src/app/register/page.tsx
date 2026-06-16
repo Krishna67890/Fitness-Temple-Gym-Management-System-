@@ -103,6 +103,15 @@ const RegisterPage = () => {
       const newMemberId = `FT${Math.floor(1000 + Math.random() * 9000)}`;
       setMemberId(newMemberId);
 
+      // Calculate Expiry Date
+      const joinDate = new Date();
+      const expiryDate = new Date();
+      if (formData.membershipType === "basic") {
+        expiryDate.setMonth(joinDate.getMonth() + 1);
+      } else if (formData.membershipType === "standard") {
+        expiryDate.setMonth(joinDate.getMonth() + 3);
+      }
+
       let uid = "temp_" + Date.now();
 
       if (auth && db) {
@@ -128,6 +137,7 @@ const RegisterPage = () => {
             status: "active",
             role: "member",
             profileImage: previewImage,
+            expiryDate: expiryDate.toISOString(),
             createdAt: serverTimestamp(),
           });
         } catch (error: any) {

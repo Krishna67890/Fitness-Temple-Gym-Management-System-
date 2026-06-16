@@ -9,8 +9,13 @@ import {
   Share2,
   Maximize2,
   X,
-  Camera
+  Camera,
+  Loader2
 } from "lucide-react";
+import { db, storage } from "@/lib/firebase";
+import { collection, addDoc, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useAuth } from "@/context/AuthContext";
 
 const photos = [
   {
@@ -48,7 +53,59 @@ const photos = [
 ];
 
 const GalleryPage = () => {
+  const { user } = useAuth();
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  React.useEffect(() => {
+    const firestore = db;
+    if (!firestore) return;
+    const q = query(collection(firestore, "gallery"), orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setPhotos(docs);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const firestore = db;
+    const firestorage = storage;
+    if (!file || !firestore || !firestorage || !user) return;
+
+    const caption = prompt("Enter a caption for your photo:");
+    if (caption === null) return;
+
+    try {
+      setIsUploading(true);
+      const storageRef = ref(firestorage, `gallery/${Date.now()}_${file.name}`);
+      const uploadResult = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(uploadResult.ref);
+
+      await addDoc(collection(firestore, "gallery"), {
+        url: downloadURL,
+        caption: caption || "Fitness journey!",
+        likes: 0,
+        comments: 0,
+        timestamp: Timestamp.now(),
+        userName: user.displayName || "Member",
+        userPhoto: user.photoURL || null,
+        userId: user.uid
+      });
+
+      alert("Photo uploaded successfully!");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Failed to upload photo.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -57,37 +114,23 @@ const GalleryPage = () => {
           <h1 className="text-3xl font-black uppercase italic mb-2">Member <span className="text-primary">Gallery</span></h1>
           <p className="text-gray-400">Share your journey and inspire the community.</p>
         </div>
-        <button
-          onClick={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e: any) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = (event: any) => {
-                  const newPhoto = {
-                    id: Date.now(),
-                    url: event.target.result,
-                    caption: prompt("Enter a caption for your photo:") || "Fitness journey!",
-                    likes: 0,
-                    comments: 0,
-                    date: "Just now"
-                  };
-                  photos.unshift(newPhoto);
-                  alert("Photo uploaded to community gallery!");
-                };
-                reader.readAsDataURL(file);
-              }
-            };
-            input.click();
-          }}
-          className="btn-primary py-3 px-6 flex items-center space-x-2"
-        >
-          <Camera size={20} />
-          <span className="text-sm">Upload Photo</span>
-        </button>
+        <div className="relative">
+          <input
+            type="file"
+            id="gallery-upload"
+            className="hidden"
+            accept="image/*"
+            onChange={handleUpload}
+            disabled={isUploading}
+          />
+          <label
+            htmlFor="gallery-upload"
+            className={`btn-primary py-3 px-6 flex items-center space-x-2 cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isUploading ? <Loader2 size={20} className="animate-spin" /> : <Camera size={20} />}
+            <span className="text-sm">{isUploading ? "Uploading..." : "Upload Photo"}</span>
+          </label>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -119,7 +162,9 @@ const GalleryPage = () => {
                     <span className="text-xs font-bold">{photo.comments}</span>
                   </div>
                 </div>
-                <span className="text-[10px] text-gray-500 font-black uppercase">{photo.date}</span>
+                <span className="text-[10px] text-gray-500 font-black uppercase">
+                  {photo.timestamp?.toDate ? photo.timestamp.toDate().toLocaleDateString() : "Recent"}
+                </span>
               </div>
             </div>
           </motion.div>
@@ -150,10 +195,14 @@ const GalleryPage = () => {
               </div>
               <div className="lg:w-1/3 p-8 flex flex-col">
                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-black">JD</div>
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-black text-black">
+                      {selectedPhoto.userName?.substring(0, 2).toUpperCase() || "M"}
+                    </div>
                     <div>
-                       <p className="text-sm font-bold">John Doe</p>
-                       <p className="text-[10px] text-gray-500 uppercase font-black">{selectedPhoto.date}</p>
+                       <p className="text-sm font-bold">{selectedPhoto.userName || "Member"}</p>
+                       <p className="text-[10px] text-gray-500 uppercase font-black">
+                         {selectedPhoto.timestamp?.toDate ? selectedPhoto.timestamp.toDate().toLocaleString() : "Recent"}
+                       </p>
                     </div>
                  </div>
                  <p className="text-gray-300 mb-8">{selectedPhoto.caption}</p>

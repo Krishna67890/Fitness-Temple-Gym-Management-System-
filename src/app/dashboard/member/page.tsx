@@ -125,7 +125,9 @@ const MemberDashboard = () => {
                 </div>
                 <div className="flex justify-between items-center text-xs">
                   <span className="text-gray-500 font-bold uppercase tracking-widest text-[9px]">Valid Until</span>
-                  <span className="text-white font-black uppercase italic">Next Month</span>
+                  <span className="text-white font-black uppercase italic">
+                    {memberData.expiryDate ? new Date(memberData.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "Next Month"}
+                  </span>
                 </div>
              </div>
              <button className="w-full bg-white/5 border border-white/10 hover:bg-primary hover:text-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">

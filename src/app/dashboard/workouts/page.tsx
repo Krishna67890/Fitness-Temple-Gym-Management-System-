@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
@@ -84,6 +84,7 @@ const WorkoutsPage = () => {
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlanDetails, setSelectedPlanDetails] = useState<any>(null);
+  const [localWorkouts, setLocalWorkouts] = useState(workouts);
 
   const [newPlan, setNewPlan] = useState({
     name: "",
@@ -105,8 +106,7 @@ const WorkoutsPage = () => {
         isNew: true
     };
 
-    // In a real app, this would be saved to DB
-    workouts.push(createdPlan);
+    setLocalWorkouts([...localWorkouts, createdPlan]);
     setShowCreateModal(false);
     alert("New plan initialized successfully!");
   };
@@ -153,7 +153,7 @@ const WorkoutsPage = () => {
           <div className="lg:w-3/4 space-y-6">
             {/* Workout Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {workouts.map((workout) => (
+              {localWorkouts.map((workout) => (
                 <div
                   key={workout.id}
                   onClick={() => setSelectedPlanDetails(workout)}
