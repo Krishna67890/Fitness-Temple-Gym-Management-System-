@@ -3,12 +3,12 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   MessageSquare,
-  Send,
   Clock,
   CheckCircle2,
   AlertCircle,
   HelpCircle,
-  Plus
+  Plus,
+  ArrowRight
 } from "lucide-react";
 
 const SupportPage = () => {
