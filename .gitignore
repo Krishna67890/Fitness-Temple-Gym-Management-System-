@@ -1,0 +1,15 @@
+.next/
+.idea/
+.env
+.env.local
+out/
+dist/
+build/
+.next/
+.idea/
+.env
+.env.local
+out/
+dist/
+build/
+node_modules/
