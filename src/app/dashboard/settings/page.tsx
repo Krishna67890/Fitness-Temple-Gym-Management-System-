@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -15,43 +15,68 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { toast } from "react-hot-toast";
 
 const SettingsPage = () => {
-  const { userData, logout } = useAuth();
+  const { user, userData, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    fullName: userData?.fullName || "",
-    email: userData?.email || "",
-    mobile: userData?.mobile || "",
-    fitnessGoal: userData?.fitnessGoal || "",
-    weight: userData?.weight || "",
-    height: userData?.height || ""
+    fullName: "",
+    email: "",
+    mobile: "",
+    fitnessGoal: "",
+    weight: "",
+    height: ""
   });
 
   const [notifications, setNotifications] = useState({
-    workout: userData?.notifications?.workout ?? true,
-    diet: userData?.notifications?.diet ?? true,
-    community: userData?.notifications?.community ?? false,
-    promotional: userData?.notifications?.promotional ?? true
+    workout: true,
+    diet: true,
+    community: false,
+    promotional: true
   });
 
+  // Sync state when userData is loaded
+  useEffect(() => {
+    if (userData) {
+      setProfileData({
+        fullName: userData.fullName || "",
+        email: userData.email || "",
+        mobile: userData.mobile || "",
+        fitnessGoal: userData.fitnessGoal || "",
+        weight: userData.weight || "",
+        height: userData.height || ""
+      });
+      if (userData.notifications) {
+        setNotifications({
+          workout: userData.notifications.workout ?? true,
+          diet: userData.notifications.diet ?? true,
+          community: userData.notifications.community ?? false,
+          promotional: userData.notifications.promotional ?? true
+        });
+      }
+    }
+  }, [userData]);
+
   const handleSaveProfile = async () => {
-    if (!userData?.uid) return;
+    const uid = user?.uid || userData?.uid;
+    if (!uid || !db) {
+      alert("Error: Missing user ID or database connection.");
+      return;
+    }
     setIsSaving(true);
     try {
-      const userRef = doc(db, "users", userData.uid);
+      const userRef = doc(db, "users", uid);
       await updateDoc(userRef, {
         ...profileData,
         notifications,
         updatedAt: new Date()
       });
-      toast.success("Profile updated successfully!");
+      alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile.");
+      alert("Failed to update profile.");
     } finally {
       setIsSaving(false);
     }
@@ -129,7 +154,13 @@ const SettingsPage = () => {
                 </div>
                 <div className="text-center md:text-left">
                    <h3 className="text-2xl font-black uppercase italic">{userData?.fullName || "Warrior"}</h3>
-                   <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">{userData?.membershipType || "Basic"} Member • Since {new Date(userData?.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString()}</p>
+                   <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">
+                    {userData?.membershipType || "Basic"} Member • Since {
+                      userData?.createdAt?.seconds
+                        ? new Date(userData.createdAt.seconds * 1000).toLocaleDateString()
+                        : "Joined"
+                    }
+                   </p>
                 </div>
                 <button className="md:ml-auto btn-outline py-2 px-6 text-xs rounded-xl">Edit Photo</button>
               </div>
