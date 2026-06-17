@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Phone, Mail, MapPin, Calendar, Weight, Ruler, Users, Camera, Zap, CheckCircle2, Eye, EyeOff, ChevronDown, Loader2, QrCode, CreditCard, ShieldCheck, Lock, Shield, Check, Dumbbell } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -8,7 +8,7 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
-const RegisterPage = () => {
+const RegisterContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedPlan = searchParams.get("plan") || "basic";
@@ -34,6 +34,13 @@ const RegisterPage = () => {
     membershipType: selectedPlan,
     joinDate: new Date().toISOString().split('T')[0],
   });
+
+  // Update membershipType when selectedPlan changes
+  useEffect(() => {
+    if (selectedPlan) {
+      setFormData(prev => ({ ...prev, membershipType: selectedPlan }));
+    }
+  }, [selectedPlan]);
 
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "Empty", color: "bg-gray-800" });
 
@@ -421,4 +428,14 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
+  );
+}
