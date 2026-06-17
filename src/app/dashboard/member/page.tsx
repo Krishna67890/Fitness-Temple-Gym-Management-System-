@@ -18,6 +18,7 @@ import {
   Target,
   Ruler
 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 import { auth, db } from "@/lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
@@ -41,6 +42,14 @@ const MemberDashboard = () => {
     intermediate: ["Bench Press", "Deadlift", "Pull-Ups", "Shoulder Press", "Barbell Rows"],
     advanced: ["Powerlifting Program", "Bodybuilding Split", "Functional Training", "HIIT Workouts", "Athletic Conditioning"]
   };
+
+  const dietPlans = [
+    "Oatmeal & Eggs",
+    "Chicken & Rice",
+    "Greek Yogurt & Berries",
+    "Fish & Greens",
+    "Protein Shake"
+  ];
 
   const workoutPlanNames: Record<string, string> = {
     "wp1": "Full Body Blast",

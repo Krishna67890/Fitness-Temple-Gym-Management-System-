@@ -1,33 +1,28 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import {
   Users,
   Dumbbell,
   ChefHat,
-  CheckCircle2,
   Clock,
   Search,
-  MessageSquare,
   ClipboardList,
   Plus,
   ArrowRight,
-  Video,
-  Camera,
   TrendingUp,
   Phone,
   Calendar,
-  MapPin,
   Mail,
   MoreVertical,
   ChevronRight
 } from "lucide-react";
 
 import { db } from "@/lib/firebase";
-import { collection, query, onSnapshot, orderBy, doc, updateDoc, getDocs } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, doc, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { X, Check } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 interface Member {
   id: string;
@@ -43,6 +38,7 @@ interface Member {
   status: string;
   assignedWorkout?: string;
   assignedDiet?: string;
+  createdAt?: any;
 }
 
 const TrainerDashboard = () => {
@@ -102,13 +98,12 @@ const TrainerDashboard = () => {
       });
       setMembers(memberList);
 
-      setStats([
+            setStats([
         { label: "Total Members", value: snapshot.size.toString(), icon: Users, color: "text-blue-500" },
         { label: "Active Today", value: Math.floor(snapshot.size * 0.4).toString(), icon: Clock, color: "text-green-500" },
-        { label: "New Joinings", value: memberList.filter(m => {
+        { label: "New Joiners", value: memberList.filter(m => {
             const now = new Date();
-            // @ts-ignore
-            const created = m.createdAt?.toDate ? m.createdAt.toDate() : new Date();
+            const created = m.createdAt && typeof m.createdAt.toDate === 'function' ? m.createdAt.toDate() : (m.createdAt ? new Date(m.createdAt) : new Date());
             return now.getTime() - created.getTime() < 86400000;
           }).length.toString(), icon: Plus, color: "text-primary" },
         { label: "Assessments", value: "12", icon: TrendingUp, color: "text-yellow-500" },
