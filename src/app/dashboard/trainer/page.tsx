@@ -25,18 +25,53 @@ import {
 } from "lucide-react";
 
 import { db } from "@/lib/firebase";
-import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, doc, updateDoc, getDocs } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
+import { X, Check } from "lucide-react";
+
+interface Member {
+  id: string;
+  fullName: string;
+  memberId: string;
+  membershipType: string;
+  mobile: string;
+  weight?: string;
+  height?: string;
+  age?: string;
+  fitnessGoal?: string;
+  profileImage?: string;
+  status: string;
+  assignedWorkout?: string;
+  assignedDiet?: string;
+}
 
 const TrainerDashboard = () => {
   const { userData } = useAuth();
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [assignmentType, setAssignmentType] = useState<"workout" | "diet" | null>(null);
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState([
     { label: "Total Members", value: "0", icon: Users, color: "text-blue-500" },
     { label: "Active Today", value: "0", icon: Clock, color: "text-green-500" },
     { label: "New Joinings", value: "0", icon: Plus, color: "text-primary" },
     { label: "Assessments", value: "0", icon: TrendingUp, color: "text-yellow-500" },
   ]);
+
+  // Mock plans for now - in a real app, these would come from Firestore
+  const workoutPlans = [
+    { id: "wp1", name: "Full Body Blast", level: "Beginner" },
+    { id: "wp2", name: "Muscle Gain Pro", level: "Advanced" },
+    { id: "wp3", name: "Fat Loss Elite", level: "Intermediate" },
+    { id: "wp4", name: "Strength Starter", level: "Beginner" },
+  ];
+
+  const dietPlans = [
+    { id: "dp1", name: "Muscle Building Pro", type: "High Protein" },
+    { id: "dp2", name: "Shred & Lean", type: "Low Carb" },
+    { id: "dp3", name: "Vegetarian Power", type: "Balanced" },
+    { id: "dp4", name: "Keto Advanced", type: "Ketogenic" },
+  ];
 
   // Use real trainer data from AuthContext
   const trainer = {
@@ -49,17 +84,21 @@ const TrainerDashboard = () => {
     const firestore = db;
     if (!firestore) return;
 
-    // Real-time listener for ALL members (since trainers need to see the tribe)
+    // Real-time listener for ALL members
     const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memberList = snapshot.docs.map(doc => {
+      const memberList: Member[] = snapshot.docs.map(doc => {
         const data = doc.data();
         const isExpired = data.expiryDate && new Date(data.expiryDate) < new Date();
         return {
           id: doc.id,
           ...data,
+          fullName: data.fullName || "Unknown Member",
+          memberId: data.memberId || "N/A",
+          membershipType: data.membershipType || "Basic",
+          mobile: data.mobile || "N/A",
           status: isExpired ? "expired" : (data.status || "active")
-        };
+        } as Member;
       });
       setMembers(memberList);
 
@@ -68,6 +107,7 @@ const TrainerDashboard = () => {
         { label: "Active Today", value: Math.floor(snapshot.size * 0.4).toString(), icon: Clock, color: "text-green-500" },
         { label: "New Joinings", value: memberList.filter(m => {
             const now = new Date();
+            // @ts-ignore
             const created = m.createdAt?.toDate ? m.createdAt.toDate() : new Date();
             return now.getTime() - created.getTime() < 86400000;
           }).length.toString(), icon: Plus, color: "text-primary" },
@@ -77,6 +117,28 @@ const TrainerDashboard = () => {
 
     return () => unsubscribe();
   }, []);
+
+  const handleAssign = async (planId: string) => {
+    if (!selectedMember || !assignmentType) return;
+
+    setLoading(true);
+    try {
+      const memberRef = doc(db!, "members", selectedMember.id);
+      const updateData = assignmentType === "workout"
+        ? { assignedWorkout: planId }
+        : { assignedDiet: planId };
+
+      await updateDoc(memberRef, updateData);
+      alert(`${assignmentType === "workout" ? "Workout" : "Diet"} plan assigned to ${selectedMember.fullName}`);
+      setAssignmentType(null);
+      setSelectedMember(null);
+    } catch (error) {
+      console.error("Error assigning plan:", error);
+      alert("Failed to assign plan.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -191,11 +253,17 @@ const TrainerDashboard = () => {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 border-l border-white/5 pl-0 md:pl-6 justify-between md:justify-end">
-                       <button className="flex-1 md:flex-none p-3 bg-white/5 hover:bg-primary rounded-xl transition-all group/btn">
-                          <ChefHat size={18} className="text-gray-500 group-hover/btn:text-black mx-auto" />
+                       <button
+                         onClick={() => { setSelectedMember(member); setAssignmentType("diet"); }}
+                         className="flex-1 md:flex-none p-3 bg-white/5 hover:bg-primary rounded-xl transition-all group/btn"
+                       >
+                          <ChefHat size={18} className={`${member.assignedDiet ? 'text-primary' : 'text-gray-500'} group-hover/btn:text-black mx-auto`} />
                        </button>
-                       <button className="flex-1 md:flex-none p-3 bg-white/5 hover:bg-primary rounded-xl transition-all group/btn">
-                          <Dumbbell size={18} className="text-gray-500 group-hover/btn:text-black mx-auto" />
+                       <button
+                         onClick={() => { setSelectedMember(member); setAssignmentType("workout"); }}
+                         className="flex-1 md:flex-none p-3 bg-white/5 hover:bg-primary rounded-xl transition-all group/btn"
+                       >
+                          <Dumbbell size={18} className={`${member.assignedWorkout ? 'text-primary' : 'text-gray-500'} group-hover/btn:text-black mx-auto`} />
                        </button>
                        <button className="flex-1 md:flex-none p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all group/btn">
                           <MoreVertical size={18} className="text-gray-500 mx-auto" />
@@ -212,6 +280,71 @@ const TrainerDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Assignment Modal */}
+        <AnimatePresence>
+          {assignmentType && selectedMember && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="relative w-full max-w-lg glass p-8 rounded-[3rem] border-white/10"
+              >
+                <button
+                  onClick={() => { setAssignmentType(null); setSelectedMember(null); }}
+                  className="absolute top-6 right-6 p-2 hover:bg-white/5 rounded-full"
+                >
+                  <X size={24} />
+                </button>
+
+                <h3 className="text-2xl font-black uppercase italic mb-2">
+                  Assign {assignmentType === "workout" ? "Workout" : "Diet"} <span className="text-primary">Plan</span>
+                </h3>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-8">
+                  Assigning to: <span className="text-white">{selectedMember.fullName}</span>
+                </p>
+
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {(assignmentType === "workout" ? workoutPlans : dietPlans).map((plan) => (
+                    <button
+                      key={plan.id}
+                      onClick={() => handleAssign(plan.id)}
+                      disabled={loading}
+                      className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all group text-left ${
+                        (assignmentType === "workout" ? selectedMember.assignedWorkout : selectedMember.assignedDiet) === plan.id
+                          ? "bg-primary/20 border-primary"
+                          : "bg-white/5 border-white/5 hover:border-primary/50"
+                      }`}
+                    >
+                      <div>
+                        <h4 className="font-bold text-sm">{(plan as any).name}</h4>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase">
+                          {(plan as any).level || (plan as any).type}
+                        </p>
+                      </div>
+                      {(assignmentType === "workout" ? selectedMember.assignedWorkout : selectedMember.assignedDiet) === plan.id ? (
+                        <Check size={18} className="text-primary" />
+                      ) : (
+                        <ArrowRight size={18} className="text-gray-600 group-hover:text-primary transition-colors" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {loading && (
+                  <div className="absolute inset-0 bg-black/50 rounded-[3rem] flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Right Panel Tools */}
         <div className="lg:col-span-4 space-y-6">

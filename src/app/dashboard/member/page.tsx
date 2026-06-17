@@ -42,10 +42,22 @@ const MemberDashboard = () => {
     advanced: ["Powerlifting Program", "Bodybuilding Split", "Functional Training", "HIIT Workouts", "Athletic Conditioning"]
   };
 
-  const dietPlans = [
-    "Weight Loss Diet", "Weight Gain Diet", "Muscle Gain Diet",
-    "Vegetarian Diet", "Non-Vegetarian Diet", "Maintenance Diet"
-  ];
+  const workoutPlanNames: Record<string, string> = {
+    "wp1": "Full Body Blast",
+    "wp2": "Muscle Gain Pro",
+    "wp3": "Fat Loss Elite",
+    "wp4": "Strength Starter"
+  };
+
+  const dietPlanNames: Record<string, string> = {
+    "dp1": "Muscle Building Pro",
+    "dp2": "Shred & Lean",
+    "dp3": "Vegetarian Power",
+    "dp4": "Keto Advanced"
+  };
+
+  const currentWorkoutName = memberData.assignedWorkout ? workoutPlanNames[memberData.assignedWorkout] : "Beginner Routine";
+  const currentDietName = memberData.assignedDiet ? dietPlanNames[memberData.assignedDiet] : "Maintenance Diet";
 
   return (
     <div className="space-y-10">
@@ -162,9 +174,12 @@ const MemberDashboard = () => {
                   <div className="p-2 bg-primary/10 rounded-lg text-primary">
                     <Dumbbell size={20} />
                   </div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tight">Active Plan</h3>
+                  <div>
+                    <h3 className="text-xl font-black uppercase italic tracking-tight">Active Plan</h3>
+                    <p className="text-[10px] text-primary font-black uppercase tracking-widest">{currentWorkoutName}</p>
+                  </div>
                 </div>
-                <button className="text-[10px] font-black uppercase text-primary tracking-widest">Change</button>
+                <Link href="/dashboard/workouts" className="text-[10px] font-black uppercase text-primary tracking-widest hover:underline">Browse</Link>
               </div>
 
               <div className="space-y-3">
@@ -193,8 +208,12 @@ const MemberDashboard = () => {
                   <div className="p-2 bg-green-500/10 text-green-500 rounded-lg">
                     <ChefHat size={20} />
                   </div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tight">Fuel Log</h3>
+                  <div>
+                    <h3 className="text-xl font-black uppercase italic tracking-tight">Fuel Log</h3>
+                    <p className="text-[10px] text-green-500 font-black uppercase tracking-widest">{currentDietName}</p>
+                  </div>
                 </div>
+                <Link href="/dashboard/diets" className="text-[10px] font-black uppercase text-primary tracking-widest hover:underline">Plans</Link>
               </div>
 
               <div className="space-y-4">
