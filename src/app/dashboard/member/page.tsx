@@ -16,16 +16,54 @@ import {
   LogOut,
   Weight,
   Target,
-  Ruler
+  Ruler,
+  Volume2,
+  VolumeX,
+  Send,
+  Heart,
+  MessageSquare,
+  Pause,
+  Play
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, onSnapshot } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
+import { useVoice } from "@/hooks/useVoice";
 
 const MemberDashboard = () => {
   const router = useRouter();
   const { userData: memberData, loading } = useAuth();
+  const { speak, stop, isSpeaking, isPaused, toggle } = useVoice();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [newPost, setNewPost] = useState("");
+
+  useEffect(() => {
+    if (!db) return;
+    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleCreatePost = async () => {
+    if (!newPost.trim() || !memberData) return;
+    try {
+      await addDoc(collection(db, "posts"), {
+        text: newPost,
+        authorName: memberData.fullName,
+        authorImage: memberData.profileImage,
+        authorId: memberData.uid,
+        likes: 0,
+        createdAt: serverTimestamp(),
+      });
+      setNewPost("");
+      speak("Post shared with the tribe!");
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   if (loading) {
     return (
@@ -248,6 +286,69 @@ const MemberDashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Tribe Feed */}
+          <div className="glass p-8 rounded-[3rem] border-white/5 space-y-6">
+             <div className="flex items-center justify-between">
+                <h3 className="text-xl font-black uppercase italic tracking-tight">Tribe <span className="text-primary">Feed</span></h3>
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                   <span className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Live Updates</span>
+                </div>
+             </div>
+
+             <div className="flex gap-4">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0">
+                   <img src={memberData.profileImage || "/assets/avatar.png"} className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 relative">
+                   <textarea
+                    value={newPost}
+                    onChange={(e) => setNewPost(e.target.value)}
+                    placeholder="Share your progress with the tribe..."
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:border-primary outline-none min-h-[100px] resize-none"
+                   />
+                   <button
+                    onClick={handleCreatePost}
+                    className="absolute bottom-4 right-4 p-2 bg-primary text-black rounded-xl hover:scale-105 transition-all"
+                   >
+                      <Send size={18} />
+                   </button>
+                </div>
+             </div>
+
+             <div className="space-y-6 max-h-[600px] overflow-y-auto pr-2 scrollbar-hide">
+                {posts.map((post) => (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    key={post.id}
+                    className="p-6 bg-white/[0.02] border border-white/5 rounded-[2rem] space-y-4"
+                  >
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                           <img src={post.authorImage || "/assets/avatar.png"} className="w-10 h-10 rounded-full object-cover border border-primary/20" />
+                           <div>
+                              <p className="text-sm font-black uppercase italic">{post.authorName}</p>
+                              <p className="text-[8px] text-gray-500 font-bold uppercase">{post.createdAt?.toDate().toLocaleDateString()}</p>
+                           </div>
+                        </div>
+                     </div>
+                     <p className="text-sm text-gray-300 leading-relaxed">{post.text}</p>
+                     <div className="flex items-center gap-6 pt-2">
+                        <button className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors">
+                           <Heart size={16} />
+                           <span className="text-[10px] font-black">{post.likes || 0}</span>
+                        </button>
+                        <button className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors">
+                           <MessageSquare size={16} />
+                           <span className="text-[10px] font-black">Reply</span>
+                        </button>
+                     </div>
+                  </motion.div>
+                ))}
+             </div>
           </div>
 
           {/* Tribe Connect */}

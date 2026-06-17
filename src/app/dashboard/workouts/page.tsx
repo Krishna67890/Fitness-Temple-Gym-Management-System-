@@ -15,10 +15,14 @@ import {
   ChevronLeft,
   Info,
   Youtube,
-  Trophy
+  Trophy,
+  Volume2,
+  VolumeX
 } from "lucide-react";
+import { useVoice } from "@/hooks/useVoice";
 
 const exercises = [
+// ... (rest of the code)
   {
     id: 1,
     name: "Barbell Squats",
@@ -79,6 +83,7 @@ const workouts = [
 ];
 
 const WorkoutsPage = () => {
+  const { speak, stop, isSpeaking } = useVoice();
   const [view, setView] = useState<"plans" | "library">("plans");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<any>(null);
@@ -263,9 +268,17 @@ const WorkoutsPage = () => {
               </div>
               <div className="p-8 space-y-6">
                  <div>
-                    <h4 className="text-[10px] font-black uppercase text-primary tracking-widest mb-3 flex items-center gap-2">
-                       <Info size={14} /> Instructions
-                    </h4>
+                    <div className="flex items-center justify-between mb-3">
+                       <h4 className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                          <Info size={14} /> Instructions
+                       </h4>
+                       <button
+                         onClick={() => isSpeaking ? stop() : speak(`${selectedExercise.name}. Instructions: ${selectedExercise.instructions}`)}
+                         className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-primary text-black' : 'bg-white/5 text-primary hover:bg-white/10'}`}
+                       >
+                          {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                       </button>
+                    </div>
                     <p className="text-gray-300 text-sm leading-relaxed">{selectedExercise.instructions}</p>
                  </div>
                  <div className="flex items-center justify-between pt-6 border-t border-white/5">
@@ -368,7 +381,19 @@ const WorkoutsPage = () => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-black uppercase italic">Recommended <span className="text-primary">Exercises</span></h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-black uppercase italic">Recommended <span className="text-primary">Exercises</span></h3>
+                  <button
+                    onClick={() => {
+                      const allExercises = exercises.map((ex, i) => `Exercise ${i+1}: ${ex.name}`).join('. ');
+                      const fullSpeech = `Here is your ${selectedPlanDetails.title} routine. It includes: ${allExercises}. Let's get to work!`;
+                      isSpeaking ? stop() : speak(fullSpeech);
+                    }}
+                    className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-primary text-black' : 'bg-white/5 text-primary hover:bg-white/10'}`}
+                  >
+                    {isSpeaking ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                  </button>
+                </div>
                 {exercises.map((ex, i) => (
                   <div key={i} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-primary/30 transition-all">
                     <img src={ex.image} className="w-16 h-16 rounded-xl object-cover" />
@@ -376,15 +401,32 @@ const WorkoutsPage = () => {
                       <p className="font-bold text-sm">{ex.name}</p>
                       <p className="text-[10px] text-gray-500 uppercase">{ex.muscles.join(', ')}</p>
                     </div>
-                    <button className="p-2 hover:bg-primary hover:text-black rounded-lg transition-all">
-                      <PlayCircle size={20} />
+                    <button
+                      onClick={() => {
+                        if (isSpeaking) {
+                          stop();
+                        } else {
+                          speak(`${ex.name}. Focusing on ${ex.muscles.join(' and ')}. Instructions: ${ex.instructions}`);
+                        }
+                      }}
+                      className={`p-2 rounded-lg transition-all ${isSpeaking ? 'bg-primary text-black' : 'hover:bg-primary hover:text-black'}`}
+                    >
+                      {isSpeaking ? <VolumeX size={20} /> : <PlayCircle size={20} />}
                     </button>
                   </div>
                 ))}
               </div>
 
               <div className="mt-8">
-                <button className="btn-primary w-full py-4 uppercase font-black italic">Start This Plan Today</button>
+                <button
+                  onClick={() => {
+                    speak(`Great choice! Starting the ${selectedPlanDetails.title} plan. Let's crush those goals!`);
+                    // Logic to set as active plan could go here
+                  }}
+                  className="btn-primary w-full py-4 uppercase font-black italic"
+                >
+                  Start This Plan Today
+                </button>
               </div>
             </div>
           </div>

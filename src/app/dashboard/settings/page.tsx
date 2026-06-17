@@ -13,16 +13,49 @@ import {
   Check
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { toast } from "react-hot-toast";
 
 const SettingsPage = () => {
   const { userData, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
-  const [notifications, setNotifications] = useState({
-    workout: true,
-    diet: true,
-    community: false,
-    promotional: true
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [profileData, setProfileData] = useState({
+    fullName: userData?.fullName || "",
+    email: userData?.email || "",
+    mobile: userData?.mobile || "",
+    fitnessGoal: userData?.fitnessGoal || "",
+    weight: userData?.weight || "",
+    height: userData?.height || ""
   });
+
+  const [notifications, setNotifications] = useState({
+    workout: userData?.notifications?.workout ?? true,
+    diet: userData?.notifications?.diet ?? true,
+    community: userData?.notifications?.community ?? false,
+    promotional: userData?.notifications?.promotional ?? true
+  });
+
+  const handleSaveProfile = async () => {
+    if (!userData?.uid) return;
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, "users", userData.uid);
+      await updateDoc(userRef, {
+        ...profileData,
+        notifications,
+        updatedAt: new Date()
+      });
+      toast.success("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const toggleNotification = (key: keyof typeof notifications) => {
     setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
@@ -104,26 +137,76 @@ const SettingsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Full Name</label>
-                    <input type="text" defaultValue={userData?.fullName} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary" />
+                    <input
+                      type="text"
+                      value={profileData.fullName}
+                      onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+                    />
                  </div>
                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Email Address</label>
-                    <input type="email" defaultValue={userData?.email} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary" />
+                    <input
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+                    />
                  </div>
                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Phone Number</label>
-                    <input type="tel" defaultValue={userData?.mobile} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary" />
+                    <input
+                      type="tel"
+                      value={profileData.mobile}
+                      onChange={(e) => setProfileData({...profileData, mobile: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+                    />
                  </div>
                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Member ID</label>
-                    <input type="text" value={userData?.memberId} readOnly className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none text-gray-500 cursor-not-allowed" />
+                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Fitness Goal</label>
+                    <select
+                      value={profileData.fitnessGoal}
+                      onChange={(e) => setProfileData({...profileData, fitnessGoal: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+                    >
+                      <option value="weight-loss">Weight Loss</option>
+                      <option value="muscle-gain">Muscle Gain</option>
+                      <option value="general-fitness">General Fitness</option>
+                      <option value="athletic-performance">Athletic Performance</option>
+                    </select>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Weight (kg)</label>
+                    <input
+                      type="number"
+                      value={profileData.weight}
+                      onChange={(e) => setProfileData({...profileData, weight: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+                    />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Height (cm)</label>
+                    <input
+                      type="number"
+                      value={profileData.height}
+                      onChange={(e) => setProfileData({...profileData, height: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary"
+                    />
                  </div>
               </div>
 
               <div className="pt-6">
-                 <button className="btn-primary w-full md:w-auto py-4 px-10 text-xs flex items-center justify-center gap-2">
-                    <Check size={18} />
-                    Save Changes
+                 <button
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="btn-primary w-full md:w-auto py-4 px-10 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+                 >
+                    {isSaving ? (
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Check size={18} />
+                    )}
+                    {isSaving ? "Saving..." : "Save Changes"}
                  </button>
               </div>
             </motion.div>

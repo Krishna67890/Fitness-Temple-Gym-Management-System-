@@ -81,10 +81,6 @@ const Navbar = () => {
                   <LayoutDashboard size={14} className="text-primary" />
                   <span className="text-[10px] font-black uppercase tracking-widest">Dashboard</span>
                 </Link>
-                <Link href="/dashboard/member/profile" className="flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2.5 rounded-full hover:bg-white/10 transition-all group">
-                  <User size={14} className="text-primary" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Profile</span>
-                </Link>
                 <button
                   onClick={logout}
                   className="bg-primary text-black px-6 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-white transition-all"
@@ -94,7 +90,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Link href="/register" className="btn-primary px-6 py-2.5 text-[10px] rounded-full">
+                <Link href="/membership" className="btn-primary px-6 py-2.5 text-[10px] rounded-full">
                   Join Now
                 </Link>
                 <Link href="/login" className="flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2.5 rounded-full hover:bg-white/10 transition-all group">
@@ -135,11 +131,11 @@ const Navbar = () => {
                   <Link href={getDashboardLink()} className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
                     Dashboard
                   </Link>
-                  <Link href="/dashboard/member/profile" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
-                    Profile
-                  </Link>
                   <button
-                    onClick={logout}
+                    onClick={() => {
+                      logout();
+                      setIsOpen(false);
+                    }}
                     className="text-left text-4xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors"
                   >
                     Logout
@@ -172,10 +168,10 @@ const Navbar = () => {
                   ))}
                   <div className="flex flex-col gap-4 mt-10">
                     <Link
-                      href="/register"
+                      href="/membership"
                       className="btn-primary w-full text-center py-5 text-xl rounded-2xl"
                     >
-                      Join the Tribe
+                      Join Now
                     </Link>
                     <Link
                       href="/login"

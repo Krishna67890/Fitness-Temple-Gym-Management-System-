@@ -6,8 +6,18 @@ import Footer from "@/components/Footer";
 import Chatbot from "@/components/Chatbot";
 import { AuthProvider } from "@/context/AuthContext";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: 'swap',
+  preload: true
+});
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+  display: 'swap',
+  preload: true
+});
 
 export const metadata: Metadata = {
   title: "Fitness Temple Gym | The Ultimate Powerhouse",

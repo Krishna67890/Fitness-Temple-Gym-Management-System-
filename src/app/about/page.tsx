@@ -6,9 +6,10 @@ import {
   Dumbbell, Users, Zap, CheckCircle2,
   ArrowRight, Award, Flame, ClipboardList,
   Coffee, Droplets, Smile, Clock, ExternalLink,
-  Code
+  Code, Volume2, VolumeX
 } from "lucide-react";
 import Link from "next/link";
+import { useVoice } from "@/hooks/useVoice";
 
 const trainers = [
   { name: "Suraj", role: "Expert Trainer / Bodybuilding Specialist", image: "https://images.unsplash.com/photo-1567013127542-490d757e51fe?q=80&w=1974&auto=format&fit=crop" },
@@ -30,6 +31,7 @@ const stats = [
 ];
 
 const AboutPage = () => {
+  const { speak, stop, isSpeaking } = useVoice();
   return (
     <div className="pt-20 pb-24 bg-[#050505]">
       {/* Hero Section */}
@@ -49,6 +51,15 @@ const AboutPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
+            <div className="flex justify-center mb-6">
+               <button
+                 onClick={() => isSpeaking ? stop() : speak("Welcome to Fitness Temple Gym, Nashik. Change Your Life with the Ultimate Warrior Tribe Experience. Transform your body, build your confidence.")}
+                 className={`flex items-center gap-2 px-6 py-2 rounded-full border transition-all ${isSpeaking ? 'bg-primary text-black border-primary' : 'bg-white/5 text-primary border-primary/20 hover:bg-primary/10'}`}
+               >
+                  {isSpeaking ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                  <span className="text-[10px] font-black uppercase tracking-widest">{isSpeaking ? 'Stop AI Tour' : 'AI Audio Tour'}</span>
+               </button>
+            </div>
             <h2 className="text-primary font-black uppercase tracking-[0.4em] text-sm mb-6">Fitness Temple Gym, Nashik</h2>
             <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-tight mb-8">
               TRANSFORM YOUR <span className="ft-gradient-text">BODY</span>,<br />

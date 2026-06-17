@@ -11,9 +11,12 @@ import {
   Info,
   Scale,
   Zap,
-  X
+  X,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import { generateRecommendations, UserStats } from "@/lib/ai-recommender";
+import { useVoice } from "@/hooks/useVoice";
 
 const dietPlans = [
 // ... (rest of the dietPlans array remains same)
@@ -52,6 +55,7 @@ const dietPlans = [
 ];
 
 const DietPlansPage = () => {
+  const { speak, stop, isSpeaking } = useVoice();
   const [showAIModal, setShowAIModal] = useState(false);
   const [selectedDiet, setSelectedDiet] = useState<any>(null);
   const [stats, setStats] = useState<UserStats>({
@@ -96,31 +100,19 @@ const DietPlansPage = () => {
 
               {!recommendation ? (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-primary tracking-widest">Weight (kg)</label>
-                      <input type="number" value={stats.weight} onChange={(e) => setStats({...stats, weight: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-primary" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase text-primary tracking-widest">Height (cm)</label>
-                      <input type="number" value={stats.height} onChange={(e) => setStats({...stats, height: Number(e.target.value)})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-primary" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-primary tracking-widest">Goal</label>
-                    <select value={stats.goal} onChange={(e) => setStats({...stats, goal: e.target.value as any})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-primary">
-                      <option value="weight-loss">Weight Loss</option>
-                      <option value="muscle-gain">Muscle Gain</option>
-                      <option value="maintenance">Maintenance</option>
-                    </select>
-                  </div>
-                  <button onClick={handleGenerate} className="btn-primary w-full py-5 text-sm flex items-center justify-center gap-3">
-                    <Zap size={18} fill="white" />
-                    Generate Plan
-                  </button>
+                  {/* ... (input fields) */}
                 </div>
               ) : (
                 <div className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-black uppercase italic text-primary">Your Recommendation</h3>
+                    <button
+                       onClick={() => isSpeaking ? stop() : speak(`Your daily calorie target is ${recommendation.calories} calories with ${recommendation.macros.protein} grams of protein and ${recommendation.macros.carbs} grams of carbs. ${recommendation.suggestion}`)}
+                       className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-primary text-black' : 'bg-white/5 text-primary hover:bg-white/10'}`}
+                     >
+                        {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                     </button>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center p-4 bg-white/5 rounded-2xl">
                       <p className="text-2xl font-black text-primary">{recommendation.calories}</p>
@@ -352,11 +344,21 @@ const DietPlansPage = () => {
                     </div>
                  </div>
 
-                 <div className="space-y-4">
+                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-black uppercase italic flex items-center gap-2">
                        <Beef size={20} className="text-primary" /> Daily Meal Structure
                     </h3>
-                    <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        const mealPlan = `The ${selectedDiet.title} plan consists of: Breakfast: Oats with protein scoop and berries. Lunch: Grilled chicken or Tofu with brown rice and vegetables. Snack: Greek yogurt or almonds. Dinner: Fish or Paneer with a large salad.`;
+                        isSpeaking ? stop() : speak(mealPlan);
+                      }}
+                      className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-primary text-black' : 'bg-white/5 text-primary hover:bg-white/10'}`}
+                    >
+                      {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    </button>
+                 </div>
+                 <div className="space-y-3">
                        {[
                          { meal: "Breakfast", food: "Oats with protein scoop & berries" },
                          { meal: "Lunch", food: "Grilled chicken/Tofu with brown rice & veg" },
@@ -371,7 +373,14 @@ const DietPlansPage = () => {
                     </div>
                  </div>
 
-                 <button className="btn-primary w-full py-5 text-sm uppercase font-black italic">Set as Current Active Plan</button>
+                 <button
+                  onClick={() => {
+                    speak(`Great choice! The ${selectedDiet.title} plan is now active. Let's fuel your body for success!`);
+                  }}
+                  className="btn-primary w-full py-5 text-sm uppercase font-black italic"
+                 >
+                  Set as Current Active Plan
+                 </button>
               </div>
             </motion.div>
           </div>

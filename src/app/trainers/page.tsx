@@ -115,11 +115,15 @@ const TrainersPage = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-6 pt-6">
-                   <button className="btn-primary flex items-center justify-center gap-3">
+                   <a
+                    href={`https://wa.me/919000000000?text=Hi ${trainer.name}, I want to book a 1-on-1 session!`}
+                    target="_blank"
+                    className="btn-primary flex items-center justify-center gap-3"
+                   >
                       <MessageCircle size={20} />
                       Book 1-on-1 Session
-                   </button>
-                   <button className="btn-outline">View Transformation</button>
+                   </a>
+                   <Link href="/gallery" className="btn-outline text-center">View Transformation</Link>
                 </div>
               </div>
             </div>
