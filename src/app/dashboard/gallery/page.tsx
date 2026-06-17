@@ -17,7 +17,7 @@ import { collection, addDoc, onSnapshot, query, orderBy, Timestamp } from "fireb
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/context/AuthContext";
 
-const photos = [
+const MOCK_PHOTOS = [
   {
     id: 1,
     url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop",
@@ -55,7 +55,7 @@ const photos = [
 const GalleryPage = () => {
   const { user } = useAuth();
   const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [photos, setPhotos] = useState<any[]>(MOCK_PHOTOS);
   const [isUploading, setIsUploading] = useState(false);
 
   React.useEffect(() => {

@@ -8,6 +8,10 @@ export async function POST(req: Request) {
   try {
     const { amount, currency } = await req.json();
 
+    if (!amount || isNaN(Number(amount))) {
+      return NextResponse.json({ error: "Invalid amount provided" }, { status: 400 });
+    }
+
     // FORCED DEMO MODE / FAKE PAYMENT FIX:
     // This ensures that even if Razorpay keys are missing or invalid,
     // the system generates a "Success" response for the frontend to proceed.

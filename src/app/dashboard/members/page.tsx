@@ -13,20 +13,19 @@ import {
   Download
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
 interface Member {
   id: string;
   name: string;
   email: string;
   phone: string;
-  plan: "Monthly" | "Quarterly" | "Annual";
-  status: "Active" | "Expired" | "Pending";
+  plan: string;
+  status: string;
   joiningDate: string;
   expiryDate: string;
 }
-
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 
 const MembersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
