@@ -12,6 +12,7 @@ import {
   Camera,
   Check
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const SettingsPage = () => {
   const { userData, logout } = useAuth();

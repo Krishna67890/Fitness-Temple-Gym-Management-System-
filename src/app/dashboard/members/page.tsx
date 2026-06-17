@@ -19,7 +19,7 @@ import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 interface Member {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   plan: string;
   status: string;
@@ -29,7 +29,7 @@ interface Member {
 
 const MembersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [members, setMembers] = useState<any[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ const MembersPage = () => {
 
     const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memberList = snapshot.docs.map(doc => {
+      const memberList: Member[] = snapshot.docs.map(doc => {
         const data = doc.data();
         const expiryDate = data.expiryDate;
         const isExpired = expiryDate && new Date(expiryDate) < new Date();
