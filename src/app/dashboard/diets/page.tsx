@@ -100,7 +100,67 @@ const DietPlansPage = () => {
 
               {!recommendation ? (
                 <div className="space-y-6">
-                  {/* ... (input fields) */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Weight (kg)</label>
+                      <input
+                        type="number"
+                        value={stats.weight}
+                        onChange={(e) => setStats({ ...stats, weight: parseInt(e.target.value) || 0 })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Height (cm)</label>
+                      <input
+                        type="number"
+                        value={stats.height}
+                        onChange={(e) => setStats({ ...stats, height: parseInt(e.target.value) || 0 })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Age</label>
+                      <input
+                        type="number"
+                        value={stats.age}
+                        onChange={(e) => setStats({ ...stats, age: parseInt(e.target.value) || 0 })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Goal</label>
+                      <select
+                        value={stats.goal}
+                        onChange={(e) => setStats({ ...stats, goal: e.target.value as any })}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm appearance-none"
+                      >
+                        <option value="weight-loss">Weight Loss</option>
+                        <option value="muscle-gain">Muscle Gain</option>
+                        <option value="maintenance">Maintenance</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Activity Level</label>
+                    <select
+                      value={stats.activityLevel}
+                      onChange={(e) => setStats({ ...stats, activityLevel: e.target.value as any })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-primary text-sm appearance-none"
+                    >
+                      <option value="sedentary">Sedentary (Office job)</option>
+                      <option value="moderate">Moderate (3-5 days/week)</option>
+                      <option value="active">Active (6-7 days/week)</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleGenerate}
+                    className="w-full py-4 bg-primary text-black font-black uppercase italic rounded-2xl shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:scale-[1.02] transition-all"
+                  >
+                    Generate Diet Profile
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-8">

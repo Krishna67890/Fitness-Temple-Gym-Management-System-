@@ -301,6 +301,79 @@ const SettingsPage = () => {
                </div>
             </motion.div>
           )}
+
+          {activeTab === "billing" && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-8"
+            >
+              <h3 className="text-xl font-black uppercase italic mb-8">Billing & <span className="text-primary">Subscription</span></h3>
+
+              <div className="glass p-8 rounded-3xl border-primary/20 bg-primary/5 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col md:flex-row justify-between gap-6">
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-primary tracking-[0.2em] mb-2">Current Plan</p>
+                    <h4 className="text-3xl font-black uppercase italic">{userData?.membershipType || "Basic"} Pass</h4>
+                    <p className="text-sm text-gray-400 mt-2">Your next billing date is <span className="text-white font-bold">Oct 12, 2023</span></p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button className="btn-primary py-3 px-8 text-xs">Upgrade</button>
+                    <button className="text-xs font-black uppercase text-red-500 hover:text-red-400 transition-colors">Cancel Plan</button>
+                  </div>
+                </div>
+                <CreditCard className="absolute right-[-20px] bottom-[-20px] text-primary/10" size={120} />
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Payment Methods</h4>
+                <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-8 bg-white/10 rounded flex items-center justify-center font-bold text-[10px]">VISA</div>
+                    <div>
+                      <p className="text-sm font-bold">•••• •••• •••• 4242</p>
+                      <p className="text-[10px] text-gray-500 uppercase">Expires 12/25</p>
+                    </div>
+                  </div>
+                  <button className="text-[10px] font-black uppercase text-primary hover:underline">Edit</button>
+                </div>
+                <button className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-[10px] font-black uppercase text-gray-500 hover:border-primary hover:text-primary transition-all">
+                  + Add New Payment Method
+                </button>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                <h4 className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Billing History</h4>
+                <div className="overflow-hidden rounded-2xl border border-white/5">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-white/5 text-[10px] font-black uppercase text-gray-500">
+                      <tr>
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4">Plan</th>
+                        <th className="px-6 py-4">Amount</th>
+                        <th className="px-6 py-4">Receipt</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {[
+                        { date: "Sep 12, 2023", plan: "Basic Monthly", amount: "₹1,499", id: "#INV-001" },
+                        { date: "Aug 12, 2023", plan: "Basic Monthly", amount: "₹1,499", id: "#INV-002" }
+                      ].map((inv, i) => (
+                        <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-4 text-gray-400">{inv.date}</td>
+                          <td className="px-6 py-4 font-bold">{inv.plan}</td>
+                          <td className="px-6 py-4 text-primary font-black">{inv.amount}</td>
+                          <td className="px-6 py-4">
+                            <button className="text-gray-500 hover:text-white transition-colors">Download</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
