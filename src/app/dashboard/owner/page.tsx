@@ -64,7 +64,7 @@ const OwnerDashboard = () => {
     if (!firestore) return;
 
     // Real-time members listener
-    const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(firestore!, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const memberList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMembers(memberList);

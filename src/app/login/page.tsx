@@ -66,7 +66,7 @@ const LoginPage = () => {
         return;
       }
 
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth!, email, password);
       localStorage.setItem("ft_user_role", "member");
       router.push("/dashboard/member");
     } catch (err: any) {

@@ -81,7 +81,7 @@ const TrainerDashboard = () => {
     if (!firestore) return;
 
     // Real-time listener for ALL members
-    const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(firestore!, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const memberList: Member[] = snapshot.docs.map(doc => {
         const data = doc.data();

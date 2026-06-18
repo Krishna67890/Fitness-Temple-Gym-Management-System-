@@ -61,7 +61,7 @@ const GalleryPage = () => {
   React.useEffect(() => {
     const firestore = db;
     if (!firestore) return;
-    const q = query(collection(firestore, "gallery"), orderBy("timestamp", "desc"));
+    const q = query(collection(firestore!, "gallery"), orderBy("timestamp", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -83,11 +83,11 @@ const GalleryPage = () => {
 
     try {
       setIsUploading(true);
-      const storageRef = ref(firestorage, `gallery/${Date.now()}_${file.name}`);
+      const storageRef = ref(firestorage!, `gallery/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadResult.ref);
 
-      await addDoc(collection(firestore, "gallery"), {
+      await addDoc(collection(firestore!, "gallery"), {
         url: downloadURL,
         caption: caption || "Fitness journey!",
         likes: 0,

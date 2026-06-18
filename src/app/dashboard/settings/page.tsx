@@ -74,8 +74,8 @@ const SettingsPage = () => {
     }
     setIsSaving(true);
     try {
-      const userRef = doc(db, "users", uid);
-      const memberRef = doc(db, "members", uid);
+      const userRef = doc(db!, "users", uid);
+      const memberRef = doc(db!, "members", uid);
 
       const updates = {
         ...profileData,
@@ -131,8 +131,8 @@ const SettingsPage = () => {
         };
 
         await Promise.all([
-          updateDoc(doc(db, "users", userData.uid), updates),
-          updateDoc(doc(db, "members", userData.uid), updates)
+          updateDoc(doc(db!, "users", userData.uid), updates),
+          updateDoc(doc(db!, "members", userData.uid), updates)
         ]);
         alert("Plan upgraded successfully!");
         window.location.reload();

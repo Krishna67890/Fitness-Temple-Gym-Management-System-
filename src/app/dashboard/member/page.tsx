@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, onSnapshot, doc, updateDoc, Firestore } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { useVoice } from "@/hooks/useVoice";
 
@@ -40,7 +40,7 @@ const MemberDashboard = () => {
 
   useEffect(() => {
     if (!db) return;
-    const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+    const q = query(collection(db!, "posts"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -48,9 +48,9 @@ const MemberDashboard = () => {
   }, []);
 
   const handleCreatePost = async () => {
-    if (!newPost.trim() || !memberData) return;
+    if (!newPost.trim() || !memberData || !db) return;
     try {
-      await addDoc(collection(db, "posts"), {
+      await addDoc(collection(db!, "posts"), {
         text: newPost,
         authorName: memberData.fullName,
         authorImage: memberData.profileImage,
@@ -343,7 +343,7 @@ const MemberDashboard = () => {
                         <button
                           onClick={async () => {
                             if (!db || !memberData) return;
-                            const postRef = doc(db, "posts", post.id);
+                            const postRef = doc(db!, "posts", post.id);
                             await updateDoc(postRef, {
                               likes: (post.likes || 0) + 1
                             });

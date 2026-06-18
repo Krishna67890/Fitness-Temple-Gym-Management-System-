@@ -127,7 +127,7 @@ const RegisterContent = () => {
           uid = userCredential.user.uid;
 
           // Save to Users collection for Auth
-          await setDoc(doc(db, "users", uid), {
+          await setDoc(doc(db!, "users", uid), {
             fullName: formData.fullName,
             email: formData.email,
             role: "member",
@@ -136,7 +136,7 @@ const RegisterContent = () => {
           });
 
           // Save to Members collection for Dashboard
-          await setDoc(doc(db, "members", uid), {
+          await setDoc(doc(db!, "members", uid), {
             ...formData,
             uid: uid,
             memberId: newMemberId,
