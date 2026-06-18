@@ -37,7 +37,9 @@ import {
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 import { db } from "@/lib/firebase";
-import { collection, query, getDocs, orderBy, limit, onSnapshot } from "firebase/firestore";
+import { collection, query, getDocs, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
+import { X, Camera, User as UserIcon, Phone, Mail, Lock, Calendar as CalendarIcon, Ruler, Weight, Target, Shield } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 ChartJS.register(
   CategoryScale,
@@ -54,6 +56,82 @@ ChartJS.register(
 const OwnerDashboard = () => {
   const { userData } = useAuth();
   const [members, setMembers] = useState<any[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    mobile: "",
+    email: "",
+    password: "",
+    gender: "male",
+    membershipType: "basic",
+    age: "",
+    height: "",
+    weight: "",
+    fitnessGoal: "muscle-gain",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewImage(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const newMemberId = `FT${Math.floor(1000 + Math.random() * 9000)}`;
+      const joinDate = new Date();
+      const expiryDate = new Date();
+      if (formData.membershipType === "basic") {
+        expiryDate.setMonth(joinDate.getMonth() + 1);
+      } else {
+        expiryDate.setMonth(joinDate.getMonth() + 3);
+      }
+
+      const memberData = {
+        ...formData,
+        memberId: newMemberId,
+        status: "Active",
+        role: "user",
+        profileImage: previewImage,
+        expiryDate: expiryDate.toISOString(),
+        createdAt: new Date().toISOString(),
+      };
+
+      const existingMembersRaw = localStorage.getItem("ft_all_members");
+      const existingMembers = existingMembersRaw ? JSON.parse(existingMembersRaw) : [];
+      existingMembers.push(memberData);
+      localStorage.setItem("ft_all_members", JSON.stringify(existingMembers));
+
+      if (db) {
+        await addDoc(collection(db, "members"), {
+          ...memberData,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      setIsAddModalOpen(false);
+      setFormData({
+        fullName: "", mobile: "", email: "", password: "", gender: "male",
+        membershipType: "basic", age: "", height: "", weight: "", fitnessGoal: "muscle-gain",
+      });
+      setPreviewImage(null);
+      alert("Member added successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add member");
+    }
+  };
   const [stats, setStats] = useState<any[]>([
     { label: "Total Members", value: "0", icon: Users, trend: "0%", color: "text-blue-500" },
     { label: "Active Members", value: "0", icon: Activity, trend: "0%", color: "text-green-500" },
@@ -162,7 +240,10 @@ const OwnerDashboard = () => {
           <p className="text-gray-500 text-sm font-bold uppercase tracking-widest mt-1">Gym: Fitness Temple • Admins: Omkar & Siddhant</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="btn-primary py-3 px-6 flex items-center gap-2 text-sm uppercase font-black italic">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="btn-primary py-3 px-6 flex items-center gap-2 text-sm uppercase font-black italic"
+          >
             <Plus size={18} />
             Add Member
           </button>
@@ -172,15 +253,19 @@ const OwnerDashboard = () => {
       {/* Action Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
         {[
-          { label: "Members", icon: Users, color: "text-blue-500" },
-          { label: "Trainers", icon: Dumbbell, color: "text-green-500" },
-          { label: "Finance", icon: TrendingUp, color: "text-primary" },
-          { label: "Attendance", icon: Calendar, color: "text-yellow-500" },
-          { label: "Inventory", icon: Package, color: "text-purple-500" },
-          { label: "QR Cards", icon: QrCode, color: "text-secondary" },
-          { label: "Reports", icon: PieChart, color: "text-orange-500" },
+          { label: "Members", icon: Users, color: "text-blue-500", path: "/dashboard/members" },
+          { label: "Trainers", icon: Dumbbell, color: "text-green-500", path: "#" },
+          { label: "Finance", icon: TrendingUp, color: "text-primary", path: "#" },
+          { label: "Attendance", icon: Calendar, color: "text-yellow-500", path: "/dashboard/attendance" },
+          { label: "Inventory", icon: Package, color: "text-purple-500", path: "#" },
+          { label: "QR Cards", icon: QrCode, color: "text-secondary", path: "#" },
+          { label: "Reports", icon: PieChart, color: "text-orange-500", path: "/dashboard/reports" },
         ].map((action, i) => (
-          <button key={i} className="glass p-4 rounded-2xl border-white/5 hover:border-primary/50 transition-all flex flex-col items-center group">
+          <button
+            onClick={() => action.path !== "#" && (window.location.href = action.path)}
+            key={i}
+            className="glass p-4 rounded-2xl border-white/5 hover:border-primary/50 transition-all flex flex-col items-center group"
+          >
              <action.icon className={`${action.color} mb-2 group-hover:scale-110 transition-transform`} size={20} />
              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white">{action.label}</span>
           </button>
@@ -318,6 +403,165 @@ const OwnerDashboard = () => {
           </table>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md overflow-y-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="relative w-full max-w-4xl glass p-8 md:p-12 rounded-[3rem] border-white/10 my-8"
+            >
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="absolute top-8 right-8 p-2 hover:bg-white/5 rounded-full transition-all"
+              >
+                <X size={24} />
+              </button>
+
+              <div className="text-center mb-10">
+                <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2">ADD NEW <span className="text-primary">WARRIOR</span></h2>
+                <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Enroll a new member into the temple</p>
+              </div>
+
+              <form onSubmit={handleAddMember} className="space-y-8">
+                <div className="flex flex-col items-center mb-8">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-32 h-32 rounded-[2.5rem] bg-white/5 border-2 border-dashed border-primary/30 flex items-center justify-center cursor-pointer hover:border-primary transition-all overflow-hidden relative group"
+                  >
+                    {previewImage ? (
+                      <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center">
+                        <Camera className="text-gray-500 mx-auto mb-2" size={24} />
+                        <span className="text-[8px] font-black uppercase text-gray-500">Photo</span>
+                      </div>
+                    )}
+                  </div>
+                  <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Basic Info */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Full Name</label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input name="fullName" required placeholder="Name" className="ft-input-sm" onChange={handleChange} value={formData.fullName} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Mobile</label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input name="mobile" required placeholder="Phone" className="ft-input-sm" onChange={handleChange} value={formData.mobile} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input type="email" name="email" required placeholder="Email" className="ft-input-sm" onChange={handleChange} value={formData.email} />
+                    </div>
+                  </div>
+
+                  {/* Physical Stats */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Age</label>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input name="age" required placeholder="Age" className="ft-input-sm" onChange={handleChange} value={formData.age} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Height (cm)</label>
+                    <div className="relative">
+                      <Ruler className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input name="height" required placeholder="Height" className="ft-input-sm" onChange={handleChange} value={formData.height} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Weight (kg)</label>
+                    <div className="relative">
+                      <Weight className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input name="weight" required placeholder="Weight" className="ft-input-sm" onChange={handleChange} value={formData.weight} />
+                    </div>
+                  </div>
+
+                  {/* Plans & Goals */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Fitness Goal</label>
+                    <div className="relative">
+                      <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <select name="fitnessGoal" className="ft-input-sm appearance-none bg-[#0a0a0a]" onChange={handleChange} value={formData.fitnessGoal}>
+                        <option value="muscle-gain">Muscle Gain</option>
+                        <option value="weight-loss">Weight Loss</option>
+                        <option value="fat-loss">Fat Loss</option>
+                        <option value="endurance">Endurance</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Membership</label>
+                    <div className="relative">
+                      <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <select name="membershipType" className="ft-input-sm appearance-none bg-[#0a0a0a]" onChange={handleChange} value={formData.membershipType}>
+                        <option value="basic">Basic (1 Month)</option>
+                        <option value="standard">Standard (3 Months)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input type="password" name="password" required placeholder="Password" className="ft-input-sm" onChange={handleChange} value={formData.password} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="flex-1 btn-primary py-4 text-[10px]">
+                    Create Account
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style jsx>{`
+        .ft-input-sm {
+          width: 100%;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 1rem;
+          padding: 0.8rem 1rem 0.8rem 3rem;
+          font-weight: 700;
+          font-size: 0.875rem;
+          color: white;
+          outline: none;
+          transition: all 0.3s;
+        }
+        .ft-input-sm:focus {
+          border-color: #FFD700;
+          background: rgba(255, 215, 0, 0.05);
+        }
+      `}</style>
     </div>
   );
 };
