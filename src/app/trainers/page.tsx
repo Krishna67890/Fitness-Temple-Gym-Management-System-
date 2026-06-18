@@ -68,7 +68,7 @@ const TrainersPage = () => {
 
                   {/* Socials Floating */}
                   <div className="absolute bottom-10 left-10 flex gap-4">
-                    {[Instagram, Twitter, Linkedin].map((Icon, i) => (
+                    {[Instagram, Twitter].map((Icon, i) => (
                        <button key={i} className="w-14 h-14 bg-black/50 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 hover:bg-primary hover:border-primary transition-all text-white">
                           <Icon size={24} />
                        </button>
@@ -117,12 +117,14 @@ const TrainersPage = () => {
 
                 <div className="flex flex-col sm:flex-row gap-6 pt-6">
                    <a
-                    href={`https://wa.me/919000000000?text=Hi ${trainer.name}, I want to book a 1-on-1 session!`}
+                    href={`https://wa.me/918080690631?text=${encodeURIComponent(
+                      `Hi ${trainer.name}, I want to join Fitness Temple Gym and I'm interested in training with you. Respectfully, could you please let me know your charges and how I can interact with you?`
+                    )}`}
                     target="_blank"
                     className="btn-primary flex items-center justify-center gap-3"
                    >
                       <MessageCircle size={20} />
-                      Book 1-on-1 Session
+                      Talk to Owner
                    </a>
                    <Link href="/gallery" className="btn-outline text-center">View Transformation</Link>
                 </div>

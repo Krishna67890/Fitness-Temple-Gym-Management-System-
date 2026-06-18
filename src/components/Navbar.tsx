@@ -116,17 +116,35 @@ const Navbar = () => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-black z-[60] flex flex-col p-6 md:p-10"
+            className="fixed inset-0 bg-black z-[70] flex flex-col p-6 md:p-10"
           >
             <div className="flex justify-between items-center mb-12">
               <span className="text-2xl font-black uppercase italic">FT <span className="text-primary">GYM</span></span>
-              <button onClick={() => setIsOpen(false)} className="p-2"><X size={32} /></button>
+              <button onClick={() => setIsOpen(false)} className="p-2 text-white"><X size={32} /></button>
             </div>
             <div className="flex flex-col space-y-6 overflow-y-auto pb-10">
               {isLoggedIn ? (
                 <>
                   <Link href="/" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
                     Home
+                  </Link>
+                  <Link href="/about" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
+                    About
+                  </Link>
+                  <Link href="/trainers" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
+                    Trainers
+                  </Link>
+                  <Link href="/membership" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
+                    Membership
+                  </Link>
+                  <Link href="/gallery" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
+                    Gallery
+                  </Link>
+                  <Link href="/contact" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
+                    Contact
+                  </Link>
+                  <Link href="/dashboard/attendance" className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
+                    Attendance
                   </Link>
                   <Link href={getDashboardLink()} className="text-4xl font-black uppercase italic tracking-tighter hover:text-primary transition-colors">
                     Dashboard
@@ -140,20 +158,6 @@ const Navbar = () => {
                   >
                     Logout
                   </button>
-                  <div className="border-t border-white/10 pt-6 mt-6">
-                    <p className="text-[10px] font-bold uppercase text-gray-500 tracking-[0.2em] mb-6">Quick Links</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      {navLinks.slice(1).map((link) => (
-                        <Link
-                          key={link.name}
-                          href={link.href}
-                          className="text-sm font-bold uppercase tracking-widest text-gray-400"
-                        >
-                          {link.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
                 </>
               ) : (
                 <>
@@ -178,6 +182,12 @@ const Navbar = () => {
                       className="w-full text-center py-5 text-xl font-black uppercase italic border border-white/10 rounded-2xl"
                     >
                       Member Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      className="w-full text-center py-5 text-xl font-black uppercase italic bg-white/5 border border-white/10 rounded-2xl"
+                    >
+                      Register
                     </Link>
                   </div>
                 </>

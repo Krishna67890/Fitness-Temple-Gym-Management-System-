@@ -14,8 +14,8 @@ const stats = [
 const Stats = () => {
   return (
     <section className="relative z-20 -mt-20 lg:-mt-28">
-      <div className="container">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="container px-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
@@ -23,7 +23,7 @@ const Stats = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="glass p-10 rounded-[3rem] text-center flex flex-col items-center justify-center border-t border-white/10 shadow-3xl hover:border-primary/30 transition-all duration-500 group relative overflow-hidden"
+              className="glass p-6 md:p-10 rounded-2xl md:rounded-[3rem] text-center flex flex-col items-center justify-center border-t border-white/10 shadow-3xl hover:border-primary/30 transition-all duration-500 group relative overflow-hidden"
             >
               {/* Animated Background Pulse */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />

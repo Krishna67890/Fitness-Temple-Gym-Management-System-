@@ -60,30 +60,44 @@ const ContactSection = () => {
             viewport={{ once: true }}
             className="glass p-10 md:p-12 rounded-[3.5rem] border-white/5 shadow-3xl"
           >
-            <form className="space-y-8">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const target = e.target as any;
+                const name = target[0].value;
+                const phone = target[1].value;
+                const subject = target[2].value;
+                const message = target[3].value;
+                const whatsappUrl = `https://wa.me/918080690631?text=${encodeURIComponent(
+                  `Name: ${name}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`
+                )}`;
+                window.open(whatsappUrl, '_blank');
+              }}
+              className="space-y-8"
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Full Name</label>
-                  <input type="text" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]" placeholder="John Doe" />
+                  <input required type="text" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]" placeholder="John Doe" />
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Phone Number</label>
-                  <input type="tel" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]" placeholder="+91 00000 00000" />
+                  <input required type="tel" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]" placeholder="+91 00000 00000" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Subject</label>
                 <div className="relative">
-                  <select className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none appearance-none transition-all focus:bg-white/[0.07]">
-                    <option className="bg-background">Membership Inquiry</option>
-                    <option className="bg-background">Personal Training</option>
-                    <option className="bg-background">General Feedback</option>
+                  <select required className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none appearance-none transition-all focus:bg-white/[0.07]">
+                    <option value="Membership Inquiry" className="bg-background">Membership Inquiry</option>
+                    <option value="Personal Training" className="bg-background">Personal Training</option>
+                    <option value="General Feedback" className="bg-background">General Feedback</option>
                   </select>
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Message</label>
-                <textarea rows={5} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07] resize-none" placeholder="How can we help you?"></textarea>
+                <textarea required rows={5} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07] resize-none" placeholder="How can we help you?"></textarea>
               </div>
               <button type="submit" className="btn-primary w-full py-4 text-lg flex items-center justify-center space-x-3">
                 <span className="uppercase tracking-widest font-black">Send Message</span>

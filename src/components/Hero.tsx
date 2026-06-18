@@ -58,18 +58,18 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row items-center gap-6"
+            className="flex flex-col sm:flex-row items-center gap-6 mt-12"
           >
             <Link href="/membership" className="btn-primary w-full sm:w-auto flex items-center justify-center space-x-3 group">
               <span className="text-xl italic font-black uppercase tracking-widest">Join The Temple</span>
               <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" />
             </Link>
-            <button className="flex items-center space-x-4 group text-white hover:text-secondary transition-colors">
+            <Link href="/gallery" className="flex items-center space-x-4 group text-white hover:text-secondary transition-colors">
               <div className="w-16 h-16 rounded-full border border-white/20 flex items-center justify-center group-hover:border-secondary group-hover:bg-secondary/10 transition-all">
                 <Play className="fill-current ml-1" />
               </div>
               <span className="font-black uppercase italic tracking-widest text-sm">Experience Tour</span>
-            </button>
+            </Link>
           </motion.div>
         </div>
       </div>

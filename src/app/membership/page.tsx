@@ -148,7 +148,9 @@ const MembershipPage = () => {
               </div>
 
               <a
-                href={`https://wa.me/919665231230?text=Hello! I want to enroll in the ${plan.name} (${plan.duration}) at Fitness Temple Gym.`}
+                href={`https://wa.me/918080690631?text=${encodeURIComponent(
+                  `Hello! I want to enroll in the ${plan.name} (${plan.duration}) at Fitness Temple Gym. The rate mentioned is ₹${plan.price}. Please guide me on the next steps.`
+                )}`}
                 target="_blank"
                 className={`w-full py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 text-lg ${
                   plan.popular

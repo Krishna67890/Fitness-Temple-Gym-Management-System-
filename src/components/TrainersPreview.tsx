@@ -61,7 +61,7 @@ const TrainersPreview = () => {
                   </div>
 
                   <div className="flex flex-col gap-4 translate-y-20 group-hover:translate-y-0 transition-transform duration-500">
-                    {[Instagram, Twitter, Linkedin].map((Icon, i) => (
+                    {[Instagram, Twitter].map((Icon, i) => (
                       <button key={i} className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all">
                         <Icon size={20} />
                       </button>
