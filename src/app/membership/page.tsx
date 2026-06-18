@@ -147,17 +147,18 @@ const MembershipPage = () => {
                 </div>
               </div>
 
-              <Link
-                href={`/register?plan=${plan.id}`}
+              <a
+                href={`https://wa.me/919665231230?text=Hello! I want to enroll in the ${plan.name} (${plan.duration}) at Fitness Temple Gym.`}
+                target="_blank"
                 className={`w-full py-6 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3 text-lg ${
                   plan.popular
                     ? "bg-primary text-white hover:bg-white hover:text-black shadow-[0_20px_40px_rgba(255,0,0,0.2)]"
                     : "bg-white/5 text-white border border-white/10 hover:bg-primary hover:border-primary"
                 }`}
               >
-                Enroll Now
+                Enroll via WhatsApp
                 <Zap size={20} fill="currentColor" />
-              </Link>
+              </a>
             </motion.div>
           ))}
         </div>
@@ -165,9 +166,9 @@ const MembershipPage = () => {
         {/* Feature Highlights */}
         <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto border-t border-white/5 pt-24">
            {[
-             { title: "Digital ID", desc: "Auto-generated membership card with secure QR code." },
-             { title: "Smart Alerts", desc: "Get notified before your membership expires." },
-             { title: "Easy Renewal", desc: "Renew your plan in one click via the member portal." }
+             { title: "WhatsApp Support", desc: "Talk directly to the owner for any queries or payments." },
+             { title: "Quick Enrollment", desc: "Enroll instantly via WhatsApp and get started today." },
+             { title: "Direct Payment", desc: "Pay securely via WhatsApp and receive your digital receipt." }
            ].map((f, i) => (
              <div key={i} className="text-center group">
                 <div className="w-16 h-1 bg-primary/20 mx-auto mb-8 group-hover:w-32 transition-all duration-500" />

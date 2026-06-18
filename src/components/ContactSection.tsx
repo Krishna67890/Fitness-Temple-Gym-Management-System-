@@ -27,7 +27,7 @@ const ContactSection = () => {
             <div className="space-y-8">
               {[
                 { icon: <MapPin className="text-primary" size={24} />, title: "Location", detail: "Fitness Temple Gym, Nashik" },
-                { icon: <Phone className="text-primary" size={24} />, title: "Call Us", detail: "+91 88057 55562" },
+                { icon: <Phone className="text-primary" size={24} />, title: "Call Us", detail: "+91 96652 31230" },
                 { icon: <Mail className="text-primary" size={24} />, title: "Plus Code", detail: "XRFR+P8 Nashik, Maharashtra" },
                 { icon: <Clock className="text-primary" size={24} />, title: "Working Hours", detail: "Daily: 5:00 AM - 10:00 AM & 4:30 PM - 10:00 PM" }
               ].map((item, idx) => (
@@ -43,11 +43,11 @@ const ContactSection = () => {
               ))}
 
               <a
-                href="https://wa.me/918805755562?text=Hello! I want to join Fitness Temple Gym."
+                href="https://wa.me/919665231230?text=Hello! I want to join Fitness Temple Gym."
                 target="_blank"
                 className="btn-secondary w-full py-4 text-lg flex items-center justify-center space-x-3 mt-4"
               >
-                <span className="uppercase tracking-widest font-black">Send to Temple (WhatsApp)</span>
+                <span className="uppercase tracking-widest font-black">Talk to Owner (WhatsApp)</span>
                 <Send size={20} />
               </a>
             </div>

@@ -6,8 +6,8 @@ import { Users, Dumbbell, Award, Timer } from "lucide-react";
 
 const stats = [
   { label: "Active Members", value: "500+", icon: Users },
-  { label: "Expert Coaches", value: "12+", icon: Dumbbell },
-  { label: "Years of Excellence", value: "08+", icon: Award },
+  { label: "Expert Coaches", value: "3+", icon: Dumbbell },
+  { label: "Years of Excellence", value: "10+", icon: Award },
   { label: "Daily Sessions", value: "24+", icon: Timer },
 ];
 
