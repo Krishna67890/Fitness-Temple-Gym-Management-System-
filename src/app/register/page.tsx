@@ -14,6 +14,7 @@ const RegisterContent = () => {
   const selectedPlan = searchParams.get("plan") || "basic";
   const [step, setStep] = useState(1); // 1: Form, 2: Payment, 3: Success
   const [loading, setLoading] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [memberId, setMemberId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -197,10 +198,10 @@ Details:
       const order = await response.json();
 
       if (order.is_mock) {
-          // Demo Mode
+          setIsDemoMode(true);
           setTimeout(() => {
               finalizeRegistration(order.id);
-          }, 1500);
+          }, 2000);
           return;
       }
 
@@ -346,6 +347,18 @@ Details:
             >
               <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2">SECURE <span className="text-primary">PAYMENT</span></h2>
               <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-10">Total Payable: ₹{amount}</p>
+
+              {isDemoMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-2xl"
+                >
+                  <p className="text-primary text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                    <Zap size={14} /> Demo Mode Active: Processing Test Payment...
+                  </p>
+                </motion.div>
+              )}
 
               <div className="relative w-64 h-64 mx-auto mb-10 bg-white p-6 rounded-[3rem] border-4 border-primary shadow-[0_0_40px_rgba(255,215,0,0.2)]">
                 <QrCode size="100%" className="text-black" />

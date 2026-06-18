@@ -54,6 +54,12 @@ ChartJS.register(
 const OwnerDashboard = () => {
   const { userData } = useAuth();
   const [members, setMembers] = useState<any[]>([]);
+  const [stats, setStats] = useState<any[]>([
+    { label: "Total Members", value: "0", icon: Users, trend: "0%", color: "text-blue-500" },
+    { label: "Active Members", value: "0", icon: Activity, trend: "0%", color: "text-green-500" },
+    { label: "Monthly Revenue", value: "₹0", icon: TrendingUp, trend: "0%", color: "text-primary" },
+    { label: "Pending Renewals", value: "0", icon: Bell, trend: "Stable", color: "text-secondary" },
+  ]);
 
   const isOwner = userData?.role === 'owner';
 
