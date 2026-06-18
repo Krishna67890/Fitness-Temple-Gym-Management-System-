@@ -32,49 +32,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const isFirebaseConfigured = !!auth;
 
   useEffect(() => {
-    // Check for hardcoded role session
-    const savedRole = localStorage.getItem("ft_user_role");
-    if (savedRole && (savedRole === "owner" || savedRole === "trainer")) {
-      setUserData({ role: savedRole, name: savedRole.charAt(0).toUpperCase() + savedRole.slice(1) });
-    }
-
-    // Local Storage Check for Members
-    const savedMember = localStorage.getItem("ft_member_session");
-    if (savedMember) {
-      try {
-        const data = JSON.parse(savedMember);
-        if (data.role?.toLowerCase() === "member" || data.role?.toLowerCase() === "trainer" || data.role?.toLowerCase() === "owner") {
+    const checkSession = () => {
+      const savedMember = localStorage.getItem("ft_member_session");
+      if (savedMember) {
+        try {
+          const data = JSON.parse(savedMember);
           setUserData(data);
+          setLoading(false);
+          return true;
+        } catch (e) {
+          console.error("Error parsing saved session", e);
         }
-      } catch (e) {
-        console.error("Error parsing saved session", e);
       }
-    }
+      return false;
+    };
+
+    const hasSession = checkSession();
 
     if (!auth) {
+      if (!hasSession) {
+        setUserData(null);
+      }
       setLoading(false);
       return;
     }
 
+    // Keep Firebase listener as fallback but prioritize local storage
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
-      if (user && db) {
-        try {
-          const docRef = doc(db!, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setUserData(data);
-
-            // Persist User to Local Storage for session continuity
-            localStorage.setItem("ft_member_session", JSON.stringify(data));
-            localStorage.setItem("ft_user_role", data.role?.toLowerCase() || "member");
+      if (!localStorage.getItem("ft_member_session")) {
+        if (user && db) {
+          try {
+            const docRef = doc(db!, "users", user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setUserData(data);
+              localStorage.setItem("ft_member_session", JSON.stringify(data));
+              localStorage.setItem("ft_user_role", data.role?.toLowerCase() || "member");
+            }
+          } catch (error) {
+            console.error("Error fetching user data:", error);
           }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-      } else {
-        if (!localStorage.getItem("ft_member_session")) {
+        } else {
           setUserData(null);
         }
       }

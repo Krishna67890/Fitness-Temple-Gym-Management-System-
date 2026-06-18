@@ -21,7 +21,7 @@ const RegisterContent = () => {
 
   const [formData, setFormData] = useState({
     fullName: "",
-    mobile: "+91 ",
+    mobile: "",
     email: "",
     password: "",
     address: "",
@@ -30,7 +30,7 @@ const RegisterContent = () => {
     weight: "",
     height: "",
     fitnessGoal: "muscle-gain",
-    emergencyContact: "+91 ",
+    emergencyContact: "",
     membershipType: selectedPlan,
     joinDate: new Date().toISOString().split('T')[0],
   });
@@ -75,12 +75,8 @@ const RegisterContent = () => {
     }
 
     if (name === "mobile" || name === "emergencyContact") {
-      if (!value.startsWith("+91 ")) {
-        setFormData({ ...formData, [name]: "+91 " + value.replace(/\D/g, '').slice(0, 10) });
-        return;
-      }
-      const numbersOnly = value.slice(4).replace(/\D/g, '').slice(0, 10);
-      setFormData({ ...formData, [name]: "+91 " + numbersOnly });
+      const numbersOnly = value.replace(/\D/g, '').slice(0, 10);
+      setFormData({ ...formData, [name]: numbersOnly });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -97,7 +93,7 @@ const RegisterContent = () => {
 
   const handleInitialSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.mobile.length < 14) return alert("Enter valid 10-digit mobile number");
+    if (formData.mobile.length < 10) return alert("Enter valid 10-digit mobile number");
     if (!formData.gender) return alert("Select gender");
     if (formData.password.length < 6) return alert("Password must be at least 6 characters");
     setStep(2);
@@ -119,53 +115,32 @@ const RegisterContent = () => {
         expiryDate.setMonth(joinDate.getMonth() + 3);
       }
 
-      let uid = "temp_" + Date.now();
-
-      if (auth && db) {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-          uid = userCredential.user.uid;
-
-          // Save to Users collection for Auth
-          await setDoc(doc(db!, "users", uid), {
-            fullName: formData.fullName,
-            email: formData.email,
-            role: "member",
-            memberId: newMemberId,
-            createdAt: serverTimestamp(),
-          });
-
-          // Save to Members collection for Dashboard
-          await setDoc(doc(db!, "members", uid), {
-            ...formData,
-            uid: uid,
-            memberId: newMemberId,
-            paymentId: paymentId,
-            status: "active",
-            role: "member",
-            profileImage: previewImage,
-            expiryDate: expiryDate.toISOString(),
-            createdAt: serverTimestamp(),
-          });
-        } catch (error: any) {
-          console.error("Firebase Registration Error:", error);
-          if (error.code !== "auth/email-already-in-use") {
-             throw error;
-          }
-        }
-      }
-
-      const memberSession = {
+      const memberData = {
         ...formData,
-        uid: uid,
+        uid: "local_" + Date.now(),
         memberId: newMemberId,
         paymentId: paymentId,
         status: "active",
         role: "member",
         profileImage: previewImage,
+        expiryDate: expiryDate.toISOString(),
+        createdAt: new Date().toISOString(),
       };
 
-      localStorage.setItem("ft_member_session", JSON.stringify(memberSession));
+      // Save to Local Storage Registered Members list
+      const existingMembersRaw = localStorage.getItem("ft_all_members");
+      const existingMembers = existingMembersRaw ? JSON.parse(existingMembersRaw) : [];
+
+      // Check if email already exists
+      if (existingMembers.some((m: any) => m.email.toLowerCase() === formData.email.toLowerCase())) {
+          throw new Error("Email already registered. Please login.");
+      }
+
+      existingMembers.push(memberData);
+      localStorage.setItem("ft_all_members", JSON.stringify(existingMembers));
+
+      // Set active session
+      localStorage.setItem("ft_member_session", JSON.stringify(memberData));
       localStorage.setItem("ft_user_role", "member");
 
       setStep(3);

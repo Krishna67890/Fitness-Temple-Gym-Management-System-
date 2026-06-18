@@ -35,6 +35,11 @@ const LoginPage = () => {
       { email: "sanket@fitnesstemple.com", password: "Sanket@123", name: "Sanket" }
     ];
 
+    const memberAccounts = [
+        { email: "member1@fitnesstemple.com", password: "Member@123", name: "Member One" },
+        { email: "fitness@temple.com", password: "fitnesstemple", name: "Test Member" }
+    ];
+
     try {
       if (role === "owner") {
         const owner = ownerAccounts.find(acc => acc.email.toLowerCase() === email.toLowerCase() && acc.password === password);
@@ -52,23 +57,40 @@ const LoginPage = () => {
           router.push("/dashboard/trainer");
           return;
         }
-      }
+      } else if (role === "member") {
+        const member = memberAccounts.find(acc => acc.email.toLowerCase() === email.toLowerCase() && acc.password === password);
+        if (member) {
+          localStorage.setItem("ft_user_role", "member");
+          localStorage.setItem("ft_member_session", JSON.stringify({ role: "member", name: member.name, email: member.email }));
+          router.push("/dashboard/member");
+          return;
+        }
 
-      // Default Firebase Login for Members
-      if (!isFirebaseConfigured || !auth) {
-        // Mock success for development if Firebase is down
-        if (email.includes("test") && password === "test123") {
+        // Check Local Storage for registered members
+        const existingMembersRaw = localStorage.getItem("ft_all_members");
+        if (existingMembersRaw) {
+          const existingMembers = JSON.parse(existingMembersRaw);
+          const localMember = existingMembers.find((m: any) => m.email.toLowerCase() === email.toLowerCase() && m.password === password);
+          if (localMember) {
             localStorage.setItem("ft_user_role", "member");
+            localStorage.setItem("ft_member_session", JSON.stringify(localMember));
             router.push("/dashboard/member");
             return;
+          }
         }
+      }
+
+      // Default Firebase Login for Members (Disabled for now as per request)
+      /*
+      if (!isFirebaseConfigured || !auth) {
         setError("Firebase not connected. Please check your configuration.");
         return;
       }
-
       await signInWithEmailAndPassword(auth!, email, password);
       localStorage.setItem("ft_user_role", "member");
       router.push("/dashboard/member");
+      */
+      setError("Access Denied: Invalid credentials for the " + role + " portal.");
     } catch (err: any) {
       console.error(err);
       setError("Access Denied: Invalid credentials for the " + role + " portal.");

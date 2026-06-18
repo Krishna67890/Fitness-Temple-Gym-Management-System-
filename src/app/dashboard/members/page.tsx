@@ -33,27 +33,55 @@ const MembersPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!db) return;
+    // Check Local Storage
+    const existingMembersRaw = localStorage.getItem("ft_all_members");
+    const localMembers = existingMembersRaw ? JSON.parse(existingMembersRaw) : [];
+
+    const formattedLocalMembers = localMembers.map((m: any) => ({
+      id: m.memberId || m.uid,
+      name: m.fullName,
+      email: m.email,
+      phone: m.mobile,
+      plan: m.membershipType || "Basic",
+      status: (m.expiryDate && new Date(m.expiryDate) < new Date()) ? "Expired" : (m.status || "Active"),
+      joiningDate: m.createdAt ? new Date(m.createdAt).toLocaleDateString('en-GB') : "N/A",
+      expiryDate: m.expiryDate ? new Date(m.expiryDate).toLocaleDateString('en-GB') : "N/A",
+    }));
+
+    if (!db) {
+      setMembers(formattedLocalMembers);
+      setLoading(false);
+      return;
+    }
 
     const q = query(collection(db!, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memberList: Member[] = snapshot.docs.map(doc => {
+      const firebaseMembers: Member[] = snapshot.docs.map(doc => {
         const data = doc.data();
         const expiryDate = data.expiryDate;
         const isExpired = expiryDate && new Date(expiryDate) < new Date();
 
         return {
-          id: doc.id,
-          ...data,
+          id: data.memberId || doc.id,
+          name: data.fullName || "Unknown Member",
+          email: data.email,
+          phone: data.mobile || "N/A",
           plan: data.membershipType || "Basic",
           status: isExpired ? "Expired" : (data.status || "Active"),
-          joiningDate: data.createdAt?.toDate().toLocaleDateString('en-GB') || "N/A",
+          joiningDate: data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString('en-GB') : "N/A",
           expiryDate: expiryDate ? new Date(expiryDate).toLocaleDateString('en-GB') : "N/A",
-          phone: data.mobile || "N/A",
-          name: data.fullName || "Unknown Member"
         };
       });
-      setMembers(memberList);
+
+      // Merge local and firebase members (prioritizing firebase but showing both for redundancy)
+      const combined = [...firebaseMembers];
+      formattedLocalMembers.forEach((lm: any) => {
+        if (!combined.some(fm => fm.email === lm.email)) {
+          combined.push(lm);
+        }
+      });
+
+      setMembers(combined);
       setLoading(false);
     });
 

@@ -60,28 +60,20 @@ const OwnerDashboard = () => {
   ]);
 
   useEffect(() => {
-    if (!db) return;
-
-    // Real-time members listener
-    const q = query(collection(db!, "members"), orderBy("createdAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memberList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMembers(memberList);
-
-      const count = snapshot.size;
-      const activeCount = memberList.filter((m: any) => {
+    const updateStats = (allMembers: any[]) => {
+      const count = allMembers.length;
+      const activeCount = allMembers.filter((m: any) => {
         const isExpired = m.expiryDate && new Date(m.expiryDate) < new Date();
-        return !isExpired && (m.status === "active" || !m.status);
+        return !isExpired && (m.status === "active" || !m.status || m.status === "Active");
       }).length;
 
-      // Calculate approximate revenue
-      const revenue = memberList.reduce((acc: number, m: any) => {
-        const amount = m.membershipType === "basic" ? 700 : 1800;
+      const revenue = allMembers.reduce((acc: number, m: any) => {
+        const amount = m.membershipType === "basic" || m.membershipType === "Basic Plan" ? 700 : 1800;
         const isExpired = m.expiryDate && new Date(m.expiryDate) < new Date();
         return acc + (!isExpired ? amount : 0);
       }, 0);
 
-      const pendingRenewals = memberList.filter((m: any) => {
+      const pendingRenewals = allMembers.filter((m: any) => {
         if (!m.expiryDate) return false;
         const expiry = new Date(m.expiryDate);
         const diff = expiry.getTime() - new Date().getTime();
@@ -89,11 +81,37 @@ const OwnerDashboard = () => {
       }).length;
 
       setStats([
-        { label: "Total Members", value: count.toString(), icon: Users, trend: `+${snapshot.metadata.fromCache ? 0 : 1}%`, color: "text-blue-500" },
+        { label: "Total Members", value: count.toString(), icon: Users, trend: "+12%", color: "text-blue-500" },
         { label: "Active Members", value: activeCount.toString(), icon: Activity, trend: "Live", color: "text-green-500" },
         { label: "Monthly Revenue", value: `₹${revenue.toLocaleString()}`, icon: TrendingUp, trend: "+12%", color: "text-primary" },
         { label: "Pending Renewals", value: pendingRenewals.toString(), icon: Bell, trend: pendingRenewals > 5 ? "Urgent" : "Stable", color: "text-secondary" },
       ]);
+      setMembers(allMembers);
+    };
+
+    // Load Local Storage
+    const existingMembersRaw = localStorage.getItem("ft_all_members");
+    const localMembers = existingMembersRaw ? JSON.parse(existingMembersRaw) : [];
+
+    if (!db) {
+      updateStats(localMembers);
+      return;
+    }
+
+    // Real-time members listener
+    const q = query(collection(db!, "members"), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const firebaseMembers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Merge
+      const combined = [...firebaseMembers];
+      localMembers.forEach((lm: any) => {
+        if (!combined.some((fm: any) => fm.email === lm.email)) {
+          combined.push(lm);
+        }
+      });
+
+      updateStats(combined);
     });
 
     return () => unsubscribe();

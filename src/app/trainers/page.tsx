@@ -117,7 +117,7 @@ const TrainersPage = () => {
 
                 <div className="flex flex-col sm:flex-row gap-6 pt-6">
                    <a
-                    href={`https://wa.me/918080690631?text=${encodeURIComponent(
+                    href={`https://wa.me/919665231230?text=${encodeURIComponent(
                       `Hi ${trainer.name}, I want to join Fitness Temple Gym and I'm interested in training with you. Respectfully, could you please let me know your charges and how I can interact with you?`
                     )}`}
                     target="_blank"

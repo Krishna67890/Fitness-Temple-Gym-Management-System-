@@ -68,6 +68,12 @@ const ContactSection = () => {
                 const phone = target[1].value;
                 const subject = target[2].value;
                 const message = target[3].value;
+
+                if (!/^\d{10}$/.test(phone)) {
+                  alert("Please enter a valid 10-digit phone number.");
+                  return;
+                }
+
                 const whatsappUrl = `https://wa.me/918080690631?text=${encodeURIComponent(
                   `Name: ${name}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`
                 )}`;
@@ -82,7 +88,15 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Phone Number</label>
-                  <input required type="tel" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]" placeholder="+91 00000 00000" />
+                  <input
+                    required
+                    type="tel"
+                    pattern="[0-9]{10}"
+                    title="Please enter a 10-digit phone number"
+                    maxLength={10}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]"
+                    placeholder="10 Digit Number"
+                  />
                 </div>
               </div>
               <div>
