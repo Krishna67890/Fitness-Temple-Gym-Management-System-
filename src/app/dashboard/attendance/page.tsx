@@ -34,12 +34,11 @@ const AttendancePage = () => {
   ]);
 
   useEffect(() => {
-    const firestore = db;
-    if (!firestore) return;
+    if (!db) return;
 
     let attendanceUnsubscribe: (() => void) | undefined;
 
-    const membersUnsubscribe = onSnapshot(collection(firestore, "members"), (snapshot) => {
+    const membersUnsubscribe = onSnapshot(collection(db!, "members"), (snapshot) => {
       const total = snapshot.size;
 
       const startOfDay = new Date(selectedDate);
@@ -48,7 +47,7 @@ const AttendancePage = () => {
       endOfDay.setHours(23, 59, 59, 999);
 
       const attendanceQuery = query(
-        collection(firestore, "attendance"),
+        collection(db!, "attendance"),
         where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
         where("timestamp", "<=", Timestamp.fromDate(endOfDay)),
         orderBy("timestamp", "desc")
@@ -77,13 +76,12 @@ const AttendancePage = () => {
   }, [selectedDate]);
 
   const markAttendance = async (memberId: string) => {
-    const firestore = db;
-    if (!firestore) return;
+    if (!db) return;
     setIsScanning(true);
 
     try {
       // Find member in Firestore
-      const membersRef = collection(firestore, "members");
+      const membersRef = collection(db!, "members");
       const q = query(membersRef, where("memberId", "==", memberId));
       const querySnapshot = await getDocs(q);
 
@@ -103,7 +101,7 @@ const AttendancePage = () => {
         return;
       }
 
-      const attendanceRef = collection(firestore, "attendance");
+      const attendanceRef = collection(db!, "attendance");
       await addDoc(attendanceRef, {
         memberId: memberId,
         memberName: memberData.fullName,

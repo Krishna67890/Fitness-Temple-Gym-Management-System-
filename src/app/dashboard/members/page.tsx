@@ -33,10 +33,9 @@ const MembersPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const firestore = db;
-    if (!firestore) return;
+    if (!db) return;
 
-    const q = query(collection(firestore, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(db!, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const memberList: Member[] = snapshot.docs.map(doc => {
         const data = doc.data();

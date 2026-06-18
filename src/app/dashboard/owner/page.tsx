@@ -60,11 +60,10 @@ const OwnerDashboard = () => {
   ]);
 
   useEffect(() => {
-    const firestore = db;
-    if (!firestore) return;
+    if (!db) return;
 
     // Real-time members listener
-    const q = query(collection(firestore!, "members"), orderBy("createdAt", "desc"));
+    const q = query(collection(db!, "members"), orderBy("createdAt", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const memberList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMembers(memberList);

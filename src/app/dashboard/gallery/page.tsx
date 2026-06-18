@@ -59,9 +59,8 @@ const GalleryPage = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   React.useEffect(() => {
-    const firestore = db;
-    if (!firestore) return;
-    const q = query(collection(firestore!, "gallery"), orderBy("timestamp", "desc"));
+    if (!db) return;
+    const q = query(collection(db!, "gallery"), orderBy("timestamp", "desc"));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -74,20 +73,18 @@ const GalleryPage = () => {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const firestore = db;
-    const firestorage = storage;
-    if (!file || !firestore || !firestorage || !user) return;
+    if (!file || !db || !storage || !user) return;
 
     const caption = prompt("Enter a caption for your photo:");
     if (caption === null) return;
 
     try {
       setIsUploading(true);
-      const storageRef = ref(firestorage!, `gallery/${Date.now()}_${file.name}`);
+      const storageRef = ref(storage!, `gallery/${Date.now()}_${file.name}`);
       const uploadResult = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadResult.ref);
 
-      await addDoc(collection(firestore!, "gallery"), {
+      await addDoc(collection(db!, "gallery"), {
         url: downloadURL,
         caption: caption || "Fitness journey!",
         likes: 0,
