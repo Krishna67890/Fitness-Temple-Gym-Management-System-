@@ -18,7 +18,7 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
 
 const SettingsContent = () => {
-  const { user, userData, logout } = useAuth();
+  const { user, userData, logout, updateUserData } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "profile");
   const [isSaving, setIsSaving] = useState(false);
@@ -87,6 +87,9 @@ const SettingsContent = () => {
         updateDoc(userRef, updates),
         updateDoc(memberRef, updates)
       ]);
+
+      // Update local storage session and context
+      updateUserData(updates);
 
       alert("Profile updated successfully!");
     } catch (error) {

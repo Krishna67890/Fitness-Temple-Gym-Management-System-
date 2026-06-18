@@ -1,9 +1,34 @@
 "use client";
-import React from "react";
-import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Clock, Send } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Phone, Mail, MapPin, Clock, Send, X } from "lucide-react";
 
 const ContactSection = () => {
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    subject: "Membership Inquiry",
+    message: ""
+  });
+
+  const handleWhatsAppChoice = (target: 'dev' | 'owner') => {
+    const phone = target === 'dev' ? '8080690631' : '9665231230';
+    const text = `Contact Inquiry from ${formData.name}:
+- Phone: ${formData.phone}
+- Subject: ${formData.subject}
+- Message: ${formData.message}`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/91${phone}?text=${encoded}`, '_blank');
+    setWhatsappModalOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setWhatsappModalOpen(true);
+  };
+
   return (
     <section className="py-24 bg-secondary/10">
       <div className="container">
@@ -42,14 +67,16 @@ const ContactSection = () => {
                 </div>
               ))}
 
-              <a
-                href="https://wa.me/919665231230?text=Hello! I want to join Fitness Temple Gym."
-                target="_blank"
+              <button
+                onClick={() => {
+                  setFormData({ name: "Direct Interest", phone: "", subject: "WhatsApp Inquiry", message: "Hello! I want to join Fitness Temple Gym." });
+                  setWhatsappModalOpen(true);
+                }}
                 className="btn-secondary w-full py-4 text-lg flex items-center justify-center space-x-3 mt-4"
               >
-                <span className="uppercase tracking-widest font-black">Talk to Owner (WhatsApp)</span>
+                <span className="uppercase tracking-widest font-black">Send a Message</span>
                 <Send size={20} />
-              </a>
+              </button>
             </div>
           </motion.div>
 
@@ -61,30 +88,20 @@ const ContactSection = () => {
             className="glass p-10 md:p-12 rounded-[3.5rem] border-white/5 shadow-3xl"
           >
             <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const target = e.target as any;
-                const name = target[0].value;
-                const phone = target[1].value;
-                const subject = target[2].value;
-                const message = target[3].value;
-
-                if (!/^\d{10}$/.test(phone)) {
-                  alert("Please enter a valid 10-digit phone number.");
-                  return;
-                }
-
-                const whatsappUrl = `https://wa.me/918080690631?text=${encodeURIComponent(
-                  `Name: ${name}\nPhone: ${phone}\nSubject: ${subject}\nMessage: ${message}`
-                )}`;
-                window.open(whatsappUrl, '_blank');
-              }}
+              onSubmit={handleSubmit}
               className="space-y-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Full Name</label>
-                  <input required type="text" className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]" placeholder="John Doe" />
+                  <input
+                    required
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]"
+                    placeholder="John Doe"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Phone Number</label>
@@ -94,6 +111,8 @@ const ContactSection = () => {
                     pattern="[0-9]{10}"
                     title="Please enter a 10-digit phone number"
                     maxLength={10}
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
                     className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07]"
                     placeholder="10 Digit Number"
                   />
@@ -102,7 +121,12 @@ const ContactSection = () => {
               <div>
                 <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Subject</label>
                 <div className="relative">
-                  <select required className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none appearance-none transition-all focus:bg-white/[0.07]">
+                  <select
+                    required
+                    value={formData.subject}
+                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none appearance-none transition-all focus:bg-white/[0.07]"
+                  >
                     <option value="Membership Inquiry" className="bg-background">Membership Inquiry</option>
                     <option value="Personal Training" className="bg-background">Personal Training</option>
                     <option value="General Feedback" className="bg-background">General Feedback</option>
@@ -111,15 +135,71 @@ const ContactSection = () => {
               </div>
               <div>
                 <label className="block text-xs font-black uppercase mb-3 tracking-[0.2em] text-gray-500">Message</label>
-                <textarea required rows={5} className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07] resize-none" placeholder="How can we help you?"></textarea>
+                <textarea
+                  required
+                  rows={5}
+                  value={formData.message}
+                  onChange={(e) => setFormData({...formData, message: e.target.value})}
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-6 py-4 focus:border-primary outline-none transition-all focus:bg-white/[0.07] resize-none"
+                  placeholder="How can we help you?"
+                ></textarea>
               </div>
               <button type="submit" className="btn-primary w-full py-4 text-lg flex items-center justify-center space-x-3">
-                <span className="uppercase tracking-widest font-black">Send Message</span>
+                <span className="uppercase tracking-widest font-black">Send To Temple</span>
                 <Send size={20} />
               </button>
             </form>
           </motion.div>
         </div>
+
+        {/* WhatsApp Choice Modal */}
+        <AnimatePresence>
+          {whatsappModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="relative w-full max-w-lg glass p-8 md:p-12 rounded-[3rem] border-white/10 text-center"
+              >
+                <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                  <Mail className="text-primary" size={40} />
+                </div>
+                <h3 className="text-2xl font-black uppercase italic mb-4">Send to Temple</h3>
+                <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
+                  Do you want to send this message to <span className="text-white">Developer 8080690631</span> or else <span className="text-white">Owner 96652 31230</span>?
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handleWhatsAppChoice('dev')}
+                    className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white"
+                  >
+                    Developer
+                  </button>
+                  <button
+                    onClick={() => handleWhatsAppChoice('owner')}
+                    className="btn-primary py-4 text-[10px]"
+                  >
+                    Owner
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setWhatsappModalOpen(false)}
+                  className="mt-6 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Google Map */}
         <div className="mt-24 h-[500px] w-full rounded-[3.5rem] overflow-hidden border border-white/5 shadow-2xl">

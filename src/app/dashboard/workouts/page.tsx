@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useVoice } from "@/hooks/useVoice";
 
+import { useAuth } from "@/context/AuthContext";
+
 const exercises = [
 // ... (rest of the code)
   {
@@ -83,6 +85,8 @@ const workouts = [
 ];
 
 const WorkoutsPage = () => {
+  const { userData } = useAuth();
+  const role = userData?.role || 'member';
   const { speak, stop, isSpeaking } = useVoice();
   const [view, setView] = useState<"plans" | "library">("plans");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -143,13 +147,15 @@ const WorkoutsPage = () => {
             <Dumbbell size={20} />
             <span className="text-sm">{view === "plans" ? "Browse Library" : "View My Plans"}</span>
           </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="btn-primary py-3 px-6 flex items-center space-x-2"
-          >
-            <Plus size={20} />
-            <span className="text-sm">Create New Plan</span>
-          </button>
+          {(role === 'owner' || role === 'trainer') && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary py-3 px-6 flex items-center space-x-2"
+            >
+              <Plus size={20} />
+              <span className="text-sm">Create New Plan</span>
+            </button>
+          )}
         </div>
       </div>
 

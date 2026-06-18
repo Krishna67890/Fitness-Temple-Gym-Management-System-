@@ -31,7 +31,7 @@ const Sidebar = () => {
   const menuItems = [
     {
       name: "Dashboard",
-      href: role === 'owner' ? "/dashboard/owner" : role === 'trainer' ? "/dashboard/trainer" : "/dashboard",
+      href: role === 'owner' ? "/dashboard/owner" : role === 'trainer' ? "/dashboard/trainer" : "/dashboard/user",
       icon: LayoutDashboard
     },
     {
@@ -44,37 +44,37 @@ const Sidebar = () => {
       name: "Attendance",
       href: "/dashboard/attendance",
       icon: CalendarCheck,
-      roles: ['owner', 'trainer', 'member']
+      roles: ['owner', 'trainer', 'user']
     },
     {
       name: "Workout Plans",
       href: "/dashboard/workouts",
       icon: ClipboardList,
-      roles: ['owner', 'trainer', 'member']
+      roles: ['owner', 'trainer', 'user']
     },
     {
       name: "Diet Plans",
       href: "/dashboard/diets",
       icon: Apple,
-      roles: ['owner', 'trainer', 'member']
+      roles: ['owner', 'trainer', 'user']
     },
     {
       name: "Progress",
       href: "/dashboard/progress",
       icon: TrendingUp,
-      roles: ['owner', 'trainer', 'member']
+      roles: ['owner', 'trainer', 'user']
     },
     {
       name: "Gallery",
       href: "/dashboard/gallery",
       icon: ImageIcon,
-      roles: ['owner', 'trainer', 'member']
+      roles: ['owner', 'trainer', 'user']
     },
     {
       name: "Settings",
       href: "/dashboard/settings",
       icon: Settings,
-      roles: ['owner', 'trainer', 'member']
+      roles: ['owner', 'trainer', 'user']
     },
   ];
 

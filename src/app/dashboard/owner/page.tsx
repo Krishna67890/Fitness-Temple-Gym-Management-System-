@@ -22,6 +22,7 @@ import {
   MessageCircle,
   QrCode
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -51,13 +52,10 @@ ChartJS.register(
 );
 
 const OwnerDashboard = () => {
+  const { userData } = useAuth();
   const [members, setMembers] = useState<any[]>([]);
-  const [stats, setStats] = useState([
-    { label: "Total Members", value: "...", icon: Users, trend: "+0%", color: "text-blue-500" },
-    { label: "Active Members", value: "...", icon: Activity, trend: "+0%", color: "text-green-500" },
-    { label: "Monthly Revenue", value: "₹...", icon: TrendingUp, trend: "+0%", color: "text-primary" },
-    { label: "Pending Renewals", value: "...", icon: Bell, trend: "Stable", color: "text-secondary" },
-  ]);
+
+  const isOwner = userData?.role === 'owner';
 
   useEffect(() => {
     const updateStats = (allMembers: any[]) => {
@@ -130,6 +128,24 @@ const OwnerDashboard = () => {
       },
     ],
   };
+
+  if (!isOwner) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <Settings className="text-primary w-16 h-16 animate-pulse" />
+        <h2 className="text-2xl font-black uppercase italic tracking-tighter text-center">Owner <span className="text-primary">Restricted</span></h2>
+        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest text-center max-w-xs">
+          Access denied. This high-level console is for Owners only.
+        </p>
+        <button
+          onClick={() => window.location.href = '/dashboard/user'}
+          className="btn-primary px-8 py-3 text-sm font-black uppercase italic"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">

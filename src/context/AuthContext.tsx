@@ -13,6 +13,7 @@ interface AuthContextType {
   userData: any | null;
   loading: boolean;
   logout: () => Promise<void>;
+  updateUserData: (newData: any) => void;
   isFirebaseConfigured: boolean;
 }
 
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextType>({
   userData: null,
   loading: true,
   logout: async () => {},
+  updateUserData: () => {},
   isFirebaseConfigured: false,
 });
 
@@ -28,6 +30,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const updateUserData = (newData: any) => {
+    setUserData((prev: any) => {
+      const updated = { ...prev, ...newData };
+      localStorage.setItem("ft_member_session", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const isFirebaseConfigured = !!auth;
 
@@ -97,7 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userData, loading, logout, isFirebaseConfigured }}>
+    <AuthContext.Provider value={{ user, userData, loading, logout, updateUserData, isFirebaseConfigured }}>
       {children}
     </AuthContext.Provider>
   );

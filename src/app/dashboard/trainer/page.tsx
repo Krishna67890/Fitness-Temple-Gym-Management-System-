@@ -76,6 +76,8 @@ const TrainerDashboard = () => {
     id: userData?.uid || "trainer_id"
   };
 
+  const isAccessAuthorized = userData?.role === 'owner' || userData?.role === 'trainer';
+
   useEffect(() => {
     const firestore = db;
     if (!firestore) return;
@@ -134,6 +136,24 @@ const TrainerDashboard = () => {
       setLoading(false);
     }
   };
+
+  if (!isAccessAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <Dumbbell className="text-primary w-16 h-16 animate-pulse" />
+        <h2 className="text-2xl font-black uppercase italic tracking-tighter text-center">Unauthorized <span className="text-primary">Access</span></h2>
+        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest text-center max-w-xs">
+          This command center is reserved for Coaches and Owners only. Please return to your user dashboard.
+        </p>
+        <button
+          onClick={() => window.location.href = '/dashboard/user'}
+          className="btn-primary px-8 py-3 text-sm font-black uppercase italic"
+        >
+          Back to Safety
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">

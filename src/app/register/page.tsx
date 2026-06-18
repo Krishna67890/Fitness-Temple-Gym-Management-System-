@@ -14,6 +14,7 @@ const RegisterContent = () => {
   const selectedPlan = searchParams.get("plan") || "basic";
   const [step, setStep] = useState(1); // 1: Form, 2: Payment, 3: Success
   const [loading, setLoading] = useState(false);
+  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [memberId, setMemberId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -96,8 +97,29 @@ const RegisterContent = () => {
     if (formData.mobile.length < 10) return alert("Enter valid 10-digit mobile number");
     if (!formData.gender) return alert("Select gender");
     if (formData.password.length < 6) return alert("Password must be at least 6 characters");
-    setStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setWhatsappModalOpen(true);
+  };
+
+  const handleWhatsAppChoice = (target: 'dev' | 'owner') => {
+    const phone = target === 'dev' ? '8080690631' : '9665231230';
+    const message = `Hello! I would like to join Fitness Temple.
+Details:
+- Name: ${formData.fullName}
+- Mobile: ${formData.mobile}
+- Email: ${formData.email}
+- Goal: ${formData.fitnessGoal}
+- Plan: ${formData.membershipType}
+- Gender: ${formData.gender}
+- Age: ${formData.age}
+- Weight: ${formData.weight}
+- Height: ${formData.height}`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/91${phone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+
+    finalizeRegistration("WHATSAPP-" + target.toUpperCase());
+    setWhatsappModalOpen(false);
   };
 
   const finalizeRegistration = async (paymentId: string) => {
@@ -227,10 +249,10 @@ const RegisterContent = () => {
             >
               <div className="text-center mb-12">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full mb-4 border border-primary/20">
-                  <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">Step 01: Profile Setup</span>
+                  <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">Step 01: Fill Details</span>
                 </div>
-                <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter mb-4">JOIN THE <span className="text-primary">TEMPLE</span></h1>
-                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Build your profile to start your fitness journey</p>
+                <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter mb-4">CHAT ON <span className="text-primary">WHATSAPP</span></h1>
+                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Provide your details to register via WhatsApp</p>
               </div>
 
               <form onSubmit={handleInitialSubmit} className="space-y-8">
@@ -307,7 +329,7 @@ const RegisterContent = () => {
                 </div>
 
                 <button type="submit" className="btn-primary w-full py-6 text-xl rounded-2xl flex items-center justify-center gap-4">
-                  <span>Continue to Payment</span>
+                  <span>Continue on WhatsApp</span>
                   <Zap size={20} />
                 </button>
               </form>
@@ -377,6 +399,55 @@ const RegisterContent = () => {
                 Access Member Portal
               </Link>
               <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mt-6">Use your email/password for future logins</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* WhatsApp Choice Modal */}
+        <AnimatePresence>
+          {whatsappModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="relative w-full max-w-lg glass p-8 md:p-12 rounded-[3rem] border-white/10 text-center"
+              >
+                <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                  <Mail className="text-primary" size={40} />
+                </div>
+                <h3 className="text-2xl font-black uppercase italic mb-4">Send to Temple</h3>
+                <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
+                  Do you want to send this message to <span className="text-white">Developer 8080690631</span> or else <span className="text-white">Owner 96652 31230</span>?
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handleWhatsAppChoice('dev')}
+                    className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    Developer
+                  </button>
+                  <button
+                    onClick={() => handleWhatsAppChoice('owner')}
+                    className="btn-primary py-4 text-[10px]"
+                  >
+                    Owner
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setWhatsappModalOpen(false)}
+                  className="mt-6 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

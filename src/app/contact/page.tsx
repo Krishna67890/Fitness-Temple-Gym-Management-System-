@@ -1,9 +1,37 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Clock, Send, MessageCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Send, MessageCircle, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ContactPage = () => {
+  const [whatsappModalOpen, setWhatsappModalOpen] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    interest: "1 Month Plan (₹700)",
+    message: ""
+  });
+
+  const handleWhatsAppChoice = (target: 'dev' | 'owner') => {
+    const phone = target === 'dev' ? '8080690631' : '9665231230';
+    const text = `Contact Inquiry from ${formData.fullName}:
+- Phone: ${formData.phone}
+- Email: ${formData.email}
+- Interest: ${formData.interest}
+- Message: ${formData.message}`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/91${phone}?text=${encoded}`, '_blank');
+    setWhatsappModalOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setWhatsappModalOpen(true);
+  };
+
   return (
     <div className="pt-32 pb-20">
       <section className="container mx-auto px-6 mb-20 text-center">
@@ -75,25 +103,50 @@ const ContactPage = () => {
             className="glass p-10 md:p-16 rounded-[4rem]"
           >
             <h2 className="text-4xl font-black uppercase italic mb-10">Send a <span className="ft-gradient-text">Message</span></h2>
-            <form className="space-y-8">
+            <form className="space-y-8" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/60 ml-1">Full Name</label>
-                  <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600" placeholder="Your Name" />
+                  <input
+                    type="text"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600"
+                    placeholder="Your Name"
+                  />
                 </div>
                 <div className="space-y-3">
                   <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/60 ml-1">Phone Number</label>
-                  <input type="tel" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600" placeholder="+91 XXXXX XXXXX" />
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600"
+                    placeholder="+91 XXXXX XXXXX"
+                  />
                 </div>
               </div>
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/60 ml-1">Email Address</label>
-                <input type="email" className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600" placeholder="your@email.com" />
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600"
+                  placeholder="your@email.com"
+                />
               </div>
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/60 ml-1">Interest</label>
                 <div className="relative">
-                  <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white appearance-none cursor-pointer">
+                  <select
+                    value={formData.interest}
+                    onChange={(e) => setFormData({...formData, interest: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white appearance-none cursor-pointer"
+                  >
                     <option className="bg-black">1 Month Plan (₹700)</option>
                     <option className="bg-black">3 Month Plan (₹1800)</option>
                     <option className="bg-black">Bodybuilding</option>
@@ -106,7 +159,14 @@ const ContactPage = () => {
               </div>
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/60 ml-1">Message</label>
-                <textarea rows={5} className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600 resize-none" placeholder="Tell us about your fitness goals..."></textarea>
+                <textarea
+                  rows={5}
+                  required
+                  value={formData.message}
+                  onChange={(e) => setFormData({...formData, message: e.target.value})}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white placeholder:text-gray-600 resize-none"
+                  placeholder="Tell us about your fitness goals..."
+                ></textarea>
               </div>
               <button type="submit" className="btn-primary w-full py-6 flex items-center justify-center space-x-4 group shadow-[0_20px_40px_rgba(255,0,0,0.2)] hover:shadow-[0_25px_50px_rgba(255,0,0,0.3)]">
                 <span className="text-xl font-black uppercase tracking-widest italic">Send To Temple</span>
@@ -173,6 +233,55 @@ const ContactPage = () => {
             </div>
           </div>
         </div>
+
+        {/* WhatsApp Choice Modal */}
+        <AnimatePresence>
+          {whatsappModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.9, y: 20 }}
+                className="relative w-full max-w-lg glass p-8 md:p-12 rounded-[3rem] border-white/10 text-center"
+              >
+                <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                  <Mail className="text-primary" size={40} />
+                </div>
+                <h3 className="text-2xl font-black uppercase italic mb-4">Send to Temple</h3>
+                <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
+                  Do you want to send this message to <span className="text-white">Developer 8080690631</span> or else <span className="text-white">Owner 96652 31230</span>?
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => handleWhatsAppChoice('dev')}
+                    className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    Developer
+                  </button>
+                  <button
+                    onClick={() => handleWhatsAppChoice('owner')}
+                    className="btn-primary py-4 text-[10px]"
+                  >
+                    Owner
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setWhatsappModalOpen(false)}
+                  className="mt-6 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Full Width Map */}
         <div className="mt-24 h-[500px] w-full rounded-[4rem] overflow-hidden border-2 border-white/5 relative group shadow-2xl">

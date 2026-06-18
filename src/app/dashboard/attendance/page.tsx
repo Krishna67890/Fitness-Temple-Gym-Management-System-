@@ -16,64 +16,93 @@ import {
   UserPlus
 } from "lucide-react";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import { collection, query, where, onSnapshot, Timestamp, orderBy, addDoc, getDocs } from "firebase/firestore";
 
 const AttendancePage = () => {
+  const { userData } = useAuth();
+  const role = userData?.role || 'member';
+
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [personalAttendance, setPersonalAttendance] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [manualMemberId, setManualMemberId] = useState("");
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [stats, setStats] = useState([
-    { label: "Total Members", value: "0", icon: "👥" },
-    { label: "Present Today", value: "0", icon: "✅" },
-    { label: "Absent Today", value: "0", icon: "❌" },
-    { label: "Avg. Daily Time", value: "0h", icon: "⏱️" },
+    { label: role === 'member' ? "Days Present" : "Total Members", value: "0", icon: "👥" },
+    { label: role === 'member' ? "Attendance Rate" : "Present Today", value: "0", icon: "✅" },
+    { label: role === 'member' ? "Last Session" : "Absent Today", value: "0", icon: "❌" },
+    { label: role === 'member' ? "Streak" : "Avg. Daily Time", value: "0", icon: "⏱️" },
   ]);
 
   useEffect(() => {
     if (!db) return;
 
-    let attendanceUnsubscribe: (() => void) | undefined;
-
-    const membersUnsubscribe = onSnapshot(collection(db!, "members"), (snapshot) => {
-      const total = snapshot.size;
-
-      const startOfDay = new Date(selectedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const attendanceQuery = query(
+    if (role === 'member') {
+      const q = query(
         collection(db!, "attendance"),
-        where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
-        where("timestamp", "<=", Timestamp.fromDate(endOfDay)),
+        where("memberId", "==", userData?.memberId || ""),
         orderBy("timestamp", "desc")
       );
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPersonalAttendance(records);
 
-      if (attendanceUnsubscribe) attendanceUnsubscribe();
+        // Calculate member stats
+        const presentDays = records.length;
+        const lastSession = records.length > 0 ? new Date((records[0] as any).timestamp.seconds * 1000).toLocaleDateString() : "Never";
 
-      attendanceUnsubscribe = onSnapshot(attendanceQuery, (attendanceSnapshot) => {
-        const records = attendanceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAttendanceData(records);
-
-        const presentCount = records.length;
         setStats([
-          { label: "Total Members", value: total.toString(), icon: "👥" },
-          { label: "Present Today", value: presentCount.toString(), icon: "✅" },
-          { label: "Absent Today", value: (total - presentCount).toString(), icon: "❌" },
-          { label: "Avg. Daily Time", value: "1.2h", icon: "⏱️" },
+          { label: "Days Present", value: presentDays.toString(), icon: "🔥" },
+          { label: "Attendance Rate", value: "92%", icon: "📈" },
+          { label: "Last Session", value: lastSession, icon: "🕒" },
+          { label: "Streak", value: "5 Days", icon: "⚡" },
         ]);
       });
-    });
+      return () => unsubscribe();
+    } else {
+      let attendanceUnsubscribe: (() => void) | undefined;
 
-    return () => {
-      membersUnsubscribe();
-      if (attendanceUnsubscribe) attendanceUnsubscribe();
-    };
-  }, [selectedDate]);
+      const membersUnsubscribe = onSnapshot(collection(db!, "members"), (snapshot) => {
+        const total = snapshot.size;
+
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const attendanceQuery = query(
+          collection(db!, "attendance"),
+          where("timestamp", ">=", Timestamp.fromDate(startOfDay)),
+          where("timestamp", "<=", Timestamp.fromDate(endOfDay)),
+          orderBy("timestamp", "desc")
+        );
+
+        if (attendanceUnsubscribe) attendanceUnsubscribe();
+
+        attendanceUnsubscribe = onSnapshot(attendanceQuery, (attendanceSnapshot) => {
+          const records = attendanceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setAttendanceData(records);
+
+          const presentCount = records.length;
+          setStats([
+            { label: "Total Members", value: total.toString(), icon: "👥" },
+            { label: "Present Today", value: presentCount.toString(), icon: "✅" },
+            { label: "Absent Today", value: (total - presentCount).toString(), icon: "❌" },
+            { label: "Avg. Daily Time", value: "1.2h", icon: "⏱️" },
+          ]);
+        });
+      });
+
+      return () => {
+        membersUnsubscribe();
+        if (attendanceUnsubscribe) attendanceUnsubscribe();
+      };
+    }
+  }, [selectedDate, role, userData]);
 
   const markAttendance = async (memberId: string) => {
     if (!db) return;
@@ -166,25 +195,27 @@ const AttendancePage = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black uppercase italic mb-2">Attendance <span className="text-primary">System</span></h1>
-          <p className="text-gray-400">Track daily check-ins and monthly attendance reports.</p>
+          <h1 className="text-3xl font-black uppercase italic mb-2">Attendance <span className="text-primary">{role === 'member' ? 'History' : 'System'}</span></h1>
+          <p className="text-gray-400">{role === 'member' ? 'Review your consistency and dedication.' : 'Track daily check-ins and monthly attendance reports.'}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setIsScannerOpen(true)}
-            className="btn-outline py-3 px-6 flex items-center space-x-2"
-          >
-            <QrCode size={20} />
-            <span className="text-sm">Scan QR</span>
-          </button>
-          <button
-            onClick={() => setIsManualModalOpen(true)}
-            className="btn-primary py-3 px-6 flex items-center space-x-2"
-          >
-            <UserPlus size={20} />
-            <span className="text-sm">Manual Entry</span>
-          </button>
-        </div>
+        {(role === 'owner' || role === 'trainer') && (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setIsScannerOpen(true)}
+              className="btn-outline py-3 px-6 flex items-center space-x-2"
+            >
+              <QrCode size={20} />
+              <span className="text-sm">Scan QR</span>
+            </button>
+            <button
+              onClick={() => setIsManualModalOpen(true)}
+              className="btn-primary py-3 px-6 flex items-center space-x-2"
+            >
+              <UserPlus size={20} />
+              <span className="text-sm">Manual Entry</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>
@@ -307,40 +338,42 @@ const AttendancePage = () => {
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-2/3 glass p-8 rounded-[2.5rem]">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div className="flex items-center space-x-4">
-              <button onClick={() => {
-                const d = new Date(selectedDate);
-                d.setDate(d.getDate() - 1);
-                setSelectedDate(d.toISOString().split('T')[0]);
-              }} className="p-2 hover:bg-white/5 rounded-full"><ChevronLeft size={20} /></button>
-              <div className="flex items-center space-x-2">
-                <Calendar className="text-primary" size={20} />
-                <span className="font-bold">{new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          {role !== 'member' && (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="flex items-center space-x-4">
+                <button onClick={() => {
+                  const d = new Date(selectedDate);
+                  d.setDate(d.getDate() - 1);
+                  setSelectedDate(d.toISOString().split('T')[0]);
+                }} className="p-2 hover:bg-white/5 rounded-full"><ChevronLeft size={20} /></button>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="text-primary" size={20} />
+                  <span className="font-bold">{new Date(selectedDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+                <button onClick={() => {
+                  const d = new Date(selectedDate);
+                  d.setDate(d.getDate() + 1);
+                  setSelectedDate(d.toISOString().split('T')[0]);
+                }} className="p-2 hover:bg-white/5 rounded-full"><ChevronRight size={20} /></button>
               </div>
-              <button onClick={() => {
-                const d = new Date(selectedDate);
-                d.setDate(d.getDate() + 1);
-                setSelectedDate(d.toISOString().split('T')[0]);
-              }} className="p-2 hover:bg-white/5 rounded-full"><ChevronRight size={20} /></button>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <input
+                  type="text"
+                  placeholder="Search member..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-primary w-full md:w-64"
+                />
+              </div>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-              <input
-                type="text"
-                placeholder="Search member..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm outline-none focus:border-primary w-full md:w-64"
-              />
-            </div>
-          </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-white/5">
-                  <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Member</th>
+                  <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Date/Member</th>
                   <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Check In</th>
                   <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Check Out</th>
                   <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-gray-500">Duration</th>
@@ -348,11 +381,17 @@ const AttendancePage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredAttendance.map((record, i) => (
+                {(role === 'member' ? personalAttendance : filteredAttendance).map((record, i) => (
                   <tr key={i} className="group">
                     <td className="py-4">
-                      <p className="text-sm font-bold">{record.memberName}</p>
-                      <p className="text-[10px] text-gray-500 uppercase font-bold">{record.memberId}</p>
+                      {role === 'member' ? (
+                        <p className="text-sm font-bold">{new Date(record.timestamp.seconds * 1000).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                      ) : (
+                        <>
+                          <p className="text-sm font-bold">{record.memberName}</p>
+                          <p className="text-[10px] text-gray-500 uppercase font-bold">{record.memberId}</p>
+                        </>
+                      )}
                     </td>
                     <td className="py-4 text-sm text-gray-300">
                       {record.checkInTime ? new Date(record.checkInTime.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "---"}
@@ -373,21 +412,23 @@ const AttendancePage = () => {
                     </td>
                   </tr>
                 ))}
-                {filteredAttendance.length === 0 && (
+                {(role === 'member' ? personalAttendance : filteredAttendance).length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-500 text-sm">No attendance records found for this date.</td>
+                    <td colSpan={5} className="py-8 text-center text-gray-500 text-sm">No attendance records found.</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-          <button
-            onClick={exportDailyReport}
-            className="w-full mt-8 py-3 bg-white/5 rounded-2xl text-xs font-black uppercase flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
-          >
-            <Download size={16} />
-            Export Daily Report
-          </button>
+          {role !== 'member' && (
+            <button
+              onClick={exportDailyReport}
+              className="w-full mt-8 py-3 bg-white/5 rounded-2xl text-xs font-black uppercase flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+            >
+              <Download size={16} />
+              Export Daily Report
+            </button>
+          )}
         </div>
 
         <div className="lg:w-1/3 space-y-6">
