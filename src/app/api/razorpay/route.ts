@@ -29,8 +29,8 @@ export async function POST(req: Request) {
     }
 
     const razorpay = new Razorpay({
-      key_id,
-      key_secret,
+      key_id: key_id!,
+      key_secret: key_secret!,
     });
 
     const options = {
