@@ -441,7 +441,6 @@ const DietPlansPage = () => {
                  >
                   Set as Current Active Plan
                  </button>
-              </div>
             </motion.div>
           </div>
         )}

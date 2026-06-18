@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { auth, db } from "@/lib/firebase";
-import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { useVoice } from "@/hooks/useVoice";
 
@@ -189,7 +189,10 @@ const MemberDashboard = () => {
                   </span>
                 </div>
              </div>
-             <button className="w-full bg-white/5 border border-white/10 hover:bg-primary hover:text-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+             <button
+                onClick={() => router.push("/dashboard/settings?tab=billing")}
+                className="w-full bg-white/5 border border-white/10 hover:bg-primary hover:text-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+             >
                 Upgrade Plan
              </button>
           </div>
@@ -337,8 +340,17 @@ const MemberDashboard = () => {
                      </div>
                      <p className="text-sm text-gray-300 leading-relaxed">{post.text}</p>
                      <div className="flex items-center gap-6 pt-2">
-                        <button className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors">
-                           <Heart size={16} />
+                        <button
+                          onClick={async () => {
+                            if (!db || !memberData) return;
+                            const postRef = doc(db, "posts", post.id);
+                            await updateDoc(postRef, {
+                              likes: (post.likes || 0) + 1
+                            });
+                          }}
+                          className="flex items-center gap-2 text-gray-500 hover:text-red-500 transition-colors"
+                        >
+                           <Heart size={16} className={post.likes > 0 ? "fill-red-500 text-red-500" : ""} />
                            <span className="text-[10px] font-black">{post.likes || 0}</span>
                         </button>
                         <button className="flex items-center gap-2 text-gray-500 hover:text-primary transition-colors">

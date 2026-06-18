@@ -14,12 +14,19 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { useSearchParams } from "next/navigation";
 
 const SettingsPage = () => {
   const { user, userData, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "profile");
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
 
   const [profileData, setProfileData] = useState({
     fullName: "",
@@ -68,11 +75,19 @@ const SettingsPage = () => {
     setIsSaving(true);
     try {
       const userRef = doc(db, "users", uid);
-      await updateDoc(userRef, {
+      const memberRef = doc(db, "members", uid);
+
+      const updates = {
         ...profileData,
         notifications,
-        updatedAt: new Date()
-      });
+        updatedAt: serverTimestamp()
+      };
+
+      await Promise.all([
+        updateDoc(userRef, updates),
+        updateDoc(memberRef, updates)
+      ]);
+
       alert("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -92,6 +107,64 @@ const SettingsPage = () => {
     { id: "security", label: "Security", icon: Lock },
     { id: "billing", label: "Billing", icon: CreditCard },
   ];
+
+  const handleRazorpayUpgrade = async (plan: string) => {
+    const amount = plan === "standard" ? 1800 : 700;
+    try {
+      const response = await fetch("/api/razorpay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, currency: "INR" }),
+      });
+      const order = await response.json();
+
+      const finalizeUpgrade = async (paymentId: string) => {
+        if (!db || !userData?.uid) return;
+        const expiryDate = new Date();
+        expiryDate.setMonth(expiryDate.getMonth() + (plan === "standard" ? 3 : 1));
+
+        const updates = {
+          membershipType: plan,
+          expiryDate: expiryDate.toISOString(),
+          lastPaymentId: paymentId,
+          updatedAt: serverTimestamp()
+        };
+
+        await Promise.all([
+          updateDoc(doc(db, "users", userData.uid), updates),
+          updateDoc(doc(db, "members", userData.uid), updates)
+        ]);
+        alert("Plan upgraded successfully!");
+        window.location.reload();
+      };
+
+      if (order.is_mock) {
+        finalizeUpgrade(order.id);
+        return;
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Fitness Temple Gym",
+        description: `${plan.toUpperCase()} Membership Upgrade`,
+        order_id: order.id,
+        handler: (res: any) => finalizeUpgrade(res.razorpay_payment_id),
+        prefill: {
+          name: userData?.fullName,
+          email: userData?.email,
+          contact: userData?.mobile,
+        },
+        theme: { color: "#FFD700" },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (e) {
+      console.error(e);
+      alert("Upgrade failed. Please contact support.");
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -318,7 +391,22 @@ const SettingsPage = () => {
                     <p className="text-sm text-gray-400 mt-2">Your next billing date is <span className="text-white font-bold">Oct 12, 2023</span></p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button className="btn-primary py-3 px-8 text-xs">Upgrade</button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => handleRazorpayUpgrade("standard")}
+                        className="btn-primary py-3 px-8 text-xs"
+                      >
+                        Upgrade to Standard
+                      </button>
+                      {userData?.membershipType === "standard" && (
+                         <button
+                           onClick={() => handleRazorpayUpgrade("basic")}
+                           className="btn-outline py-2 px-8 text-[10px]"
+                         >
+                           Switch to Basic
+                         </button>
+                      )}
+                    </div>
                     <button className="text-xs font-black uppercase text-red-500 hover:text-red-400 transition-colors">Cancel Plan</button>
                   </div>
                 </div>
