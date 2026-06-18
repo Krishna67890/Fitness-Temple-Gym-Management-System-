@@ -100,9 +100,9 @@ const ReportsPage = () => {
         const local = localStorage.getItem("ft_all_members");
         const localMembers = local ? JSON.parse(local) : [];
 
-        const combined = [...firebaseMembers];
+        const combined = [...firebaseMembers] as any[];
         localMembers.forEach((lm: any) => {
-          if (!combined.some(fm => fm.email === lm.email)) {
+          if (!combined.some((fm: any) => fm.email === lm.email)) {
             combined.push(lm);
           }
         });
