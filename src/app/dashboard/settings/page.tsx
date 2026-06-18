@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -17,7 +17,7 @@ import { db } from "@/lib/firebase";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
 
-const SettingsPage = () => {
+const SettingsContent = () => {
   const { user, userData, logout } = useAuth();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "profile");
@@ -465,6 +465,14 @@ const SettingsPage = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const SettingsPage = () => {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <SettingsContent />
+    </Suspense>
   );
 };
 
