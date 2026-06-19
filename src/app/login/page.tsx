@@ -36,7 +36,6 @@ const LoginPage = () => {
     ];
 
     const memberAccounts = [
-        { email: "member1@fitnesstemple.com", password: "Member@123", name: "Member One" },
         { email: "fitness@temple.com", password: "fitnesstemple", name: "Test Member" }
     ];
 

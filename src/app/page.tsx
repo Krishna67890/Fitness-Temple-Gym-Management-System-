@@ -11,7 +11,7 @@ import { Dumbbell, Users, Trophy, ShieldCheck, Clock, Zap, MapPin } from "lucide
 export default function Home() {
   const features = [
     { title: "Strength Training", desc: "Heavy-duty lifting equipment for maximum gains.", icon: Dumbbell },
-    { title: "Guru Coaching", desc: "Expert guidance from Sooraj & Sanket.", icon: Users },
+    { title: "Guru Coaching", desc: "Expert guidance from Suraj & Sanket.", icon: Users },
     { title: "Elite Facility", desc: "Premium training environment and hygiene standards.", icon: Trophy },
     { title: "Safe Training", desc: "Secure environment with 24/7 CCTV.", icon: ShieldCheck },
     { title: "Evening Devotion", desc: "Open daily from 4:30 PM for the fitness warriors.", icon: Clock },

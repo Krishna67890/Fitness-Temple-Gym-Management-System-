@@ -24,7 +24,7 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-gray-400 leading-relaxed text-base font-medium">
-              Fitness Temple (फिटनेस टेंपल) - Nashik's elite fitness sanctuary. Transform your physique under the guidance of Sanket Sir, Sooraj Sir, and our expert staff.
+              Fitness Temple (फिटनेस टेंपल) - Nashik's elite fitness sanctuary. Transform your physique under the guidance of Sanket Sir, Suraj Sir, and our expert staff.
             </p>
             <div className="flex space-x-4">
               {[Instagram, Facebook, Twitter, Youtube].map((Icon, i) => (
@@ -79,7 +79,7 @@ const Footer = () => {
               Fitness Temple Gym, Nashik
             </p>
             <div className="space-y-2 text-sm font-bold">
-              <p className="text-white">Trainers: Sanket Sir & Sooraj Sir</p>
+              <p className="text-white">Trainers: Sanket Sir & Suraj Sir</p>
               <p className="text-gray-500">Rating: 4.9/5 ⭐ (56 Reviews)</p>
               <p className="text-gray-500 italic">Opens daily at 4:30 PM</p>
             </div>

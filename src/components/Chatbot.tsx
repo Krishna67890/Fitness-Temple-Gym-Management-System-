@@ -69,7 +69,7 @@ const Chatbot = () => {
 
     // Membership & Gym Info
     if (q.includes("fee") || q.includes("price") || q.includes("cost") || q.includes("plan") || q.includes("timing") || q.includes("trainer")) {
-      return "Membership Plans: ₹700 (1 Month) and ₹1800 (3 Months). We have expert trainers like Suraj and Sanket. Timings: 5 AM - 10 PM. Owners Omkar & Siddhant ensure a premium environment.";
+      return "Membership Plans: ₹700 (1 Month), ₹1800 (3 Months), ₹3500 (6 Months), ₹6000 (12 Months). With Cardio: ₹800 (1M), ₹2000 (3M), ₹4000 (6M), ₹7000 (12M). Personal Training: ₹3000/Month. Owners: Omkar & Siddhant. Trainers: Suraj & Sanket.";
     }
 
     // General Fitness Knowledge

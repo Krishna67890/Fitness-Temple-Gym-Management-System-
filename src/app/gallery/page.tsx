@@ -21,6 +21,8 @@ const galleryItems = [
   { id: 13, category: "Gym Interior", type: "image", src: "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop", title: "Upper Level View" },
   { id: 14, category: "Equipment", type: "image", src: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=2069&auto=format&fit=crop", title: "Dumbbell Rack" },
   { id: 15, category: "Transformation", type: "image", src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop", title: "Body Recomp" },
+  { id: 16, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleCertificate.jpg", title: "Official Certification" },
+  { id: 17, category: "Equipment", type: "image", src: "/assets/FitnessTempleRate.jpg", title: "Membership Rates" },
 ];
 
 const GalleryPage = () => {

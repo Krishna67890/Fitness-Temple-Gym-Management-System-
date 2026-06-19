@@ -237,7 +237,7 @@ const OwnerDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black uppercase italic tracking-tighter">Owner <span className="ft-gradient-text">Command Center</span></h1>
-          <p className="text-gray-500 text-sm font-bold uppercase tracking-widest mt-1">Gym: Fitness Temple • Admins: Omkar & Siddhant</p>
+          <p className="text-gray-500 text-sm font-bold uppercase tracking-widest mt-1">Gym: Fitness Temple • Owners: Omkar & Siddhant</p>
         </div>
         <div className="flex items-center gap-3">
           <button

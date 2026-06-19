@@ -88,9 +88,9 @@ const TrainerDashboard = () => {
 
   // Use real trainer data from AuthContext
   const trainer = {
-    name: userData?.fullName?.split(' ')[0] || "Coach",
-    role: userData?.role === 'trainer' ? "Elite Strength Coach" : "Staff",
-    id: userData?.uid || "trainer_id"
+    name: userData?.name?.split(' ')[0] || "Coach",
+    role: userData?.role === 'trainer' ? "Expert Trainer" : "Staff",
+    id: userData?.id || "trainer_id"
   };
 
   const isAccessAuthorized = userData?.role === 'owner' || userData?.role === 'trainer';

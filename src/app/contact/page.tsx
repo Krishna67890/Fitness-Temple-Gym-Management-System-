@@ -49,7 +49,7 @@ const ContactPage = () => {
         >
           CONTACT THE <br/>TEMPLE
         </motion.h1>
-        <p className="text-gray-400 max-w-2xl mx-auto text-lg font-medium">
+        <p className="text-gray-400 max-w-2xl mx-auto text-lg font-medium text-white">
           Have a question about our memberships, trainers, or facilities?
           Our team (Omkar, Siddhant, Suraj & Sanket) is here to help you start your transformation.
         </p>
@@ -61,11 +61,11 @@ const ContactPage = () => {
             <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-[0_0_0_0_rgba(255,0,0,0)] group-hover:shadow-[0_0_30px_rgba(255,0,0,0.3)]">
               <Phone size={32} />
             </div>
-            <h3 className="text-2xl font-black uppercase italic mb-3">Call Us</h3>
+            <h3 className="text-2xl font-black uppercase italic mb-3 text-white">Call Us</h3>
             <p className="text-gray-400 text-sm mb-6">Direct support from the Arena</p>
             <div className="space-y-1">
-              <p className="text-white font-black text-xl tracking-tight">+91 98XXX XXXXX</p>
-              <p className="text-white font-black text-xl tracking-tight">+91 88XXX XXXXX</p>
+              <p className="text-white font-black text-xl tracking-tight">+91 96652 31230</p>
+              <p className="text-white font-black text-xl tracking-tight">+91 80806 90631</p>
             </div>
           </div>
 
@@ -73,10 +73,10 @@ const ContactPage = () => {
             <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-[0_0_0_0_rgba(255,0,0,0)] group-hover:shadow-[0_0_30px_rgba(255,0,0,0.3)]">
               <Mail size={32} />
             </div>
-            <h3 className="text-2xl font-black uppercase italic mb-3">Email Us</h3>
+            <h3 className="text-2xl font-black uppercase italic mb-3 text-white">Email Us</h3>
             <p className="text-gray-400 text-sm mb-6">Send us your detailed goals</p>
             <div className="space-y-1">
-              <p className="text-white font-black text-lg tracking-tight">info@fitnesstemple.com</p>
+              <p className="text-white font-black text-lg tracking-tight">fitness@temple.com</p>
               <p className="text-white font-black text-lg tracking-tight">support@fitnesstemple.fit</p>
             </div>
           </div>
@@ -85,7 +85,7 @@ const ContactPage = () => {
             <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-[0_0_0_0_rgba(255,0,0,0)] group-hover:shadow-[0_0_30px_rgba(255,0,0,0.3)]">
               <MapPin size={32} />
             </div>
-            <h3 className="text-2xl font-black uppercase italic mb-3">Visit Us</h3>
+            <h3 className="text-2xl font-black uppercase italic mb-3 text-white">Visit Us</h3>
             <p className="text-gray-400 text-sm mb-6">Nashik's Elite Fitness Hub</p>
             <div className="space-y-1">
               <p className="text-white font-black text-lg tracking-tight">Fitness Temple Gym</p>
@@ -101,7 +101,7 @@ const ContactPage = () => {
             viewport={{ once: true }}
             className="glass p-10 md:p-16 rounded-[4rem]"
           >
-            <h2 className="text-4xl font-black uppercase italic mb-10">Send a <span className="ft-gradient-text">Message</span></h2>
+            <h2 className="text-4xl font-black uppercase italic mb-10 text-white">Send a <span className="ft-gradient-text">Message</span></h2>
             <form className="space-y-8" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
@@ -148,8 +148,11 @@ const ContactPage = () => {
                   >
                     <option className="bg-black">1 Month Plan (₹700)</option>
                     <option className="bg-black">3 Month Plan (₹1800)</option>
+                    <option className="bg-black">6 Month Plan (₹3500)</option>
+                    <option className="bg-black">12 Month Plan (₹6000)</option>
                     <option className="bg-black">Bodybuilding</option>
                     <option className="bg-black">Fat Loss</option>
+                    <option className="bg-black">Personal Training</option>
                   </select>
                   <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg>
@@ -176,7 +179,7 @@ const ContactPage = () => {
 
           <div className="space-y-8">
             <div className="glass p-10 rounded-[3rem] overflow-hidden relative">
-              <h3 className="text-2xl font-black uppercase italic mb-6">Temple <span className="text-primary">Hours</span></h3>
+              <h3 className="text-2xl font-black uppercase italic mb-6 text-white">Temple <span className="text-primary">Hours</span></h3>
               <div className="space-y-4">
                 {[
                   { day: "Monday - Saturday", hours: "05:00 AM - 10:00 PM" },
@@ -201,7 +204,7 @@ const ContactPage = () => {
 
                   <div className="grid grid-cols-1 gap-3">
                     <a
-                      href="https://wa.me/91XXXXXXXXXX?text=Hi%20Sanket%20Sir,%20I'm%20interested%20in%20joining%20Fitness%20Temple%20Gym."
+                      href="https://wa.me/919370335293?text=Hi%20Sanket%20Sir,%20I'm%20interested%20in%20joining%20Fitness%20Temple%20Gym."
                       target="_blank"
                       className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest flex items-center justify-between group/wa hover:scale-[1.02] transition-all"
                     >
@@ -219,7 +222,7 @@ const ContactPage = () => {
                     </a>
 
                     <a
-                      href="https://wa.me/91XXXXXXXXXX?text=Hi%20Owner,%20I%20have%20a%20business%20inquiry%20regarding%20Fitness%20Temple%20Gym."
+                      href="https://wa.me/919665231230?text=Hi%20Owner,%20I%20have%20a%20business%20inquiry%20regarding%20Fitness%20Temple%20Gym."
                       target="_blank"
                       className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest flex items-center justify-between group/wa hover:scale-[1.02] transition-all"
                     >
@@ -251,7 +254,7 @@ const ContactPage = () => {
                 <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
                   <Mail className="text-primary" size={40} />
                 </div>
-                <h3 className="text-2xl font-black uppercase italic mb-4">Send to Temple</h3>
+                <h3 className="text-2xl font-black uppercase italic mb-4 text-white">Send to Temple</h3>
                 <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
                   Do you want to send this message to <span className="text-white">Developer 8080690631</span> or else <span className="text-white">Owner 96652 31230</span>?
                 </p>
@@ -259,7 +262,7 @@ const ContactPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <button
                     onClick={() => handleWhatsAppChoice('dev')}
-                    className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                    className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white"
                   >
                     Developer
                   </button>
@@ -294,7 +297,7 @@ const ContactPage = () => {
           ></iframe>
           <div className="absolute top-8 left-8 glass px-8 py-6 rounded-2xl hidden md:block group-hover:translate-y-2 transition-transform border border-primary/20">
             <p className="text-xs font-black uppercase tracking-widest text-primary mb-1">Our Location</p>
-            <p className="font-black text-lg italic tracking-tighter">Fitness Temple Gym</p>
+            <p className="font-black text-lg italic tracking-tighter text-white">Fitness Temple Gym</p>
           </div>
         </div>
       </section>

@@ -37,10 +37,15 @@ const RegisterContent = () => {
     joinDate: new Date().toISOString().split('T')[0],
   });
 
-  // Update membershipType when selectedPlan changes
   useEffect(() => {
     if (selectedPlan) {
-      setFormData(prev => ({ ...prev, membershipType: selectedPlan }));
+      const planMap: Record<string, string> = {
+        'basic': 'basic-1',
+        'standard': 'basic-3',
+        'annual': 'basic-12',
+        'cardio': 'cardio-1'
+      };
+      setFormData(prev => ({ ...prev, membershipType: planMap[selectedPlan] || selectedPlan }));
     }
   }, [selectedPlan]);
 
@@ -132,11 +137,14 @@ Details:
       // Calculate Expiry Date
       const joinDate = new Date();
       const expiryDate = new Date();
-      if (formData.membershipType === "basic") {
-        expiryDate.setMonth(joinDate.getMonth() + 1);
-      } else if (formData.membershipType === "standard") {
-        expiryDate.setMonth(joinDate.getMonth() + 3);
-      }
+
+      const plan = formData.membershipType;
+      let months = 1;
+      if (plan.includes("-3")) months = 3;
+      if (plan.includes("-6")) months = 6;
+      if (plan.includes("-12")) months = 12;
+
+      expiryDate.setMonth(joinDate.getMonth() + months);
 
       const memberData = {
         ...formData,
@@ -183,7 +191,13 @@ Details:
 
   const handleRazorpayPayment = async () => {
     setLoading(true);
-    const amount = formData.membershipType === "basic" ? 700 : 1800;
+
+    const priceMap: Record<string, number> = {
+      'basic-1': 700, 'basic-3': 1800, 'basic-6': 3500, 'basic-12': 6000,
+      'cardio-1': 800, 'cardio-3': 2000, 'cardio-6': 4000, 'cardio-12': 7000,
+      'pt': 3000
+    };
+    const amount = priceMap[formData.membershipType] || 700;
 
     try {
       const response = await fetch("/api/razorpay", {
@@ -234,7 +248,12 @@ Details:
     }
   };
 
-  const amount = formData.membershipType === "basic" ? 700 : 1800;
+  const priceMap: Record<string, number> = {
+    'basic-1': 700, 'basic-3': 1800, 'basic-6': 3500, 'basic-12': 6000,
+    'cardio-1': 800, 'cardio-3': 2000, 'cardio-6': 4000, 'cardio-12': 7000,
+    'pt': 3000
+  };
+  const amount = priceMap[formData.membershipType] || 700;
 
   return (
     <div className="pt-32 pb-24 min-h-screen bg-[#050505] text-white selection:bg-primary selection:text-black">
@@ -322,8 +341,15 @@ Details:
                     <div className="relative">
                       <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
                       <select name="membershipType" className="ft-input appearance-none pl-12" onChange={handleChange} value={formData.membershipType}>
-                        <option value="basic">BASIC (₹700 / 1 MONTH)</option>
-                        <option value="standard">STANDARD (₹1800 / 3 MONTHS)</option>
+                        <option value="basic-1">BASIC (₹700 / 1 MONTH)</option>
+                        <option value="basic-3">QUARTERLY (₹1800 / 3 MONTHS)</option>
+                        <option value="basic-6">HALF-YEAR (₹3500 / 6 MONTHS)</option>
+                        <option value="basic-12">ANNUAL (₹6000 / 12 MONTHS)</option>
+                        <option value="cardio-1">CARDIO (₹800 / 1 MONTH)</option>
+                        <option value="cardio-3">CARDIO (₹2000 / 3 MONTHS)</option>
+                        <option value="cardio-6">CARDIO (₹4000 / 6 MONTHS)</option>
+                        <option value="cardio-12">CARDIO (₹7000 / 12 MONTHS)</option>
+                        <option value="pt">PERSONAL TRAINING (₹3000 / MO)</option>
                       </select>
                     </div>
                   </div>
