@@ -3,18 +3,19 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Instagram, Twitter, Linkedin } from "lucide-react";
 import Link from "next/link";
+import imageMap from "../lib/imageMap";
 
 const trainers = [
   {
     name: "Suraj",
     role: "Certified Fitness Trainer",
-    image: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=1974&auto=format&fit=crop",
+    image: imageMap.suraj,
     specialty: "Bodybuilding & Weight Loss"
   },
   {
     name: "Sanket",
     role: "Strength & Conditioning Coach",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop",
+    image: imageMap.sanket,
     specialty: "Functional Training & Powerlifting"
   }
 ];

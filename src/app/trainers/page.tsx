@@ -3,25 +3,26 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Dumbbell, ShieldCheck, Trophy, Instagram, Twitter, Linkedin, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import imageMap from "../../lib/imageMap";
 
 const trainerList = [
   {
     name: "Suraj",
-    role: "Head Fitness Trainer",
-    specialization: "Bodybuilding & Lifestyle Transformation",
+    role: "Certified Fitness Trainer",
+    specialization: "Bodybuilding & Weight Loss",
     experience: "8+ Years",
-    image: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=1974&auto=format&fit=crop",
-    bio: "Suraj is a world-class bodybuilding specialist dedicated to helping members achieve their dream physique with scientific training and nutrition methods.",
-    certifications: ["ACE Certified", "Nutrition Specialist", "Gold's Gym Elite Trainer"]
+    image: imageMap.suraj,
+    bio: "Suraj is a dedicated bodybuilding and weight-loss coach focused on practical, sustainable results.",
+    certifications: ["ACE Certified", "Nutrition Specialist"]
   },
   {
     name: "Sanket",
     role: "Strength & Conditioning Coach",
-    specialization: "Powerlifting & Athletic Performance",
+    specialization: "Functional Training & Powerlifting",
     experience: "6+ Years",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop",
-    bio: "Sanket specializes in explosive power and strength development, ensuring members build functional muscle and peak athletic performance.",
-    certifications: ["Certified Strength Coach", "First Aid Certified", "Sports Science Diploma"]
+    image: imageMap.sanket,
+    bio: "Sanket focuses on strength, power, and functional movement to improve athletic performance.",
+    certifications: ["Certified Strength Coach", "Sports Science Diploma"]
   }
 ];
 
