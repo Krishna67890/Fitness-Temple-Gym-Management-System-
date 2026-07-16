@@ -28,5 +28,6 @@ yarn-error.log*
 
 # AI & Tooling
 .claude/
+.claude
 .aiexclude
 .vercel

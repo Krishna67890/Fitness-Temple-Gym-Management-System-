@@ -1,3 +1,6 @@
+"use client";
+import React from "react";
+import { motion } from "framer-motion";
 import Hero from "@/components/Hero";
 import Stats from "@/components/Stats";
 import MembershipPreview from "@/components/MembershipPreview";
