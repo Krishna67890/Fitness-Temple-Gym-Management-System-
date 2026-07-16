@@ -227,12 +227,22 @@ const AboutPage = () => {
                   "Designed and developed the complete Fitness Temple Gym Management Platform with advanced member management, trainer dashboards, AI fitness assistance, payment systems, and modern responsive design."
                 </p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                  <button className="btn-primary px-8 py-3 rounded-full text-sm font-black uppercase flex items-center gap-2">
+                  <a
+                    href={`https://wa.me/918080690631?text=${encodeURIComponent("Hello Krishna! I saw your work on the Fitness Temple platform and would like to connect.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary px-8 py-3 rounded-full text-sm font-black uppercase flex items-center gap-2 cursor-pointer"
+                  >
                     Contact Me <ArrowRight size={18} />
-                  </button>
-                  <button className="glass px-8 py-3 rounded-full text-sm font-black uppercase border border-white/10 hover:border-primary transition-all flex items-center gap-2">
+                  </a>
+                  <a
+                    href="https://krishnapatilrajput.vercel.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="glass px-8 py-3 rounded-full text-sm font-black uppercase border border-white/10 hover:border-primary transition-all flex items-center gap-2 cursor-pointer"
+                  >
                     Portfolio <ExternalLink size={18} />
-                  </button>
+                  </a>
                 </div>
               </div>
             </motion.div>
