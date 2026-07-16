@@ -236,7 +236,7 @@ const AboutPage = () => {
                     Contact Me <ArrowRight size={18} />
                   </a>
                   <a
-                    href="https://krishnapatilrajput.vercel.app"
+                    href="https://krishna-patil-rajput.vercel.app"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="glass px-8 py-3 rounded-full text-sm font-black uppercase border border-white/10 hover:border-primary transition-all flex items-center gap-2 cursor-pointer"
