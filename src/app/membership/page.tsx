@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { Check, X, Shield, Star, Crown, Zap, Dumbbell, Activity, Target } from "lucide-react";
+import { Check, X, Shield, Star, Crown, Zap, Dumbbell, Activity, Target, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 const plans = [
