@@ -51,6 +51,47 @@ export default function Home() {
       </section>
 
       <MembershipPreview />
+
+      {/* Equipment Showcase Section */}
+      <section className="py-32 relative overflow-hidden bg-black">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[150px] rounded-full -z-10" />
+        <div className="container px-4">
+          <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
+            <div className="max-w-2xl">
+              <h2 className="text-primary font-black uppercase tracking-[0.4em] text-xs mb-4">The Arsenal</h2>
+              <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">
+                PREMIUM <span className="ft-gradient-text">EQUIPMENT</span>
+              </h2>
+            </div>
+            <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.3em] mb-4">Professional Grade Infrastructure</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: "Olympic Racks", category: "Strength", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070" },
+              { name: "Cardio Suite", category: "Endurance", img: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070" },
+              { name: "Plate Loaded", category: "Hypertrophy", img: "https://images.unsplash.com/photo-1583454110551-21f2fa209f9c?q=80&w=2070" },
+              { name: "Dumbbell Set", category: "Versatility", img: "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?q=80&w=2070" }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative h-[400px] rounded-[3rem] overflow-hidden border border-white/5"
+              >
+                <img src={item.img} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0" alt={item.name} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                <div className="absolute bottom-10 left-10">
+                  <span className="text-primary text-[10px] font-black uppercase tracking-widest mb-2 block">{item.category}</span>
+                  <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter">{item.name}</h3>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <TrainersPreview />
 
       {/* Location Section */}

@@ -18,7 +18,12 @@ import {
   Clock,
   ArrowUpRight,
   ArrowDownRight,
-  Plus
+  Plus,
+  Brain,
+  Zap,
+  AlertTriangle,
+  Activity,
+  Shield
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
@@ -31,6 +36,30 @@ const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState<"analytics" | "history">("analytics");
 
   const isAdvanced = userData?.role === 'owner' || userData?.role === 'trainer';
+
+  const aiInsights = [
+    {
+      title: "Predictive Attendance",
+      description: "Expect 15% higher traffic tomorrow morning (6AM-8AM). Recommend extra floor support.",
+      icon: Zap,
+      color: "text-yellow-500",
+      bg: "bg-yellow-500/10"
+    },
+    {
+      title: "Retention Alert",
+      description: "4 members show 60% probability of churn based on last 10 days activity.",
+      icon: AlertTriangle,
+      color: "text-red-500",
+      bg: "bg-red-500/10"
+    },
+    {
+      title: "Equipment Health",
+      description: "Leg Press A requires maintenance check in 48 hours to avoid failure.",
+      icon: Activity,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10"
+    }
+  ];
 
   const downloadCSV = (data: any[], filename: string) => {
     if (data.length === 0) return;
@@ -168,6 +197,40 @@ const ReportsPage = () => {
 
       {activeTab === "analytics" ? (
         <div className="space-y-8">
+          {/* AI Intelligence Engine - New Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {aiInsights.map((insight, i) => (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+                key={i}
+                className="relative overflow-hidden glass p-6 rounded-[2.5rem] border-primary/20 bg-gradient-to-br from-primary/5 to-transparent group"
+              >
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Brain size={80} />
+                </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={`p-3 rounded-2xl ${insight.bg} ${insight.color}`}>
+                    <insight.icon size={20} />
+                  </div>
+                  <h4 className="text-xs font-black uppercase italic tracking-widest">{insight.title}</h4>
+                </div>
+                <p className="text-[10px] text-gray-400 font-medium leading-relaxed relative z-10">
+                  {insight.description}
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                   <div className="flex -space-x-2">
+                      {[1, 2, 3].map(j => (
+                        <div key={j} className="w-5 h-5 rounded-full border border-black bg-gray-800" />
+                      ))}
+                   </div>
+                   <span className="text-[8px] text-gray-500 font-black uppercase tracking-widest">AI analysis active</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -242,17 +305,31 @@ const ReportsPage = () => {
                   ))}
                </div>
 
-               <div className="mt-10 p-6 bg-white/5 border border-white/5 rounded-3xl">
-                  <div className="flex items-center gap-4">
-                     <div className="p-3 bg-primary/10 text-primary rounded-2xl">
-                        <TrendingUp size={24} />
-                     </div>
-                     <div>
-                        <h4 className="text-sm font-black uppercase italic">AI Recommendation</h4>
-                        <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
-                          Peak activity detected between 6PM-9PM. Suggesting new "Muscle Blast" templates for the endurance group to optimize facility load.
-                        </p>
-                     </div>
+               <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-6 bg-white/5 border border-white/5 rounded-3xl">
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="p-2 bg-primary/10 text-primary rounded-xl">
+                        <TrendingUp size={20} />
+                      </div>
+                      <h4 className="text-xs font-black uppercase italic">Capacity Forecast</h4>
+                    </div>
+                    <p className="text-[10px] text-gray-500 font-medium leading-relaxed">
+                      Peak activity detected between 6PM-9PM. Suggesting new "Muscle Blast" templates for the endurance group to optimize facility load.
+                    </p>
+                  </div>
+                  <div className="p-6 bg-primary text-black rounded-3xl relative overflow-hidden">
+                    <div className="absolute -right-4 -bottom-4 opacity-10">
+                      <Brain size={100} />
+                    </div>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="p-2 bg-black/10 rounded-xl">
+                        <Zap size={20} />
+                      </div>
+                      <h4 className="text-xs font-black uppercase italic">Growth Hack</h4>
+                    </div>
+                    <p className="text-[10px] font-bold leading-relaxed">
+                      Conversion rate for "Cardio Add-on" is 40% higher after morning sessions. Target push notifications at 9:00 AM.
+                    </p>
                   </div>
                </div>
             </div>
@@ -364,22 +441,5 @@ const ReportsPage = () => {
     </div>
   );
 };
-
-const Shield = ({ className, size }: { className?: string, size?: number }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size || 24}
-    height={size || 24}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-  </svg>
-);
 
 export default ReportsPage;

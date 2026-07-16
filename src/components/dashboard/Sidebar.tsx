@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   UserCheck,
   Menu,
-  X
+  X,
+  Trophy,
+  Watch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -59,10 +61,34 @@ const Sidebar = () => {
       roles: ['owner', 'trainer', 'user']
     },
     {
+      name: "Reports",
+      href: "/dashboard/reports",
+      icon: ClipboardList,
+      roles: ['owner', 'trainer']
+    },
+    {
       name: "Progress",
       href: "/dashboard/progress",
       icon: TrendingUp,
-      roles: ['owner', 'trainer', 'user']
+      roles: ['owner', 'trainer', 'user', 'member']
+    },
+    {
+      name: "3D Virtual Tour",
+      href: "/virtual-tour",
+      icon: ImageIcon,
+      roles: ['owner', 'trainer', 'user', 'member']
+    },
+    {
+      name: "Arena Leaderboard",
+      href: "/dashboard/leaderboard",
+      icon: Trophy,
+      roles: ['owner', 'trainer', 'user', 'member']
+    },
+    {
+      name: "Wearable Sync",
+      href: "/biometrics",
+      icon: Watch,
+      roles: ['owner', 'trainer', 'user', 'member']
     },
     {
       name: "Gallery",

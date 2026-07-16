@@ -24,19 +24,9 @@ import { useVoice } from "@/hooks/useVoice";
 import { useAuth } from "@/context/AuthContext";
 
 const exercises = [
-// ... (rest of the code)
   {
     id: 1,
-    name: "Barbell Squats",
-    category: "Legs",
-    difficulty: "Advanced",
-    instructions: "1. Place barbell on upper traps. 2. Feet shoulder-width apart. 3. Squat down until thighs are parallel to floor. 4. Drive back up through heels.",
-    muscles: ["Quads", "Glutes", "Hamstrings"],
-    image: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    name: "Bench Press",
+    name: "Barbell Bench Press",
     category: "Chest",
     difficulty: "Intermediate",
     instructions: "1. Lie flat on bench. 2. Grip bar slightly wider than shoulders. 3. Lower bar to mid-chest. 4. Press bar back up until arms are straight.",
@@ -44,43 +34,79 @@ const exercises = [
     image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
   },
   {
-    id: 3,
-    name: "Deadlifts",
-    category: "Back",
+    id: 2,
+    name: "Standing Overhead Press",
+    category: "Shoulders",
     difficulty: "Advanced",
-    instructions: "1. Feet hip-width apart. 2. Grip bar outside knees. 3. Keep back flat, chest up. 4. Stand up by extending hips and knees.",
-    muscles: ["Back", "Hamstrings", "Glutes", "Core"],
-    image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?q=80&w=2070&auto=format&fit=crop"
+    instructions: "1. Stand with feet shoulder-width. 2. Press barbell from shoulders to overhead. 3. Keep core tight and avoid leaning back.",
+    muscles: ["Shoulders", "Triceps"],
+    image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=2070&auto=format&fit=crop"
+  },
+  {
+    id: 3,
+    name: "Barbell Back Squat",
+    category: "Legs",
+    difficulty: "Advanced",
+    instructions: "1. Bar on upper traps. 2. Feet shoulder-width. 3. Lower until thighs are parallel to floor. 4. Drive up through heels.",
+    muscles: ["Quads", "Glutes", "Hamstrings"],
+    image: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?q=80&w=2070&auto=format&fit=crop"
   },
   {
     id: 4,
-    name: "Pull Ups",
+    name: "Conventional Deadlift",
     category: "Back",
-    difficulty: "Intermediate",
-    instructions: "1. Grip bar wider than shoulders. 2. Pull body up until chin is over bar. 3. Lower body with control.",
-    muscles: ["Lats", "Biceps", "Upper Back"],
+    difficulty: "Advanced",
+    instructions: "1. Feet hip-width. 2. Grip bar outside knees. 3. Neutral spine. 4. Stand up by extending hips and knees.",
+    muscles: ["Back", "Hamstrings", "Glutes"],
+    image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?q=80&w=2070&auto=format&fit=crop"
+  },
+  {
+    id: 5,
+    name: "Lat Pulldowns",
+    category: "Back",
+    difficulty: "Beginner",
+    instructions: "1. Sit at machine. 2. Pull bar to upper chest. 3. Squeeze shoulder blades. 4. Return with control.",
+    muscles: ["Lats", "Biceps"],
     image: "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?q=80&w=2070&auto=format&fit=crop"
+  },
+  {
+    id: 6,
+    name: "Romanian Deadlift",
+    category: "Legs",
+    difficulty: "Intermediate",
+    instructions: "1. Hinge at hips. 2. Lower bar along legs. 3. Feel stretch in hamstrings. 4. Snap hips forward to stand.",
+    muscles: ["Hamstrings", "Glutes"],
+    image: "https://images.unsplash.com/photo-1590487988256-9ed24133863e?q=80&w=2070&auto=format&fit=crop"
   }
 ];
 
 const workouts = [
   {
     id: 1,
-    title: "Full Body Blast",
-    level: "Beginner",
-    duration: "45 mins",
-    calories: "350 kcal",
-    exercisesCount: 8,
-    image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop"
+    title: "Push (Chest/Shoulders/Triceps)",
+    level: "Intermediate",
+    duration: "60 mins",
+    calories: "450 kcal",
+    exercisesCount: 6,
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
   },
   {
     id: 2,
-    title: "Muscle Gain Pro",
+    title: "Pull (Back/Biceps)",
+    level: "Intermediate",
+    duration: "60 mins",
+    calories: "400 kcal",
+    exercisesCount: 6,
+    image: "https://images.unsplash.com/photo-1581009146145-b5ef03a71018?q=80&w=2070&auto=format&fit=crop"
+  },
+  {
+    id: 3,
+    title: "Legs (Quads/Hams/Glutes)",
     level: "Advanced",
     duration: "75 mins",
-    calories: "500 kcal",
-    exercisesCount: 12,
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef03a71018?q=80&w=2070&auto=format&fit=crop"
+    calories: "600 kcal",
+    exercisesCount: 5,
+    image: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?q=80&w=2070&auto=format&fit=crop"
   }
 ];
 

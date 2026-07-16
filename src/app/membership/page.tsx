@@ -80,6 +80,12 @@ const MembershipPage = () => {
           <p className="text-gray-400 max-w-2xl mx-auto text-lg font-medium">
             Choose the plan that fits your goals. From short-term intensity to long-term devotion.
           </p>
+          <div className="mt-8">
+            <Link href="/membership/quiz" className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-xl hover:border-primary/50 transition-all group">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-primary">Not sure? Take our AI Membership Quiz</span>
+              <ChevronRight size={14} className="text-gray-600 group-hover:text-primary" />
+            </Link>
+          </div>
         </div>
 
         {/* Best Value Banner */}

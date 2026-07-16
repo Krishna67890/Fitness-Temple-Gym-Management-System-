@@ -35,19 +35,38 @@ const Chatbot = () => {
 
     // Developer Information
     if (q.includes("developer") || q.includes("who built") || q.includes("who made") || q.includes("krishna")) {
-      return "This platform was developed by Krishna Patil Rajput. You can view his portfolio at https://krishna-patil-rajput.vercel.app/ or connect on LinkedIn: https://www.linkedin.com/in/krishna-patil-rajput-b66b03340";
+      return "This platform was developed by Krishna Patil Rajput. You can view his portfolio at https://krishna-patil-rajput.vercel.app/ or contact him directly on WhatsApp: 8080690631.";
+    }
+
+    // Advanced Features
+    if (q.includes("feature") || q.includes("virtual tour") || q.includes("3d") || q.includes("wearable") || q.includes("sync") || q.includes("reward") || q.includes("gamified")) {
+      return "Our advanced platform features: 1. Interactive 3D Virtual Tour. 2. Biometric & Wearable Syncing (Apple Watch, Fitbit). 3. Gamified Rewards Program. 4. AI-Driven Progress Visualizer. We are building the future of fitness!";
     }
 
     // Equipment
     if (q.includes("equipment") || q.includes("machine") || q.includes("treadmill") || q.includes("bench press") || q.includes("leg press") || q.includes("smith machine") || q.includes("lat pulldown") || q.includes("cable") || q.includes("dumbbells") || q.includes("barbells") || q.includes("squat rack") || q.includes("hack squat")) {
-      return "We have top-tier commercial equipment including Treadmills, Bench Press stations, Leg Press, Smith Machines, Lat Pulldowns, Functional Cable Trainers, Pec Decks, a wide range of Dumbbells & Barbells, Squat Racks, and Hack Squat machines. Each is designed for maximum safety and muscle engagement.";
+      return "We feature premium commercial-grade equipment: \n- Cardio: High-end Treadmills & Ellipticals. \n- Strength: Bench Press stations, Squat Racks, Smith Machines, and Hack Squat. \n- Machines: Leg Press, Lat Pulldowns, Functional Cable Trainers, and Pec Decks. \n- Free Weights: Competition-grade Dumbbells & Barbells.";
     }
 
-    // Workout Plans
-    if (q.includes("workout plan") || q.includes("beginner") || q.includes("intermediate") || q.includes("advanced") || q.includes("push pull legs") || q.includes("bro split") || q.includes("full body")) {
-      if (q.includes("beginner")) return "For beginners, I recommend a 3-day Full Body split or a Basic Bro Split (one muscle per day) to build a foundation. Focus on form over weight.";
-      if (q.includes("push pull legs") || q.includes("ppl")) return "Push-Pull-Legs is an elite 3 or 6 day split. Push (Chest/Shoulders/Triceps), Pull (Back/Biceps), and Legs (Quads/Hams/Glutes). It's great for frequency!";
-      return "We offer personalized workout programs: Beginner foundation, Intermediate PPL or Bro Splits, and Advanced high-volume training. Which level are you at?";
+    // Workout Plans (Push Pull Legs)
+    if (q.includes("workout plan") || q.includes("ppl") || q.includes("routine") || q.includes("schedule")) {
+      return "I recommend our 'Advanced Push-Pull-Legs' 6-day split: \n- Mon/Thu: Push (Chest/Shoulders/Triceps) \n- Tue/Fri: Pull (Back/Biceps) \n- Wed/Sat: Legs (Quads/Hams/Calves) \n- Sun: Recovery. Would you like the specific exercises for one of these days?";
+    }
+
+    // Specific Day Details
+    if (q.includes("monday") || q.includes("thursday") || (q.includes("push") && q.includes("day"))) {
+      return "Push Day (Chest, Shoulders, Triceps): \n1. Barbell Bench Press (4x8) \n2. Overhead Press (3x8) \n3. Incline DB Flyes (3x12) \n4. Tricep Pushdowns (4x15). Focus on explosive pushes and controlled descents.";
+    }
+    if (q.includes("tuesday") || q.includes("friday") || (q.includes("pull") && q.includes("day"))) {
+      return "Pull Day (Back, Biceps): \n1. Deadlifts or Rows (3x8) \n2. Lat Pulldowns (4x10) \n3. Seated Rows (3x12) \n4. DB Curls (3x12). Focus on squeezing the shoulder blades together.";
+    }
+    if (q.includes("wednesday") || q.includes("saturday") || (q.includes("leg") && q.includes("day"))) {
+      return "Leg Day (Quads, Hams, Calves): \n1. Back Squats (4x8) \n2. Romanian Deadlifts (3x10) \n3. Leg Press (3x15) \n4. Calf Raises (4x15). Never skip leg day—it's the foundation of your power!";
+    }
+
+    // Contact
+    if (q.includes("contact") || q.includes("whatsapp") || q.includes("call") || q.includes("phone")) {
+      return "You can reach us via WhatsApp at 8080690631 for immediate inquiries or visit the front desk!";
     }
 
     // Specific Exercises
