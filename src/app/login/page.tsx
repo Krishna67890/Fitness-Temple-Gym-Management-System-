@@ -19,6 +19,7 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
 
   // Developer Setup State
   const [showDevSetup, setShowDevSetup] = useState(false);
@@ -126,11 +127,14 @@ const LoginPage = () => {
   const handleStartDevWorkout = async () => {
     setDemoRole('member');
 
+    const avatarPath = devGender === 'boy' ? "/assets/boy.png" : "/assets/girl.png";
+
     // Update profile data in state immediately
     await updateUserData({
       name: devName || "Fitness Warrior",
       gender: devGender,
-      photoURL: devGender === 'boy' ? "/assets/boy.png" : "/assets/girl.png"
+      photoURL: avatarPath,
+      profileImage: avatarPath
     });
 
     setShowDevSetup(false);

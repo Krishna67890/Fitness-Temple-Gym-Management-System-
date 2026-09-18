@@ -55,7 +55,7 @@ const MembersPage = () => {
     mobile: "",
     email: "",
     password: "",
-    gender: "male",
+    gender: "boy",
     membershipType: "basic",
     age: "",
     height: "",
@@ -148,7 +148,7 @@ const MembersPage = () => {
         memberId: newMemberId,
         status: "Active",
         role: "user",
-        profileImage: previewImage,
+        profileImage: previewImage || (formData.gender === "boy" ? "/assets/boy.png" : "/assets/girl.png"),
         expiryDate: expiryDate.toISOString(),
         createdAt: new Date().toISOString(),
       };
@@ -171,7 +171,7 @@ const MembersPage = () => {
         mobile: "",
         email: "",
         password: "",
-        gender: "male",
+        gender: "boy",
         membershipType: "basic",
         age: "",
         height: "",
@@ -384,6 +384,16 @@ const MembersPage = () => {
                   </div>
 
                   {/* Physical Stats */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Gender</label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <select name="gender" className="ft-input-sm appearance-none" onChange={handleChange} value={formData.gender}>
+                        <option value="boy">Boy</option>
+                        <option value="girl">Girl</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Age</label>
                     <div className="relative">

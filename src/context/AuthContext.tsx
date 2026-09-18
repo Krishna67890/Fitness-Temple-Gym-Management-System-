@@ -75,6 +75,7 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     membershipStatus: "active",
     fitnessGoal: "Gym Director & Founder",
     photoURL: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
   },
   trainer_suraj: {
     uid: "local_trainer_suraj",
@@ -86,6 +87,7 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     membershipStatus: "active",
     fitnessGoal: "Senior Strength & Conditioning Coach",
     photoURL: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
+    profileImage: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
   },
   trainer_sanket: {
     uid: "local_trainer_sanket",
@@ -97,6 +99,7 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     membershipStatus: "active",
     fitnessGoal: "Biomechanics & Hypertrophy Specialist",
     photoURL: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
+    profileImage: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
   },
   member: {
     uid: "local_member_001",
@@ -113,9 +116,10 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     height: "178",
     weight: "74",
     age: "24",
-    gender: "male",
+    gender: "boy",
     memberId: "FT-2026-089",
-    photoURL: "/assets/avatars/boy.png",
+    photoURL: "/assets/boy.png",
+    profileImage: "/assets/boy.png",
   },
 };
 
@@ -321,6 +325,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (email: string, pass: string, details?: Partial<UserProfile>): Promise<UserProfile> => {
     if (isFirebaseConfigured && auth && db) {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      const defaultAvatar = details?.gender === 'girl' ? "/assets/girl.png" : "/assets/boy.png";
+
       const newProfile: UserProfile = {
         uid: cred.user.uid,
         name: details?.name || email.split("@")[0],
@@ -336,8 +342,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         height: details?.height || "175",
         weight: details?.weight || "70",
         age: details?.age || "25",
-        gender: details?.gender || "not-specified",
-        memberId: `FT-${Math.floor(1000 + Math.random() * 9000)}`,
+        gender: details?.gender || "boy",
+        photoURL: details?.photoURL || defaultAvatar,
+        profileImage: details?.profileImage || defaultAvatar,
+        memberId: details?.memberId || `FT-${Math.floor(1000 + Math.random() * 9000)}`,
         createdAt: serverTimestamp(),
       };
       await setDoc(doc(db, "users", cred.user.uid), newProfile);
@@ -350,12 +358,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // Demo Mode registration
+    const defaultAvatar = details?.gender === 'girl' ? "/assets/girl.png" : "/assets/boy.png";
     const demoProfile: UserProfile = {
       ...DEMO_PROFILES.member,
       uid: `demo_${Date.now()}`,
       name: details?.name || email.split("@")[0],
       email: email,
       phone: details?.phone || "+91 99887 76655",
+      gender: details?.gender || "boy",
+      photoURL: details?.photoURL || defaultAvatar,
+      profileImage: details?.profileImage || defaultAvatar,
       fitnessGoal: details?.fitnessGoal || "General Fitness",
       memberId: `FT-${Math.floor(1000 + Math.random() * 9000)}`,
     };
@@ -399,13 +411,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // New Google User - Create Profile
         const userEmail = result.user.email?.toLowerCase() || "";
         const isDev = userEmail.includes("krishna") || userEmail.includes("patil");
+        const defaultAvatar = result.user.photoURL || "/assets/boy.png";
 
         const newProfile: UserProfile = {
           uid: result.user.uid,
           name: isDev ? "Krishna Patil (Developer)" : (result.user.displayName || "Fitness Warrior"),
           email: userEmail,
-          photoURL: isDev ? "/assets/avatars/boy.png" : (result.user.photoURL || ""),
-          role: "member",
+          photoURL: isDev ? "/assets/boy.png" : defaultAvatar,
+          profileImage: isDev ? "/assets/boy.png" : defaultAvatar,
+          role: isDev ? "owner" : "member",
           trainerId: "trainer_suraj",
           trainerName: "Suraj Sir",
           membershipStatus: "active",

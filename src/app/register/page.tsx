@@ -147,6 +147,8 @@ Details:
 
       expiryDate.setMonth(joinDate.getMonth() + months);
 
+      const defaultAvatar = formData.gender === 'boy' ? "/assets/boy.png" : "/assets/girl.png";
+
       // Register in AuthContext (Firebase Auth + Firestore or Demo fallback)
       await register(formData.email, formData.password, {
         name: formData.fullName,
@@ -161,7 +163,8 @@ Details:
         role: "member",
         trainerId: "trainer_suraj",
         trainerName: "Suraj Sir",
-        photoURL: previewImage || undefined,
+        photoURL: previewImage || defaultAvatar,
+        profileImage: previewImage || defaultAvatar,
         memberId: newMemberId,
       });
 
@@ -322,8 +325,8 @@ Details:
                       <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
                       <select name="gender" required className="ft-input appearance-none pl-12" onChange={handleChange} value={formData.gender}>
                         <option value="" disabled>SELECT GENDER</option>
-                        <option value="male">MALE</option>
-                        <option value="female">FEMALE</option>
+                        <option value="boy">MALE</option>
+                        <option value="girl">FEMALE</option>
                       </select>
                     </div>
                   </div>

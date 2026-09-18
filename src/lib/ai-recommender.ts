@@ -2,15 +2,18 @@ export interface UserStats {
   weight: number;
   height: number;
   age: number;
+  gender?: "boy" | "girl";
   goal: "weight-loss" | "muscle-gain" | "maintenance";
   activityLevel: "sedentary" | "moderate" | "active";
 }
 
 export const generateRecommendations = (stats: UserStats) => {
-  const { weight, height, age, goal, activityLevel } = stats;
+  const { weight, height, age, gender, goal, activityLevel } = stats;
 
   // Calculate BMR (Mifflin-St Jeor Equation)
-  const bmr = 10 * weight + 6.25 * height - 5 * age + 5; // Assuming male for simplicity, +5 for male, -161 for female
+  // +5 for boy, -161 for girl
+  const genderAdjustment = gender === "girl" ? -161 : 5;
+  const bmr = 10 * weight + 6.25 * height - 5 * age + genderAdjustment;
 
   let tdeeMultiplier = 1.2;
   if (activityLevel === "moderate") tdeeMultiplier = 1.55;
