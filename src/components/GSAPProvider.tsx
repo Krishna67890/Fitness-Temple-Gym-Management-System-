@@ -62,7 +62,7 @@ const GSAPProvider = () => {
         counters.forEach((el) => {
           const target = parseFloat(el.getAttribute("data-target") || "0");
           const isDecimal = el.getAttribute("data-decimal") === "true";
-          gsap.fromTo(
+          gsap.to(
             { val: 0 },
             {
               val: target,

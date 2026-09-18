@@ -3,6 +3,7 @@ import React from "react";
 import { Check, ArrowRight, Star, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import MembershipWizard from "./MembershipWizard";
 
 const plans = [
   {
@@ -26,8 +27,11 @@ const plans = [
 ];
 
 const MembershipPreview = () => {
+  const [isWizardOpen, setIsWizardOpen] = React.useState(false);
+
   return (
-    <section className="py-32 relative">
+    <section className="py-32 relative" id="membership">
+      <MembershipWizard isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} />
       {/* Special Offer Banner */}
       <div className="container mb-20">
         <motion.div
@@ -52,9 +56,16 @@ const MembershipPreview = () => {
       <div className="container">
         <div className="text-center mb-20">
           <h2 className="text-primary font-black uppercase tracking-[0.4em] text-xs mb-4">Membership Tiers</h2>
-          <h2 className="section-title text-white">
+          <h2 className="section-title text-white mb-8">
             START YOUR <span className="ft-gradient-text">DEVOTION</span>
           </h2>
+          <button
+            onClick={() => setIsWizardOpen(true)}
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all text-gray-400 hover:text-primary group"
+          >
+            <Zap size={18} className="group-hover:animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-[0.2em]">Help Me Choose The Right Plan</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">

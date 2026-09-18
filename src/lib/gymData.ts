@@ -314,17 +314,25 @@ export const membershipData = [
   {
     id: "monthly",
     name: "Monthly Warrior",
-    price: 800,
+    price: 700,
     duration: "1 Month",
     features: ["Full Gym Access", "Evening Sessions", "Basic Locker Access", "Free Trial Session"],
     recommendedFor: ["Beginners", "Short-term goals"]
+  },
+  {
+    id: "quarterly",
+    name: "3-Month Pro",
+    price: 1800,
+    duration: "3 Months",
+    features: ["Full Gym Access", "Personal Training Intro", "Basic Locker Access", "Diet Guidance"],
+    recommendedFor: ["Intermediate", "Foundation building"]
   },
   {
     id: "annual",
     name: "Annual Temple Member",
     price: 6000,
     duration: "12 Months",
-    features: ["All Monthly Features", "Personal Training Discount", "Priority Support", "Free Diet Chart"],
+    features: ["All Monthly Features", "Personal Training Discount", "Priority Support", "Free Diet Chart", "Legacy Member Status"],
     recommendedFor: ["Serious Athletes", "Long-term transformation"]
   }
 ];
@@ -345,6 +353,51 @@ export const challengeData = [
     unit: "Seconds",
     xp: 40,
     description: "Hold a plank for a total of 3 minutes."
+  }
+];
+
+export const scheduleData = [
+  {
+    day: "Monday",
+    classes: [
+      { time: "05:00 PM", name: "Power Lifting", trainer: "Sanket", intensity: "High" },
+      { time: "07:00 PM", name: "HIIT Circuit", trainer: "Suraj", intensity: "Extreme" }
+    ]
+  },
+  {
+    day: "Tuesday",
+    classes: [
+      { time: "06:00 PM", name: "Bodybuilding 101", trainer: "Suraj", intensity: "Medium" },
+      { time: "08:00 PM", name: "Core Blast", trainer: "Sanket", intensity: "High" }
+    ]
+  },
+  {
+    day: "Wednesday",
+    classes: [
+      { time: "05:30 PM", name: "Leg Day Special", trainer: "Sanket", intensity: "Extreme" },
+      { time: "07:30 PM", name: "Cardio Kickbox", trainer: "Suraj", intensity: "High" }
+    ]
+  },
+  {
+    day: "Thursday",
+    classes: [
+      { time: "06:00 PM", name: "Upper Body Hypertrophy", trainer: "Suraj", intensity: "High" },
+      { time: "08:00 PM", name: "Mobility & Flow", trainer: "Sanket", intensity: "Low" }
+    ]
+  },
+  {
+    day: "Friday",
+    classes: [
+      { time: "05:00 PM", name: "Functional Strength", trainer: "Sanket", intensity: "High" },
+      { time: "07:00 PM", name: "Friday Night Shred", trainer: "Suraj", intensity: "Extreme" }
+    ]
+  },
+  {
+    day: "Saturday",
+    classes: [
+      { time: "05:30 PM", name: "Full Body Warrior", trainer: "Suraj", intensity: "Extreme" },
+      { time: "07:00 PM", name: "Recovery Session", trainer: "Sanket", intensity: "Low" }
+    ]
   }
 ];
 

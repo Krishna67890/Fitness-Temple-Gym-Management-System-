@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Target, Activity, Zap, CheckCircle2 } from "lucide-react";
+import { X, Sparkles, Target, Activity, Zap, CheckCircle2, TrendingUp } from "lucide-react";
+import { membershipData } from "@/lib/gymData";
 
 const MembershipWizard = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const [step, setStep] = useState(1);
@@ -22,21 +23,36 @@ const MembershipWizard = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
   const frequencies = ["2–3 days", "4–5 days", "6+ days"];
 
   const getRecommendation = () => {
+    const annual = membershipData.find(m => m.id === "annual");
+    const quarterly = membershipData.find(m => m.id === "quarterly");
+    const monthly = membershipData.find(m => m.id === "monthly");
+
     if (answers.frequency === "6+ days" || answers.experience === "Advanced") {
       return {
-        name: "Annual Elite Plan",
-        price: "6,000",
-        why: "Based on your high training frequency and experience, our Annual Plan offers the best long-term value and elite perks for dedicated athletes."
+        ...annual,
+        why: "Based on your high training frequency and elite experience, the Annual Temple membership offers the maximum ROI and legacy status."
+      };
+    }
+    if (answers.experience === "Intermediate" || answers.goal === "Muscle Gain") {
+      return {
+        ...quarterly,
+        why: "Our 3-Month Pro plan is designed for those hitting the transition phase where consistency meets results."
       };
     }
     return {
-      name: "3-Month Pro Plan",
-      price: "1,800",
-      why: "This plan is perfect for building a solid foundation and seeing real results without the long-term commitment of an annual plan."
+      ...monthly,
+      why: "Perfect for starting your journey and building the habit without a long-term commitment."
     };
   };
 
-  const recommendation = getRecommendation();
+  const recommendation: any = getRecommendation();
+
+  const handleComplete = () => {
+    // Reward user for completing the wizard
+    const currentXP = parseInt(localStorage.getItem("fitnessTempleXP") || "0");
+    localStorage.setItem("fitnessTempleXP", (currentXP + 5).toString());
+    onClose();
+  };
 
   return (
     <AnimatePresence>
@@ -136,10 +152,10 @@ const MembershipWizard = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
                   &quot;{recommendation.why}&quot;
                 </p>
                 <button
-                  onClick={onClose}
-                  className="w-full py-6 bg-primary text-black font-black rounded-2xl hover:scale-[1.02] transition-all uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(255,215,0,0.3)]"
+                  onClick={handleComplete}
+                  className="w-full py-6 bg-primary text-black font-black rounded-2xl hover:scale-[1.02] transition-all uppercase tracking-widest shadow-[0_20px_40px_-15px_rgba(255,215,0,0.3)] flex items-center justify-center gap-3"
                 >
-                  Choose This Plan
+                  <TrendingUp size={20} /> Choose This Plan
                 </button>
               </div>
             )}

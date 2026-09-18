@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Trophy, Zap, Dumbbell, Heart, Settings, Layout, X, ChevronRight } from "lucide-react";
+import { User, Trophy, Zap, Dumbbell, Heart, Settings, Layout, X, ChevronRight, CheckCircle2, Sparkles, Flame, Calendar, Clock } from "lucide-react";
+import { challengeData, scheduleData } from "@/lib/gymData";
 
 const Dashboard = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,35 +10,53 @@ const Dashboard = () => {
     xp: 0,
     level: 1,
     title: "Temple Novice",
-    goal: "Not Set"
+    goal: "Not Set",
+    dailyChallenge: null as any
   });
   const [savedWorkouts, setSavedWorkouts] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [challengeCompleted, setChallengeCompleted] = useState(false);
 
   useEffect(() => {
     // Load data from localStorage
     const workouts = JSON.parse(localStorage.getItem("fitnessTempleWorkouts") || "[]");
     const storedBookings = JSON.parse(localStorage.getItem("fitnessTempleBookings") || "[]");
     const reviews = JSON.parse(localStorage.getItem("fitnessTempleReviews") || "[]");
+    const isCompleted = localStorage.getItem("fitnessTempleDailyChallengeDone") === new Date().toDateString();
 
     setSavedWorkouts(workouts);
     setBookings(storedBookings);
+    setChallengeCompleted(isCompleted);
+
+    // Load challenge
+    const todayIndex = new Date().getDate() % challengeData.length;
+    const dailyChallenge = challengeData[todayIndex];
 
     // Calculate XP
-    let xp = (workouts.length * 20) + (storedBookings.length * 50) + (reviews.length * 10);
-    const level = Math.floor(xp / 100) + 1;
+    let baseXp = (workouts.length * 20) + (storedBookings.length * 50) + (reviews.length * 15);
+    if (isCompleted) baseXp += dailyChallenge.xp;
+
+    const level = Math.floor(baseXp / 100) + 1;
 
     let title = "Temple Novice";
     if (level >= 2) title = "Consistent Athlete";
     if (level >= 5) title = "Temple Elite";
+    if (level >= 10) title = "Grandmaster";
 
     setUserStats({
-      xp,
+      xp: baseXp,
       level,
       title,
-      goal: localStorage.getItem("fitnessTempleGoal") || "Build Muscle"
+      goal: localStorage.getItem("fitnessTempleGoal") || "Build Muscle",
+      dailyChallenge
     });
-  }, [isOpen]);
+  }, [isOpen, challengeCompleted]);
+
+  const completeChallenge = () => {
+    localStorage.setItem("fitnessTempleDailyChallengeDone", new Date().toDateString());
+    setChallengeCompleted(true);
+    // Add XP animation logic could go here
+  };
 
   return (
     <>
@@ -118,9 +137,49 @@ const Dashboard = () => {
               </div>
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto px-8 space-y-8 pb-20">
+              <div className="flex-1 overflow-y-auto px-8 space-y-10 pb-20">
+                {/* Daily Challenge Section */}
+                {userStats.dailyChallenge && (
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                    <div className="relative glass p-8 rounded-[2.5rem] border-white/10">
+                      <div className="flex justify-between items-start mb-6">
+                        <div>
+                          <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                            <Flame size={12} className="animate-pulse" /> Daily Challenge
+                          </h4>
+                          <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">
+                            {userStats.dailyChallenge.name}
+                          </h3>
+                        </div>
+                        <div className="bg-primary/20 px-3 py-1 rounded-full text-[10px] font-black text-primary uppercase tracking-widest">
+                          +{userStats.dailyChallenge.xp} XP
+                        </div>
+                      </div>
+
+                      <p className="text-gray-400 text-xs font-medium mb-6 leading-relaxed">
+                        {userStats.dailyChallenge.description}
+                      </p>
+
+                      {challengeCompleted ? (
+                        <div className="flex items-center gap-3 text-green-500 bg-green-500/10 p-4 rounded-2xl border border-green-500/20">
+                          <CheckCircle2 size={18} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Challenge Completed!</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={completeChallenge}
+                          className="w-full py-4 bg-primary text-black font-black rounded-2xl hover:scale-[1.02] transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-[0_10px_20px_-5px_rgba(255,215,0,0.3)]"
+                        >
+                          <Trophy size={14} /> Claim Rewards
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div>
-                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2 px-2">
                     <Layout size={14} className="text-primary" /> Saved Workouts
                   </h4>
                   {savedWorkouts.length > 0 ? (
@@ -143,7 +202,38 @@ const Dashboard = () => {
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2 px-2">
+                    <Calendar size={14} className="text-primary" /> Today's Schedule
+                  </h4>
+                  <div className="space-y-4">
+                    {scheduleData.find(s => s.day === new Date().toLocaleDateString('en-US', { weekday: 'long' }))?.classes.map((c, i) => (
+                      <div key={i} className="glass p-5 rounded-[2rem] border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-primary">
+                            <Clock size={20} />
+                          </div>
+                          <div>
+                            <div className="text-sm font-black text-white uppercase italic tracking-tighter">{c.name}</div>
+                            <div className="text-[10px] text-gray-500 font-bold uppercase">{c.time} • Coach {c.trainer}</div>
+                          </div>
+                        </div>
+                        <div className={`text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+                          c.intensity === 'Extreme' ? 'bg-red-500/20 text-red-500' :
+                          c.intensity === 'High' ? 'bg-orange-500/20 text-orange-500' : 'bg-green-500/20 text-green-500'
+                        }`}>
+                          {c.intensity}
+                        </div>
+                      </div>
+                    )) || (
+                      <div className="p-8 text-center glass rounded-3xl border-dashed border-white/10 text-gray-600 text-[10px] font-black uppercase tracking-widest">
+                        No Classes Scheduled Today
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2 px-2">
                     <Zap size={14} className="text-primary" /> Active Bookings
                   </h4>
                   {bookings.length > 0 ? (
