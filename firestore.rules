@@ -29,6 +29,8 @@ service cloud.firestore {
 
     // User authentication profile
     match /users/{userId} {
+      // Allow user to read/write their own document
+      // Allow owners/trainers to read other users' documents
       allow read: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
       allow write: if isAuthenticated() && (request.auth.uid == userId || isOwner());
     }
