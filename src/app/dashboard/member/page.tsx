@@ -215,6 +215,7 @@ const MemberDashboardPage = () => {
   const [completedExercises, setCompletedExercises] = useState<Record<string, boolean>>({});
   const [isWorkoutStarted, setIsWorkoutStarted] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showGenderModal, setShowGenderModal] = useState(false);
 
   // Water Tracker State
   const [waterIntakeMl, setWaterIntakeMl] = useState(1750);
@@ -243,6 +244,22 @@ const MemberDashboardPage = () => {
   }
 
   const routine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES.Mon;
+
+  // Local storage users can be mapped here to show dynamic details
+  useEffect(() => {
+    if (userData && !userData.memberId) {
+      const storedLocalUsers = localStorage.getItem("ft_local_users");
+      const localUsers = storedLocalUsers ? JSON.parse(storedLocalUsers) : {};
+
+      // If this is a local session, ensure it has a unique local ID
+      if (!localUsers[userData.uid]) {
+        const localId = `FT-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
+        localUsers[userData.uid] = { ...userData, memberId: localId };
+        localStorage.setItem("ft_local_users", JSON.stringify(localUsers));
+        updateUserData({ memberId: localId });
+      }
+    }
+  }, [userData, updateUserData]);
 
   // Today's Date String
   const todayFormatted = new Intl.DateTimeFormat("en-US", {
@@ -280,6 +297,15 @@ const MemberDashboardPage = () => {
     setWaterIntakeMl(0);
   };
 
+  const handleGenderSelection = async (gender: "boy" | "girl") => {
+    const avatarPath = gender === "boy" ? "/assets/boy.png" : "/assets/girl.png";
+    await updateUserData({
+      gender,
+      profileImage: avatarPath
+    });
+    setShowGenderModal(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#060606] text-white p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* 1. Header Banner */}
@@ -288,8 +314,11 @@ const MemberDashboardPage = () => {
         
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4 md:gap-5">
-            <div className="relative flex-shrink-0">
-              <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl overflow-hidden border-2 border-primary shadow-[0_0_20px_rgba(255,215,0,0.3)] bg-black">
+            <div
+              className="relative flex-shrink-0 cursor-pointer group"
+              onClick={() => setShowGenderModal(true)}
+            >
+              <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl overflow-hidden border-2 border-primary shadow-[0_0_20px_rgba(255,215,0,0.3)] bg-black group-hover:border-white transition-all">
                 {userData?.profileImage || userData?.photoURL ? (
                   <img src={userData.profileImage || userData.photoURL} alt="Member Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -298,8 +327,11 @@ const MemberDashboardPage = () => {
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center" title="Active">
+              <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center z-20" title="Active">
                 <ShieldCheck size={14} className="text-black" />
+              </div>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-2xl md:rounded-3xl transition-all">
+                <User size={24} className="text-white" />
               </div>
             </div>
 
@@ -746,6 +778,57 @@ const MemberDashboardPage = () => {
                 className="mt-6 w-full py-3 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-black uppercase tracking-wider"
               >
                 Close Pass
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Gender Profile Selection Modal */}
+      <AnimatePresence>
+        {showGenderModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="glass max-w-md w-full p-8 rounded-[3rem] border border-white/10 text-center relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]"
+            >
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl" />
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl" />
+
+              <h3 className="text-2xl font-black uppercase italic tracking-wider mb-2 relative z-10">
+                Identify Your Profile
+              </h3>
+              <p className="text-xs text-gray-400 mb-8 uppercase tracking-[0.2em] relative z-10">Select your avatar archetype</p>
+
+              <div className="grid grid-cols-2 gap-6 mb-8 relative z-10">
+                <button
+                  onClick={() => handleGenderSelection("boy")}
+                  className="group flex flex-col items-center gap-4 p-6 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-inner"
+                >
+                  <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-primary transition-all bg-black p-1">
+                    <img src="/assets/boy.png" alt="Boy" className="w-full h-full object-cover rounded-2xl" />
+                  </div>
+                  <span className="font-black uppercase italic tracking-widest text-sm group-hover:text-primary transition-colors">Boy</span>
+                </button>
+
+                <button
+                  onClick={() => handleGenderSelection("girl")}
+                  className="group flex flex-col items-center gap-4 p-6 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-inner"
+                >
+                  <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-primary transition-all bg-black p-1">
+                    <img src="/assets/girl.png" alt="Girl" className="w-full h-full object-cover rounded-2xl" />
+                  </div>
+                  <span className="font-black uppercase italic tracking-widest text-sm group-hover:text-primary transition-colors">Girl</span>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowGenderModal(false)}
+                className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all relative z-10"
+              >
+                Cancel & Close
               </button>
             </motion.div>
           </div>

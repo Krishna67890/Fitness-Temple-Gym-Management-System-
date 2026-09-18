@@ -136,6 +136,12 @@ const LoginPage = () => {
       return;
     }
 
+    // MANDATORY: Owner portal requires specific password for entry
+    if (selectedPortal === 'owner' && portalPassword !== 'FitnessTemple@123') {
+      setPortalError("Unauthorized access key. Owner verification failed.");
+      return;
+    }
+
     setPortalLoading(true);
     setPortalError("");
 
@@ -331,12 +337,6 @@ const LoginPage = () => {
               <div className="pt-6 border-t border-white/5">
                 <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-3">Developer Quick Access</p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  <button
-                    onClick={() => handleDemoSelect('owner')}
-                    className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-lg text-[10px] font-bold text-primary transition-all"
-                  >
-                    INSTANT OWNER
-                  </button>
                   <button
                     onClick={() => handleDemoSelect('trainer', 'suraj')}
                     className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"

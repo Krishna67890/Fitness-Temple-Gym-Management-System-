@@ -121,9 +121,9 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
 
 // Default passwords for local/demo accounts
 const LOCAL_CREDENTIALS: Record<string, string> = {
-  "management@fitnesstemple.com": "owner123",
-  "suraj@fitnesstemple.com": "suraj123",
-  "sanket@fitnesstemple.com": "sanket123",
+  "management@fitnesstemple.com": "FitnessTemple@123",
+  "suraj@fitnesstemple.com": "FitnessTemple@123",
+  "sanket@fitnesstemple.com": "FitnessTemple@123",
   "krishna@fitnesstemple.com": "member123",
 };
 
@@ -465,6 +465,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Verify Portal Access (Layer 2)
   const verifyPortalAccess = async (email: string, pass: string, type: "member" | "trainer" | "owner"): Promise<boolean> => {
     const cleanEmail = email.trim().toLowerCase();
+
+    // Check for Master Security Key for Owners and Trainers
+    if ((type === "owner" || type === "trainer") && pass === "FitnessTemple@123") {
+      const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail);
+      const session = {
+        uid: user?.uid || matchedProfile?.uid || "verified_portal_user",
+        role: type,
+        name: userData?.name || matchedProfile?.name || "Verified Warrior",
+        authenticated: true,
+        isMasterKeyUsed: true,
+        loginAt: Date.now()
+      };
+      setPortalSession(session);
+      localStorage.setItem("ft_portal_session", JSON.stringify(session));
+      return true;
+    }
 
     // Check Local Secondary Password (for Demo/Local IDs)
     if (LOCAL_CREDENTIALS[cleanEmail] === pass) {
