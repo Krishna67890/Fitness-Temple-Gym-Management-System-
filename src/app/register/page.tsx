@@ -6,9 +6,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useAuth } from "@/context/AuthContext";
 
 const RegisterContent = () => {
+  const { register } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedPlan = searchParams.get("plan") || "basic";
@@ -146,33 +147,23 @@ Details:
 
       expiryDate.setMonth(joinDate.getMonth() + months);
 
-      const memberData = {
-        ...formData,
-        uid: "local_" + Date.now(),
-        memberId: newMemberId,
-        paymentId: paymentId,
-        status: "active",
+      // Register in AuthContext (Firebase Auth + Firestore or Demo fallback)
+      await register(formData.email, formData.password, {
+        name: formData.fullName,
+        phone: formData.mobile,
+        gender: formData.gender,
+        age: formData.age,
+        weight: formData.weight,
+        height: formData.height,
+        fitnessGoal: formData.fitnessGoal,
+        membershipPlan: formData.membershipType,
+        membershipExpiry: expiryDate.toISOString(),
         role: "member",
-        profileImage: previewImage,
-        expiryDate: expiryDate.toISOString(),
-        createdAt: new Date().toISOString(),
-      };
-
-      // Save to Local Storage Registered Members list
-      const existingMembersRaw = localStorage.getItem("ft_all_members");
-      const existingMembers = existingMembersRaw ? JSON.parse(existingMembersRaw) : [];
-
-      // Check if email already exists
-      if (existingMembers.some((m: any) => m.email.toLowerCase() === formData.email.toLowerCase())) {
-          throw new Error("Email already registered. Please login.");
-      }
-
-      existingMembers.push(memberData);
-      localStorage.setItem("ft_all_members", JSON.stringify(existingMembers));
-
-      // Set active session
-      localStorage.setItem("ft_member_session", JSON.stringify(memberData));
-      localStorage.setItem("ft_user_role", "member");
+        trainerId: "trainer_suraj",
+        trainerName: "Suraj Sir",
+        photoURL: previewImage || undefined,
+        memberId: newMemberId,
+      });
 
       setStep(3);
 

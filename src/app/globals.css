@@ -7,13 +7,17 @@
     --background: 10 10 10;
     --foreground: 255 255 255;
     --primary: 255 215 0; /* Gold #FFD700 */
+    --primary-glow: rgba(255, 215, 0, 0.4);
     --secondary: 255 255 255;
+    --accent-neon: 204 255 0; /* Electric Lime #CCFF00 */
+    --card-bg: 20 20 20;
   }
 
   body {
     @apply bg-[#050505] text-white antialiased overflow-x-hidden font-sans;
     background-image:
       radial-gradient(circle at 50% 0%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 0% 50%, rgba(204, 255, 0, 0.02) 0%, transparent 40%),
       radial-gradient(circle at 100% 50%, rgba(255, 255, 255, 0.02) 0%, transparent 40%);
     background-attachment: fixed;
   }
@@ -24,41 +28,145 @@
     @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-2xl;
   }
 
-  /* Smooth Scrolling */
+  .glass-card {
+    @apply bg-white/[0.02] backdrop-blur-md border border-white/5 rounded-[2.5rem] p-8 hover:border-primary/30 transition-all duration-500 hover:bg-white/[0.04];
+  }
+
+  .neon-border {
+    @apply relative border border-primary/20;
+    box-shadow: 0 0 15px var(--primary-glow);
+  }
+
+  .neon-glow {
+    filter: drop-shadow(0 0 8px var(--primary-glow));
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   .btn-primary {
-    @apply bg-primary text-white font-black uppercase italic tracking-widest py-4 px-10 rounded-2xl hover:bg-secondary hover:text-black transition-all duration-300 transform hover:scale-[1.02] active:scale-95 inline-block text-center shadow-[0_15px_30px_rgba(255,0,0,0.2)];
+    @apply relative overflow-hidden bg-primary text-black font-black uppercase italic tracking-widest py-4 px-10 rounded-2xl transition-all duration-300 transform hover:scale-[1.05] active:scale-95 inline-block text-center shadow-[0_10px_30px_rgba(255,215,0,0.3)] hover:shadow-[0_15px_40px_rgba(255,215,0,0.5)];
   }
 
   .btn-secondary {
-    @apply bg-secondary text-black font-black uppercase italic tracking-widest py-4 px-10 rounded-2xl hover:bg-white transition-all duration-300 transform hover:scale-[1.02] active:scale-95 inline-block text-center shadow-[0_15px_30px_rgba(255,215,0,0.2)];
+    @apply bg-white text-black font-black uppercase italic tracking-widest py-4 px-10 rounded-2xl hover:bg-primary transition-all duration-300 transform hover:scale-[1.02] active:scale-95 inline-block text-center;
   }
 
   .btn-outline {
-    @apply border-2 border-white/20 text-white font-black uppercase italic tracking-widest py-4 px-10 rounded-2xl hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 transform hover:scale-[1.02] active:scale-95 inline-block text-center;
+    @apply border-2 border-white/20 text-white font-black uppercase italic tracking-widest py-4 px-10 rounded-2xl hover:bg-primary hover:text-black hover:border-primary transition-all duration-300 transform hover:scale-[1.02] active:scale-95 inline-block text-center;
   }
 
   .section-title {
-    @apply text-4xl md:text-7xl font-black text-center mb-16 uppercase italic tracking-tighter leading-none;
+    @apply text-5xl md:text-8xl font-black text-center mb-20 uppercase italic tracking-tighter leading-[0.85];
   }
 
   .ft-gradient-text {
-    @apply bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-gradient-x;
+  }
+
+  .ft-card-gradient {
+    @apply bg-gradient-to-br from-white/5 to-transparent border border-white/10 hover:border-primary/40 transition-all duration-500;
+  }
+
+  .glow-card {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  }
+
+  .glow-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 60px -15px rgba(255, 215, 0, 0.2);
+  }
+
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 215, 0, 0.08) 50%, transparent 60%);
+    animation: shimmer 2.5s infinite;
   }
 }
 
+/* Animations */
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 5s ease infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-12px) rotate(1deg); }
+  66% { transform: translateY(-6px) rotate(-1deg); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.1); }
+  50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.4); }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ping-gold {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+.animate-ping-gold { animation: ping-gold 1.5s cubic-bezier(0, 0, 0.2, 1) infinite; }
+.animate-slide-up { animation: slide-up 0.6s ease forwards; }
+
+.gsap-target { will-change: transform, opacity; }
+
 /* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.2); border-radius: 99px; border: 2px solid #000; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.4); }
 
-::-webkit-scrollbar-track {
-  @apply bg-black;
-}
+/* Text Selection */
+::selection { background: #FFD700; color: #000; }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-primary/20 rounded-full hover:bg-primary/40 transition-colors;
+/* Scrollbar hide utility */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Line clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

@@ -1,10 +1,13 @@
 "use client";
 import React from "react";
-import { Search, Bell, User } from "lucide-react";
+import { Search, Bell } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const DashboardHeader = () => {
   const { userData } = useAuth();
+
+  const displayName = userData?.name || userData?.fullName || "Warrior";
+  const initials = displayName.charAt(0).toUpperCase();
 
   return (
     <header className="h-20 border-b border-white/5 bg-secondary/50 backdrop-blur-md sticky top-0 z-30 px-6 md:px-10 flex items-center justify-between">
@@ -25,12 +28,20 @@ const DashboardHeader = () => {
 
         <div className="flex items-center space-x-3 pl-4 border-l border-white/10">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-bold">{userData?.fullName || "Warrior"}</p>
+            <p className="text-sm font-bold">{displayName}</p>
             <p className="text-[10px] text-gray-500 uppercase font-black">{userData?.role || "Member"}</p>
           </div>
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-black font-black uppercase">
-            {userData?.fullName?.split(' ').map((n: string) => n[0]).join('') || "W"}
-          </div>
+          {userData?.photoURL || userData?.profileImage ? (
+            <img
+              src={(userData.photoURL || userData.profileImage) as string}
+              alt={displayName}
+              className="w-10 h-10 rounded-full object-cover border-2 border-primary/40"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-black font-black text-lg uppercase">
+              {initials}
+            </div>
+          )}
         </div>
       </div>
     </header>

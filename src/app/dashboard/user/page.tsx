@@ -78,8 +78,8 @@ const UserDashboard = () => {
         height: parseFloat(memberData.height || "170"),
         age: parseFloat(memberData.age || "25"),
         goal: (memberData.fitnessGoal === "muscle-gain" || memberData.fitnessGoal === "weight-loss")
-              ? memberData.fitnessGoal
-              : "maintenance",
+              ? (memberData.fitnessGoal as "muscle-gain" | "weight-loss")
+              : ("maintenance" as const),
         activityLevel: "moderate" as const
       };
       const recs = generateRecommendations(stats);

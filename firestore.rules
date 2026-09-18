@@ -2,27 +2,108 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow authenticated users to read/write their own profile
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'
+      );
+    }
+
+    function isTrainer() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'trainer'
+      );
+    }
+
+    function isAssignedTrainer(memberId) {
+      return isTrainer() && (
+        resource.data.trainerId == request.auth.uid ||
+        get(/databases/$(database)/documents/members/$(memberId)).data.trainerId == request.auth.uid
+      );
+    }
+
+    // User authentication profile
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isOwner());
     }
 
+    // Member private profile data
     match /members/{memberId} {
-      allow read, write: if request.auth != null && request.auth.uid == memberId;
+      allow read: if isAuthenticated() && (
+        request.auth.uid == memberId ||
+        (isTrainer() && (resource == null || resource.data.trainerId == request.auth.uid)) ||
+        isOwner()
+      );
+      allow write: if isAuthenticated() && (
+        request.auth.uid == memberId ||
+        (isTrainer() && (resource == null || resource.data.trainerId == request.auth.uid)) ||
+        isOwner()
+      );
     }
 
-    // Allow members to view all trainers
+    // Member private workouts
+    match /workouts/{memberId}/{allPaths=**} {
+      allow read: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
+      allow write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
+    }
+
+    // Member private diets
+    match /diets/{memberId}/{allPaths=**} {
+      allow read: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
+      allow write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
+    }
+
+    // Attendance records
+    match /attendance/{memberId}/{allPaths=**} {
+      allow read: if isAuthenticated() && (request.auth.uid == memberId || isTrainer() || isOwner());
+      allow write: if isAuthenticated() && (request.auth.uid == memberId || isTrainer() || isOwner());
+    }
+
+    // Progress logs & measurements
+    match /progress/{memberId}/{allPaths=**} {
+      allow read: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
+      allow write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
+    }
+
+    // Trainer profiles
     match /trainers/{trainerId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == trainerId;
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (request.auth.uid == trainerId || isOwner());
     }
 
-    // Community posts: everyone can read, only authors can delete, anyone can update (likes)
-    match /posts/{postId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow update: if request.auth != null; // Simplified for likes; ideally validate specifically
-      allow delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+    // Notifications
+    match /notifications/{userId}/{notifId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && (isOwner() || isTrainer() || request.auth.uid == userId);
+    }
+
+    // Real Member Reviews
+    match /reviews/{reviewId} {
+      // Anyone can read published reviews
+      // Authors and Owners can read hidden/all reviews
+      allow read: if (resource.data.status == 'published')
+                  || (isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner()));
+
+      // Only authenticated members can create a review with their own UID
+      allow create: if isAuthenticated()
+                    && request.auth.uid == request.resource.data.userId
+                    && request.resource.data.rating is number
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5;
+
+      // Author can update their own review or Owner can moderate
+      allow update: if isAuthenticated()
+                    && ((request.auth.uid == resource.data.userId && request.resource.data.userId == resource.data.userId) || isOwner());
+
+      // Author can delete their own review or Owner can delete
+      allow delete: if isAuthenticated()
+                    && (request.auth.uid == resource.data.userId || isOwner());
     }
   }
 }

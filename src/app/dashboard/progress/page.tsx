@@ -120,9 +120,9 @@ const ProgressPage = () => {
 
       // Update local storage and context
       updateUserData({
-        weight: newEntry.weight || userData.weight,
-        height: newEntry.height || userData.height,
-        progressHistory: [...(userData.progressHistory || []), entry]
+        weight: newEntry.weight || userData?.weight,
+        height: newEntry.height || userData?.height,
+        progressHistory: [...(userData?.progressHistory || []), entry]
       });
 
       alert("Progress logged successfully!");

@@ -33,7 +33,7 @@ const Sidebar = () => {
   const menuItems = [
     {
       name: "Dashboard",
-      href: role === 'owner' ? "/dashboard/owner" : role === 'trainer' ? "/dashboard/trainer" : "/dashboard/user",
+      href: role === 'owner' ? "/dashboard/owner" : role === 'trainer' ? "/dashboard/trainer" : "/dashboard/member",
       icon: LayoutDashboard
     },
     {
@@ -46,19 +46,19 @@ const Sidebar = () => {
       name: "Attendance",
       href: "/dashboard/attendance",
       icon: CalendarCheck,
-      roles: ['owner', 'trainer', 'user']
+      roles: ['owner', 'trainer', 'user', 'member']
     },
     {
       name: "Workout Plans",
       href: "/dashboard/workouts",
       icon: ClipboardList,
-      roles: ['owner', 'trainer', 'user']
+      roles: ['owner', 'trainer', 'user', 'member']
     },
     {
       name: "Diet Plans",
       href: "/dashboard/diets",
       icon: Apple,
-      roles: ['owner', 'trainer', 'user']
+      roles: ['owner', 'trainer', 'user', 'member']
     },
     {
       name: "Reports",
@@ -94,13 +94,13 @@ const Sidebar = () => {
       name: "Gallery",
       href: "/dashboard/gallery",
       icon: ImageIcon,
-      roles: ['owner', 'trainer', 'user']
+      roles: ['owner', 'trainer', 'user', 'member']
     },
     {
       name: "Settings",
       href: "/dashboard/settings",
       icon: Settings,
-      roles: ['owner', 'trainer', 'user']
+      roles: ['owner', 'trainer', 'user', 'member']
     },
   ];
 
@@ -162,12 +162,18 @@ const Sidebar = () => {
         <div className="p-4 mt-auto space-y-4">
           <div className="px-4 py-3 bg-white/5 rounded-2xl border border-white/10">
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                  {role === 'owner' ? <ShieldCheck size={16} className="text-primary" /> : <UserCheck size={16} className="text-primary" />}
+               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                  {userData?.photoURL ? (
+                    <img src={userData.photoURL} alt={userData.name} className="w-full h-full object-cover" />
+                  ) : role === 'owner' ? (
+                    <ShieldCheck size={16} className="text-primary" />
+                  ) : (
+                    <UserCheck size={16} className="text-primary" />
+                  )}
                </div>
-               <div>
-                  <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none">Access Level</p>
-                  <p className="text-xs font-black uppercase italic text-white tracking-tighter">{role}</p>
+               <div className="overflow-hidden">
+                  <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none">{role}</p>
+                  <p className="text-xs font-black italic text-white tracking-tighter truncate max-w-[120px]">{userData?.name || "Warrior"}</p>
                </div>
             </div>
           </div>

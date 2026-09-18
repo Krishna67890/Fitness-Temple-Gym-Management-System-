@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Chatbot from "@/components/Chatbot";
+import GSAPProvider from "@/components/GSAPProvider";
 import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
@@ -44,6 +45,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${montserrat.variable} font-sans bg-background text-foreground`}>
         <AuthProvider>
+          <GSAPProvider />
           <Navbar />
           <main>{children}</main>
           <Footer />
