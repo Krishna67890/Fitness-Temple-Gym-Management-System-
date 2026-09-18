@@ -160,15 +160,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth!, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
+        setLoading(true);
         try {
           const userDocRef = doc(db!, "users", firebaseUser.uid);
-          const userSnap = await getDoc(userDocRef);
 
-          if (userSnap.exists()) {
+          // Retry mechanism to handle Firestore propagation delay
+          let userSnap = null;
+          let retries = 3;
+
+          while (retries > 0) {
+            try {
+              userSnap = await getDoc(userDocRef);
+              break; // Success
+            } catch (err) {
+              retries--;
+              if (retries === 0) throw err;
+              await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
+            }
+          }
+
+          if (userSnap && userSnap.exists()) {
             const data = userSnap.data() as UserProfile;
             setUserData(data);
           } else {
-            // New user without role doc -> create default member
+            // New user initialization
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
               name: firebaseUser.displayName || "Fitness Warrior",
@@ -184,16 +199,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               memberId: `FT-${Date.now().toString().slice(-4)}`,
               createdAt: serverTimestamp(),
             };
-            await setDoc(userDocRef, newProfile);
+
+            // Set state first for immediate UI update
             setUserData(newProfile);
+            try {
+              await setDoc(userDocRef, newProfile);
+              await setDoc(doc(db!, "members", firebaseUser.uid), newProfile);
+            } catch (saveErr) {
+              console.error("Delayed profile sync error:", saveErr);
+            }
           }
-        } catch (error) {
-          console.error("Error fetching user role document:", error);
+        } catch (error: any) {
+          console.error("Firestore sync failed:", error);
+          // Fallback to basic profile so the app doesn't crash
+          if (firebaseUser) {
+            setUserData({
+              uid: firebaseUser.uid,
+              name: firebaseUser.displayName || "Warrior",
+              email: firebaseUser.email || "",
+              role: "member",
+            } as UserProfile);
+          }
         }
       } else {
         setUserData(null);
       }
       setLoading(false);
+    });
     });
 
     return () => unsubscribe();
@@ -304,43 +336,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Google Sign-In
   const loginWithGoogle = async (): Promise<UserProfile> => {
     if (isFirebaseConfigured && auth && db) {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const userRef = doc(db, "users", result.user.uid);
-      const snap = await getDoc(userRef);
+      try {
+        const provider = new GoogleAuthProvider();
+        // Force account selection to help debug domain issues
+        provider.setCustomParameters({ prompt: 'select_account' });
 
-      if (snap.exists()) {
-        const data = snap.data() as UserProfile;
-        setUserData(data);
+        const result = await signInWithPopup(auth, provider);
+        const userRef = doc(db, "users", result.user.uid);
+
+        // Wait slightly for Firestore to be ready for the new user
+        let snap = await getDoc(userRef);
+
+        if (snap.exists()) {
+          const data = snap.data() as UserProfile;
+          setUserData(data);
+          setUser(result.user);
+          setIsDemoMode(false);
+          localStorage.removeItem("ft_demo_role");
+          return data;
+        }
+
+        // New Google User - Create Profile
+        const newProfile: UserProfile = {
+          uid: result.user.uid,
+          name: result.user.displayName || "Fitness Warrior",
+          email: result.user.email || "",
+          photoURL: result.user.photoURL || "",
+          role: "member",
+          trainerId: "trainer_suraj",
+          trainerName: "Suraj Sir",
+          membershipStatus: "active",
+          membershipPlan: "Standard Member",
+          membershipExpiry: "2026-12-31",
+          fitnessGoal: "General Fitness",
+          memberId: `FT-${Math.floor(1000 + Math.random() * 9000)}`,
+          createdAt: serverTimestamp(),
+        };
+
+        await setDoc(userRef, newProfile);
+        try {
+          await setDoc(doc(db, "members", result.user.uid), newProfile);
+        } catch (e) {
+          console.warn("Could not create member doc immediately:", e);
+        }
+
+        setUserData(newProfile);
         setUser(result.user);
         setIsDemoMode(false);
         localStorage.removeItem("ft_demo_role");
-        return data;
+        return newProfile;
+      } catch (error: any) {
+        console.error("Google Sign-In Error:", error);
+        if (error.code === 'auth/unauthorized-domain') {
+          alert(`Domain Unauthorized: Please add "${window.location.hostname}" to Firebase Console > Authentication > Settings > Authorized Domains.`);
+        }
+        throw error;
       }
-
-      // New Google User
-      const newProfile: UserProfile = {
-        uid: result.user.uid,
-        name: result.user.displayName || "Fitness Warrior",
-        email: result.user.email || "",
-        photoURL: result.user.photoURL || "",
-        role: "member",
-        trainerId: "trainer_suraj",
-        trainerName: "Suraj Sir",
-        membershipStatus: "active",
-        membershipPlan: "Standard Member",
-        membershipExpiry: "2026-12-31",
-        fitnessGoal: "General Fitness",
-        memberId: `FT-${Math.floor(1000 + Math.random() * 9000)}`,
-        createdAt: serverTimestamp(),
-      };
-      await setDoc(userRef, newProfile);
-      await setDoc(doc(db, "members", result.user.uid), newProfile);
-      setUserData(newProfile);
-      setUser(result.user);
-      setIsDemoMode(false);
-      localStorage.removeItem("ft_demo_role");
-      return newProfile;
     }
 
     // Fallback demo Google login

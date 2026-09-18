@@ -9,44 +9,45 @@ service cloud.firestore {
     }
 
     function isOwner() {
-      return isAuthenticated() && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'
-      );
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner';
     }
 
     function isTrainer() {
-      return isAuthenticated() && (
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'trainer'
-      );
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'trainer';
     }
 
     function isAssignedTrainer(memberId) {
       return isTrainer() && (
-        resource.data.trainerId == request.auth.uid ||
-        get(/databases/$(database)/documents/members/$(memberId)).data.trainerId == request.auth.uid
+        (resource != null && resource.data.trainerId == request.auth.uid) ||
+        (exists(/databases/$(database)/documents/members/$(memberId)) &&
+         get(/databases/$(database)/documents/members/$(memberId)).data.trainerId == request.auth.uid)
       );
     }
 
     // User authentication profile
     match /users/{userId} {
-      // Allow user to read/write their own document
-      // Allow owners/trainers to read other users' documents
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isOwner());
+      // Basic rule: You can read/write your OWN data if logged in
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Admin rule: Owners and trainers can read all user profiles
+      allow read: if isOwner() || isTrainer();
+
+      // Management: Only owners can delete or update other people's roles
+      allow update, delete: if isOwner();
     }
 
-    // Member private profile data
+    // Member records
     match /members/{memberId} {
-      allow read: if isAuthenticated() && (
-        request.auth.uid == memberId ||
-        (isTrainer() && (resource == null || resource.data.trainerId == request.auth.uid)) ||
-        isOwner()
-      );
-      allow write: if isAuthenticated() && (
-        request.auth.uid == memberId ||
-        (isTrainer() && (resource == null || resource.data.trainerId == request.auth.uid)) ||
-        isOwner()
-      );
+      // A member can always see their own fitness data
+      allow read, write: if request.auth != null && request.auth.uid == memberId;
+
+      // Trainers can see data for people assigned to them
+      allow read: if isOwner() || (isTrainer() && (resource == null || resource.data.trainerId == request.auth.uid));
+      allow write: if isOwner() || (isTrainer() && (resource == null || resource.data.trainerId == request.auth.uid));
     }
 
     // Member private workouts
