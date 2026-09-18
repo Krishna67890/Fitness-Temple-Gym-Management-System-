@@ -122,6 +122,7 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   userData: null,
+  portalSession: null,
   loading: true,
   isFirebaseConfigured: false,
   login: async () => { throw new Error("Uninitialized"); },
@@ -130,6 +131,7 @@ const AuthContext = createContext<AuthContextType>({
   resetPassword: async () => {},
   logout: async () => {},
   updateUserData: async () => {},
+  verifyPortalAccess: async () => false,
   setDemoRole: () => {},
   isDemoMode: false,
 });
