@@ -7,6 +7,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   sendPasswordResetEmail,
 } from "firebase/auth";
@@ -140,7 +142,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initialize Auth
   useEffect(() => {
-    // 1. Check for stored demo session (preferences/demo mode only)
+    // Check for redirect results (important for mobile)
+    if (isFirebaseConfigured && auth) {
+      getRedirectResult(auth).catch(err => {
+        console.error("Redirect Result Error:", err);
+      });
+    }
+
+    // 1. Check for stored demo session
     const storedDemo = typeof window !== "undefined" ? localStorage.getItem("ft_demo_role") : null;
 
     if (!isFirebaseConfigured || storedDemo) {
@@ -159,82 +168,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // 2. Firebase Auth Listener
     const unsubscribe = onAuthStateChanged(auth!, async (firebaseUser) => {
       setUser(firebaseUser);
+
       if (firebaseUser) {
-        setLoading(true);
         try {
           const userDocRef = doc(db!, "users", firebaseUser.uid);
+          const userSnap = await getDoc(userDocRef);
 
-          // Retry mechanism to handle Firestore propagation delay
-          let userSnap = null;
-          let retries = 3;
-
-          while (retries > 0) {
-            try {
-              userSnap = await getDoc(userDocRef);
-              break; // Success
-            } catch (err) {
-              retries--;
-              if (retries === 0) throw err;
-              await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
-            }
-          }
-
-          if (userSnap && userSnap.exists()) {
-            const data = userSnap.data() as UserProfile;
-            setUserData(data);
+          if (userSnap.exists()) {
+            setUserData(userSnap.data() as UserProfile);
           } else {
-            // New user initialization - Assign role based on email patterns for evaluation
+            // Check for specific role-based emails even for existing Firebase users
             const userEmail = firebaseUser.email?.toLowerCase() || "";
             let assignedRole: UserRole = "member";
-            let trainerId = "trainer_suraj";
-            let trainerName = "Suraj Sir";
 
-            if (userEmail.includes("management") || userEmail.includes("owner")) {
-              assignedRole = "owner";
-            } else if (userEmail.includes("suraj")) {
-              assignedRole = "trainer";
-              trainerId = "trainer_suraj";
-              trainerName = "Suraj Sir";
-            } else if (userEmail.includes("sanket")) {
-              assignedRole = "trainer";
-              trainerId = "trainer_sanket";
-              trainerName = "Sanket Sir";
-            }
+            if (userEmail.includes("management") || userEmail.includes("owner")) assignedRole = "owner";
+            else if (userEmail.includes("suraj")) assignedRole = "trainer";
+            else if (userEmail.includes("sanket")) assignedRole = "trainer";
 
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
-              name: firebaseUser.displayName || (assignedRole === "owner" ? "Owner" : assignedRole === "trainer" ? trainerName : "Fitness Warrior"),
+              name: firebaseUser.displayName || "Fitness Warrior",
               email: firebaseUser.email || "",
               photoURL: firebaseUser.photoURL || "",
               role: assignedRole,
-              trainerId: assignedRole === "member" ? trainerId : undefined,
-              trainerName: assignedRole === "member" ? trainerName : undefined,
               membershipStatus: "active",
-              membershipPlan: assignedRole === "member" ? "Standard Member" : "Staff",
-              membershipExpiry: "2026-12-31",
-              fitnessGoal: assignedRole === "owner" ? "Management" : assignedRole === "trainer" ? "Coaching" : "General Fitness",
-              memberId: `FT-${Date.now().toString().slice(-4)}`,
               createdAt: serverTimestamp(),
             };
 
             setUserData(newProfile);
-            try {
-              // Write to Firestore to persist the role
-              await setDoc(doc(db!, "users", firebaseUser.uid), newProfile);
-            } catch (saveErr) {
-              console.warn("Initial sync permission warning (ignoring):", saveErr);
-            }
+            // Non-blocking write to avoid permission-denied crashes on UI
+            setDoc(userDocRef, newProfile).catch(e => console.warn("Profile sync deferred:", e));
           }
-        } catch (error: any) {
-          console.error("Firestore sync error:", error);
-          if (firebaseUser) {
-            setUserData({
-              uid: firebaseUser.uid,
-              name: firebaseUser.displayName || "Warrior",
-              email: firebaseUser.email || "",
-              role: "member",
-            } as UserProfile);
-          }
+        } catch (error) {
+          console.error("Auth state sync error:", error);
+          // Fallback to avoid "Application Error" crash
+          setUserData({
+            uid: firebaseUser.uid,
+            name: firebaseUser.displayName || "Warrior",
+            role: "member"
+          } as UserProfile);
         }
       } else {
         setUserData(null);
@@ -352,8 +324,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (isFirebaseConfigured && auth && db) {
       try {
         const provider = new GoogleAuthProvider();
-        // Force account selection to help debug domain issues
         provider.setCustomParameters({ prompt: 'select_account' });
+
+        // Detection for mobile to use Redirect instead of Popup
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          await signInWithRedirect(auth, provider);
+          // The code below won't execute as the page redirects
+          return {} as UserProfile;
+        }
 
         const result = await signInWithPopup(auth, provider);
         const userRef = doc(db, "users", result.user.uid);

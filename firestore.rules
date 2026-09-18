@@ -36,8 +36,8 @@ service cloud.firestore {
 
     // User authentication profile
     match /users/{userId} {
-      // Allow user to read/write their own document
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      // Allow user to read/write their own document - simplified for initial sync
+      allow read, write: if request.auth != null && request.auth.uid == userId;
       // Allow owners and trainers to see profiles
       allow read: if isOwner() || isTrainer();
       // Only owners can change roles or delete users

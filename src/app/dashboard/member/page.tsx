@@ -203,11 +203,11 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const MemberDashboardPage = () => {
-  const { user, userData, updateUserData } = useAuth();
+  const { user, userData, loading, updateUserData } = useAuth();
+  const router = useRouter();
 
   // Calendar State
   const [selectedDay, setSelectedDay] = useState("Mon");
-  const routine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES.Mon;
 
   // Active workout execution state
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
@@ -221,6 +221,27 @@ const MemberDashboardPage = () => {
 
   // Visual View Mode: 3D Equipment vs 3D Avatar Demo
   const [visualMode, setVisualMode] = useState<"equipment" | "avatar">("equipment");
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!loading && !userData) {
+      router.replace("/login");
+    }
+  }, [userData, loading, router]);
+
+  if (loading || !userData) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 border-t-4 border-primary rounded-full animate-spin" />
+          <img src="/assets/FitnessTempleGym.png" className="w-12 h-12 absolute inset-0 m-auto animate-pulse" alt="Loading" />
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-primary/60 animate-pulse">Initializing Portal...</p>
+      </div>
+    );
+  }
+
+  const routine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES.Mon;
 
   // Today's Date String
   const todayFormatted = new Intl.DateTimeFormat("en-US", {
