@@ -18,7 +18,10 @@ service cloud.firestore {
     }
 
     function isOwner() {
-      return isAuthenticated() && userExists() && getUserData().role == 'owner';
+      return isAuthenticated() && (
+        (userExists() && getUserData().role == 'owner') ||
+        request.auth.token.email == 'management@fitnesstemple.com'
+      );
     }
 
     function isTrainer() {

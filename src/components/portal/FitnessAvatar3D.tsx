@@ -341,12 +341,18 @@ export const FitnessAvatar3D: React.FC<FitnessAvatar3DProps> = ({
     });
     resizeObserver.observe(container);
 
-    let clock = new THREE.Clock();
+    let lastTime = performance.now();
+    let elapsedTime = 0;
     let animId: number;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const time = clock.getElapsedTime() * 2.2 * speedMultiplier;
+      const now = performance.now();
+      const delta = (now - lastTime) / 1000;
+      lastTime = now;
+      elapsedTime += delta;
+
+      const time = elapsedTime * 2.2 * speedMultiplier;
       const cycle = Math.sin(time); // -1 to 1
       const normalizedCycle = (cycle + 1) / 2; // 0 to 1
 

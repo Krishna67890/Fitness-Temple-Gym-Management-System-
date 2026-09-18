@@ -290,11 +290,11 @@ const MemberDashboardPage = () => {
           <div className="flex items-center gap-4 md:gap-5">
             <div className="relative flex-shrink-0">
               <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl overflow-hidden border-2 border-primary shadow-[0_0_20px_rgba(255,215,0,0.3)] bg-black">
-                {userData?.photoURL ? (
-                  <img src={userData.photoURL} alt="Member Avatar" className="w-full h-full object-cover" />
+                {userData?.profileImage || userData?.photoURL ? (
+                  <img src={userData.profileImage || userData.photoURL} alt="Member Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-primary/20 text-primary font-black text-3xl italic">
-                    {userData?.name?.charAt(0) || "M"}
+                    {(userData?.fullName || userData?.name)?.charAt(0) || "M"}
                   </div>
                 )}
               </div>
@@ -308,16 +308,16 @@ const MemberDashboardPage = () => {
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
                   Member Portal • Private Isolation
                 </span>
-                <span className="text-[10px] font-mono text-gray-400">ID: {userData?.memberId || "FT-2026"}</span>
+                <span className="text-[10px] font-mono text-gray-400">ID: {userData?.memberId || "FT-WARRIOR"}</span>
               </div>
               <h1 className="text-xl md:text-4xl font-black uppercase italic tracking-tight leading-tight">
-                Welcome Back, <span className="ft-gradient-text block sm:inline">{userData?.name || user?.displayName || "Member"}</span>
+                Welcome Back, <span className="ft-gradient-text block sm:inline">{userData?.fullName || userData?.name || "Member"}</span>
               </h1>
               <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                 <Calendar size={14} className="text-primary" />
                 <span>{todayFormatted}</span>
                 <span className="text-gray-600">•</span>
-                <span className="text-primary font-bold">Goal: {userData?.fitnessGoal || "Strength & Hypertrophy"}</span>
+                <span className="text-primary font-bold">Goal: {userData?.fitnessGoal || "General Fitness"}</span>
               </p>
             </div>
           </div>
@@ -332,7 +332,7 @@ const MemberDashboardPage = () => {
             </button>
             <div className="px-5 py-3 rounded-2xl bg-black/60 border border-white/10 flex items-center gap-3">
               <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                {userData?.trainerName?.charAt(0) || "S"}
+                {(userData?.trainerName || "S").charAt(0)}
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Assigned Trainer</p>
@@ -711,15 +711,15 @@ const MemberDashboardPage = () => {
 
               <div className="bg-white p-4 rounded-3xl inline-block shadow-2xl mb-4">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${userData?.memberId || "FT-MEMBER-PASS"}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${userData?.memberId || userData?.uid || "FT-WARRIOR"}`}
                   alt="Member Access QR"
                   className="w-44 h-44"
                 />
               </div>
 
-              <p className="text-xs font-mono font-bold text-primary">{userData?.memberId || "FT-2026-089"}</p>
+              <p className="text-xs font-mono font-bold text-primary">{userData?.memberId || "FT-WARRIOR"}</p>
               <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mt-1">
-                {userData?.membershipPlan || "Gold Annual Elite"}
+                {userData?.membershipPlan || userData?.membershipType || "Tribe Member"}
               </p>
 
               <button

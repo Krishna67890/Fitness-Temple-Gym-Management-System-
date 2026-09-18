@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, Send, Bot, User, Volume2, VolumeX, Mic, ExternalLink, Dumbbell, CreditCard, Calendar, Info, Award } from "lucide-react";
+import { MessageSquare, X, Send, Bot, User, Volume2, VolumeX, Mic, MicOff, ExternalLink, Dumbbell, CreditCard, Calendar, Info, Award } from "lucide-react";
 
 import { equipmentData, trainerData, faqData, programData, membershipData } from "@/lib/gymData";
 
@@ -9,6 +9,7 @@ const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState([
     { role: "bot", text: "Welcome to Fitness Temple 💪\n\nI am your Personal Fitness Assistant. How can I help you build your temple today?", actions: true }
   ]);
@@ -32,12 +33,48 @@ const Chatbot = () => {
   const speak = (text: string) => {
     if (!voiceEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Strip emojis and formatting for cleaner speech synthesis
+    const cleanText = text.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD00-\uDFFF]/g, "");
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.rate = 1;
     utterance.pitch = 1;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
+  };
+
+  const startListening = () => {
+    if (!window.hasOwnProperty('webkitSpeechRecognition')) {
+      alert("Voice recognition is not supported in this browser. Please use Google Chrome.");
+      return;
+    }
+
+    // @ts-ignore
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error(e);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(transcript);
+      handleSend(transcript);
+    };
+
+    recognition.start();
   };
 
   const getBotResponse = (userInput: string) => {
@@ -223,6 +260,18 @@ const Chatbot = () => {
                   placeholder="How can we help?"
                   className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm focus:border-primary outline-none text-white placeholder:text-gray-600 font-medium"
                 />
+                <button
+                  type="button"
+                  onClick={startListening}
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isListening
+                      ? "bg-red-500 text-white border-red-500 animate-pulse shadow-lg shadow-red-500/20"
+                      : "bg-white/5 text-gray-400 border-white/10 hover:text-primary hover:border-primary"
+                  }`}
+                  title="Voice Input"
+                >
+                  {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+                </button>
                 <button type="submit" className="p-4 bg-primary text-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
                   <Send size={20} />
                 </button>

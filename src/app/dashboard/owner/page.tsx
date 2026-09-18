@@ -35,6 +35,18 @@ import {
   deleteReviewByOwner,
   GymReview,
 } from "@/lib/reviewsService";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  setDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -188,10 +200,53 @@ const INITIAL_AUDIT_LOGS = [
 const OwnerDashboard = () => {
   const { userData } = useAuth();
   const [members, setMembers] = useState<GymMember[]>(INITIAL_MEMBERS);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "expiring" | "expired">("all");
   const [filterTrainer, setFilterTrainer] = useState<"all" | "suraj" | "sanket">("all");
+
+  // Real-time Firestore listener for all members
+  useEffect(() => {
+    if (!db) {
+      setLoadingMembers(false);
+      return;
+    }
+    setLoadingMembers(true);
+    const q = query(collection(db, "members"), orderBy("name", "asc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const fetched: GymMember[] = [];
+        snapshot.forEach((docSnap) => {
+          const d = docSnap.data();
+          fetched.push({
+            id: docSnap.id,
+            name: d.name || d.fullName || "Member",
+            email: d.email || "—",
+            phone: d.phone || d.mobile || "—",
+            memberId: d.memberId || docSnap.id.slice(0, 10).toUpperCase(),
+            trainerId: d.trainerId || "trainer_suraj",
+            trainerName: d.trainerId === "trainer_sanket" ? "Sanket Sir" : "Suraj Sir",
+            membershipPlan: d.membershipPlan || d.membershipType || "Standard",
+            status: d.status || "active",
+            joinDate: d.joinDate || new Date().toISOString().split("T")[0],
+            expiryDate: d.expiryDate || new Date().toISOString().split("T")[0],
+            workoutPlan: d.assignedWorkoutName || "Not assigned",
+            dietPlan: d.assignedDietName || "Not assigned",
+            attendanceRate: d.attendanceRate || "0%",
+          });
+        });
+        setMembers(fetched);
+        setLoadingMembers(false);
+      },
+      (error) => {
+        console.warn("Firestore owner members fetch error:", error);
+        setLoadingMembers(false);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
 
   // Add Member Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -273,33 +328,42 @@ const OwnerDashboard = () => {
     return matchesSearch && matchesRating;
   });
 
-  const handleAddMemberSubmit = (e: React.FormEvent) => {
+  const handleAddMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const expiry = new Date();
     expiry.setFullYear(expiry.getFullYear() + 1);
 
-    const created: GymMember = {
-      id: `m-${Date.now()}`,
+    const memberData = {
       name: newMember.name,
       email: newMember.email,
       phone: newMember.phone || "+91 99000 11223",
       memberId: `FT-2026-${Math.floor(100 + Math.random() * 900)}`,
       trainerId: newMember.trainerId,
-      trainerName: newMember.trainerId === "trainer_suraj" ? "Suraj Sir" : "Sanket Sir",
       membershipPlan: newMember.membershipPlan,
       status: "active",
       joinDate: new Date().toISOString().split("T")[0],
       expiryDate: expiry.toISOString().split("T")[0],
-      workoutPlan: "Standard Starter Split",
-      dietPlan: "Standard Maintenance (2,200 kcal)",
+      assignedWorkoutName: "Standard Starter Split",
+      assignedDietName: "Standard Maintenance (2,200 kcal)",
       attendanceRate: "100%",
+      createdAt: serverTimestamp(),
+      fitnessGoal: newMember.fitnessGoal,
     };
 
-    setMembers([created, ...members]);
-    setAuditLogs([
-      { time: "Just now", event: `Owner added new member: ${created.name} (${created.memberId})`, type: "owner" },
-      ...auditLogs,
-    ]);
+    if (db) {
+      try {
+        const newMemberRef = doc(collection(db, "members"));
+        await setDoc(newMemberRef, memberData);
+
+        setAuditLogs([
+          { time: "Just now", event: `Owner added new member: ${memberData.name} (${memberData.memberId})`, type: "owner" },
+          ...auditLogs,
+        ]);
+      } catch (err) {
+        console.error("Error adding member to Firestore:", err);
+      }
+    }
+
     setShowAddModal(false);
     setNewMember({
       name: "",
@@ -311,25 +375,40 @@ const OwnerDashboard = () => {
     });
   };
 
-  const handleDeleteMember = (id: string, name: string) => {
+  const handleDeleteMember = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to deactivate ${name}?`)) {
-      setMembers(members.filter((m) => m.id !== id));
-      setAuditLogs([
-        { time: "Just now", event: `Owner deactivated member account: ${name}`, type: "owner" },
-        ...auditLogs,
-      ]);
+      if (db) {
+        try {
+          await deleteDoc(doc(db, "members", id));
+          setAuditLogs([
+            { time: "Just now", event: `Owner deactivated member account: ${name}`, type: "owner" },
+            ...auditLogs,
+          ]);
+        } catch (err) {
+          console.error("Error deleting member:", err);
+        }
+      }
     }
   };
 
-  const handleReassignTrainer = (memberId: string, newTrainerId: "trainer_suraj" | "trainer_sanket") => {
+  const handleReassignTrainer = async (memberId: string, newTrainerId: "trainer_suraj" | "trainer_sanket") => {
     const trainerName = newTrainerId === "trainer_suraj" ? "Suraj Sir" : "Sanket Sir";
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, trainerId: newTrainerId, trainerName } : m))
-    );
-    setAuditLogs([
-      { time: "Just now", event: `Owner reallocated member to ${trainerName}`, type: "owner" },
-      ...auditLogs,
-    ]);
+
+    if (db) {
+      try {
+        await updateDoc(doc(db, "members", memberId), {
+          trainerId: newTrainerId,
+          updatedAt: serverTimestamp(),
+        });
+
+        setAuditLogs([
+          { time: "Just now", event: `Owner reallocated member to ${trainerName}`, type: "owner" },
+          ...auditLogs,
+        ]);
+      } catch (err) {
+        console.error("Error reassigning trainer:", err);
+      }
+    }
   };
 
   // Chart Data

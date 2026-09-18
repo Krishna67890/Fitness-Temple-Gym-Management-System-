@@ -58,8 +58,10 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserData: (newData: Partial<UserProfile>) => Promise<void>;
+  verifyPortalAccess: (email: string, pass: string, type: "member" | "trainer" | "owner") => Promise<boolean>;
   setDemoRole: (role: UserRole, trainerChoice?: "suraj" | "sanket") => void;
   isDemoMode: boolean;
+  portalSession: any | null;
 }
 
 // Built-in Demo profiles for local development when Firebase is not connected
@@ -135,6 +137,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [portalSession, setPortalSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
@@ -142,9 +145,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initialize Auth
   useEffect(() => {
+    // Check for stored portal session
+    const storedPortal = typeof window !== "undefined" ? localStorage.getItem("ft_portal_session") : null;
+    if (storedPortal) {
+      try {
+        setPortalSession(JSON.parse(storedPortal));
+      } catch (e) {
+        console.error("Portal session parse error", e);
+      }
+    }
+
     // Check for redirect results (important for mobile)
     if (isFirebaseConfigured && auth) {
-      getRedirectResult(auth).catch(err => {
+      getRedirectResult(auth).then((result) => {
+        if (result?.user) {
+          // Handle successful redirect sign-in if needed
+        }
+      }).catch(err => {
         console.error("Redirect Result Error:", err);
       });
     }
@@ -416,6 +433,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Verify Portal Access (Layer 2)
+  const verifyPortalAccess = async (email: string, pass: string, type: "member" | "trainer" | "owner"): Promise<boolean> => {
+    if (type === "member") {
+      // For members, we assume Firebase auth is enough, but we can verify against the logged in user
+      if (user && user.email?.toLowerCase() === email.toLowerCase()) {
+        const session = {
+          uid: user.uid,
+          role: "member",
+          name: userData?.name || user.displayName || "Member",
+          authenticated: true,
+          loginAt: Date.now()
+        };
+        setPortalSession(session);
+        localStorage.setItem("ft_portal_session", JSON.stringify(session));
+        return true;
+      }
+      return false;
+    }
+
+    // For Trainer/Owner, check via API (Hidden env vars)
+    try {
+      const response = await fetch('/api/auth/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass, portalType: type }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        const session = {
+          ...data,
+          authenticated: true,
+          loginAt: Date.now()
+        };
+        setPortalSession(session);
+        localStorage.setItem("ft_portal_session", JSON.stringify(session));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Portal verification error:", error);
+      return false;
+    }
+  };
+
   // Quick Role Switching for Local Dev / Testing
   const setDemoRole = (role: UserRole, trainerChoice?: "suraj" | "sanket") => {
     let key = role as string;
@@ -426,6 +488,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUserData(profile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", key);
+
+    // Also set portal session for demo
+    const session = {
+      uid: profile.uid,
+      role: profile.role,
+      name: profile.name,
+      trainerId: profile.trainerId,
+      authenticated: true,
+      isDemo: true
+    };
+    setPortalSession(session);
+    localStorage.setItem("ft_portal_session", JSON.stringify(session));
   };
 
   // Logout
@@ -438,10 +512,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
     localStorage.removeItem("ft_demo_role");
+    localStorage.removeItem("ft_portal_session");
     localStorage.removeItem("ft_member_session");
     localStorage.removeItem("ft_user_role");
     setUser(null);
     setUserData(null);
+    setPortalSession(null);
     setIsDemoMode(false);
     window.location.href = "/login";
   };
@@ -451,6 +527,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         userData,
+        portalSession,
         loading,
         isFirebaseConfigured,
         login,
@@ -459,6 +536,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         resetPassword,
         logout,
         updateUserData,
+        verifyPortalAccess,
         setDemoRole,
         isDemoMode,
       }}
