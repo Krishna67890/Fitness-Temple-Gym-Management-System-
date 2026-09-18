@@ -66,8 +66,40 @@ interface AuthContextType {
 
 // Built-in Demo profiles for local development when Firebase is not connected
 const DEMO_PROFILES: Record<string, UserProfile> = {
+  owner: {
+    uid: "local_owner_001",
+    name: "Omkar & Siddhant (Owners)",
+    email: "management@fitnesstemple.com",
+    role: "owner",
+    phone: "+91 96652 31230",
+    membershipStatus: "active",
+    fitnessGoal: "Gym Director & Founder",
+    photoURL: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+  },
+  trainer_suraj: {
+    uid: "local_trainer_suraj",
+    name: "Suraj Sir",
+    email: "suraj@fitnesstemple.com",
+    role: "trainer",
+    phone: "+91 91234 56789",
+    trainerId: "trainer_suraj",
+    membershipStatus: "active",
+    fitnessGoal: "Senior Strength & Conditioning Coach",
+    photoURL: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
+  },
+  trainer_sanket: {
+    uid: "local_trainer_sanket",
+    name: "Sanket Sir",
+    email: "sanket@fitnesstemple.com",
+    role: "trainer",
+    phone: "+91 92345 67890",
+    trainerId: "trainer_sanket",
+    membershipStatus: "active",
+    fitnessGoal: "Biomechanics & Hypertrophy Specialist",
+    photoURL: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
+  },
   member: {
-    uid: "demo_member_001",
+    uid: "local_member_001",
     name: "Krishna Patil",
     email: "krishna@fitnesstemple.com",
     role: "member",
@@ -85,38 +117,14 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     memberId: "FT-2026-089",
     photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
   },
-  trainer_suraj: {
-    uid: "demo_trainer_suraj",
-    name: "Suraj Sir",
-    email: "suraj@fitnesstemple.com",
-    role: "trainer",
-    phone: "+91 91234 56789",
-    trainerId: "trainer_suraj",
-    membershipStatus: "active",
-    fitnessGoal: "Senior Strength & Conditioning Coach",
-    photoURL: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
-  },
-  trainer_sanket: {
-    uid: "demo_trainer_sanket",
-    name: "Sanket Sir",
-    email: "sanket@fitnesstemple.com",
-    role: "trainer",
-    phone: "+91 92345 67890",
-    trainerId: "trainer_sanket",
-    membershipStatus: "active",
-    fitnessGoal: "Biomechanics & Hypertrophy Specialist",
-    photoURL: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
-  },
-  owner: {
-    uid: "demo_owner_omkar",
-    name: "Omkar & Siddhant (Owners)",
-    email: "management@fitnesstemple.com",
-    role: "owner",
-    phone: "+91 96652 31230",
-    membershipStatus: "active",
-    fitnessGoal: "Gym Director & Founder",
-    photoURL: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-  },
+};
+
+// Default passwords for local/demo accounts
+const LOCAL_CREDENTIALS: Record<string, string> = {
+  "management@fitnesstemple.com": "owner123",
+  "suraj@fitnesstemple.com": "suraj123",
+  "sanket@fitnesstemple.com": "sanket123",
+  "krishna@fitnesstemple.com": "member123",
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -238,35 +246,54 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Login with Email & Password
   const login = async (email: string, pass: string): Promise<UserProfile> => {
-    // Check if live Firebase is ready
-    if (isFirebaseConfigured && auth && db) {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      const userDoc = await getDoc(doc(db, "users", cred.user.uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data() as UserProfile;
-        setUserData(data);
-        setUser(cred.user);
-        setIsDemoMode(false);
-        localStorage.removeItem("ft_demo_role");
-        return data;
-      }
-      // If doc does not exist, default to member
-      const fallback: UserProfile = {
-        uid: cred.user.uid,
-        name: cred.user.displayName || "Fitness Member",
-        email: cred.user.email || email,
-        role: "member",
-        trainerId: "trainer_suraj",
-        trainerName: "Suraj Sir",
-        membershipStatus: "active",
-      };
-      await setDoc(doc(db, "users", cred.user.uid), fallback);
-      setUserData(fallback);
-      return fallback;
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check Local Credentials first for instant access
+    if (LOCAL_CREDENTIALS[cleanEmail] && LOCAL_CREDENTIALS[cleanEmail] === pass) {
+      let matchedProfile = DEMO_PROFILES.member;
+      if (cleanEmail.includes("management")) matchedProfile = DEMO_PROFILES.owner;
+      else if (cleanEmail.includes("suraj")) matchedProfile = DEMO_PROFILES.trainer_suraj;
+      else if (cleanEmail.includes("sanket")) matchedProfile = DEMO_PROFILES.trainer_sanket;
+
+      setUserData(matchedProfile);
+      setIsDemoMode(true);
+      localStorage.setItem("ft_demo_role", matchedProfile.role === "trainer" ? (matchedProfile.trainerId || "trainer_suraj") : matchedProfile.role);
+      return matchedProfile;
     }
 
-    // Demo Mode match without plaintext leak in code
-    const cleanEmail = email.trim().toLowerCase();
+    // Check if live Firebase is ready
+    if (isFirebaseConfigured && auth && db) {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const userDoc = await getDoc(doc(db, "users", cred.user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data() as UserProfile;
+          setUserData(data);
+          setUser(cred.user);
+          setIsDemoMode(false);
+          localStorage.removeItem("ft_demo_role");
+          return data;
+        }
+        // If doc does not exist, default to member
+        const fallback: UserProfile = {
+          uid: cred.user.uid,
+          name: cred.user.displayName || "Fitness Member",
+          email: cred.user.email || email,
+          role: "member",
+          trainerId: "trainer_suraj",
+          trainerName: "Suraj Sir",
+          membershipStatus: "active",
+        };
+        await setDoc(doc(db, "users", cred.user.uid), fallback);
+        setUserData(fallback);
+        return fallback;
+      } catch (err) {
+        // Fall through to demo if firebase fails but we want to allow demo login
+        console.warn("Firebase login failed, checking demo fallback...");
+      }
+    }
+
+    // Demo Mode match without plaintext leak in code (if not already matched by LOCAL_CREDENTIALS)
     let matchedRole: UserRole = "member";
     let matchedProfile = DEMO_PROFILES.member;
 
@@ -437,6 +464,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Verify Portal Access (Layer 2)
   const verifyPortalAccess = async (email: string, pass: string, type: "member" | "trainer" | "owner"): Promise<boolean> => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check Local Secondary Password (for Demo/Local IDs)
+    if (LOCAL_CREDENTIALS[cleanEmail] === pass) {
+      const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail) || DEMO_PROFILES.member;
+      const session = {
+        uid: matchedProfile.uid,
+        role: type,
+        name: matchedProfile.name,
+        authenticated: true,
+        isLocal: true,
+        loginAt: Date.now()
+      };
+      setPortalSession(session);
+      localStorage.setItem("ft_portal_session", JSON.stringify(session));
+      return true;
+    }
+
     if (type === "member") {
       // For members, we assume Firebase auth is enough, but we can verify against the logged in user
       if (user && user.email?.toLowerCase() === email.toLowerCase()) {

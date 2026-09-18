@@ -71,11 +71,12 @@ const ThreeBackground = () => {
     window.addEventListener("mousemove", handleMouse);
 
     let animId: number;
-    const clock = new THREE.Clock();
+    // THREE.Clock is deprecated, using performance.now() or a simple timer
+    const startTime = performance.now();
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - startTime) * 0.001;
 
       particles.rotation.y = t * 0.04 + mouseX;
       particles.rotation.x = t * 0.02 + mouseY;

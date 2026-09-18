@@ -83,14 +83,24 @@ export const subscribeToPublishedReviews = (
             });
           });
 
+          // Merge Firestore and Local Reviews seamlessly
+          const local = getLocalReviews().filter((r) => r.status === "published");
+          const combined = [...reviews];
+
+          local.forEach((lr) => {
+            if (!combined.some((cr) => cr.userId === lr.userId)) {
+              combined.push(lr);
+            }
+          });
+
           // Sort newest first in memory
-          reviews.sort((a, b) => {
+          combined.sort((a, b) => {
             const timeA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt || 0).getTime();
             const timeB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt || 0).getTime();
             return timeB - timeA;
           });
 
-          callback(reviews);
+          callback(combined);
         },
         (error) => {
           console.warn("Firestore reviews listener error, reading local store:", error);

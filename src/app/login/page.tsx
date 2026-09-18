@@ -319,13 +319,38 @@ const LoginPage = () => {
             </button>
 
             {/* Footer links */}
-            <div className="mt-8 text-center space-y-2">
+            <div className="mt-8 text-center space-y-4">
               <p className="text-gray-500 text-xs">
                 Don't have an active membership?{" "}
                 <Link href="/register" className="text-primary font-black uppercase tracking-wider hover:underline ml-1">
                   Join Tribe
                 </Link>
               </p>
+
+              {/* Instant Admin/Dev Login - Added for quick access */}
+              <div className="pt-6 border-t border-white/5">
+                <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-3">Developer Quick Access</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={() => handleDemoSelect('owner')}
+                    className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-lg text-[10px] font-bold text-primary transition-all"
+                  >
+                    INSTANT OWNER
+                  </button>
+                  <button
+                    onClick={() => handleDemoSelect('trainer', 'suraj')}
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
+                  >
+                    TRAINER (SURAJ)
+                  </button>
+                  <button
+                    onClick={() => handleDemoSelect('member')}
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
+                  >
+                    MEMBER
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
         ) : (
