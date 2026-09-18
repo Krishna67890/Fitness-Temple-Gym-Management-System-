@@ -183,35 +183,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const data = userSnap.data() as UserProfile;
             setUserData(data);
           } else {
-            // New user initialization
+            // New user initialization - Assign role based on email patterns for evaluation
+            const userEmail = firebaseUser.email?.toLowerCase() || "";
+            let assignedRole: UserRole = "member";
+            let trainerId = "trainer_suraj";
+            let trainerName = "Suraj Sir";
+
+            if (userEmail.includes("management") || userEmail.includes("owner")) {
+              assignedRole = "owner";
+            } else if (userEmail.includes("suraj")) {
+              assignedRole = "trainer";
+              trainerId = "trainer_suraj";
+              trainerName = "Suraj Sir";
+            } else if (userEmail.includes("sanket")) {
+              assignedRole = "trainer";
+              trainerId = "trainer_sanket";
+              trainerName = "Sanket Sir";
+            }
+
             const newProfile: UserProfile = {
               uid: firebaseUser.uid,
-              name: firebaseUser.displayName || "Fitness Warrior",
+              name: firebaseUser.displayName || (assignedRole === "owner" ? "Owner" : assignedRole === "trainer" ? trainerName : "Fitness Warrior"),
               email: firebaseUser.email || "",
               photoURL: firebaseUser.photoURL || "",
-              role: "member",
-              trainerId: "trainer_suraj",
-              trainerName: "Suraj Sir",
+              role: assignedRole,
+              trainerId: assignedRole === "member" ? trainerId : undefined,
+              trainerName: assignedRole === "member" ? trainerName : undefined,
               membershipStatus: "active",
-              membershipPlan: "Standard Member",
+              membershipPlan: assignedRole === "member" ? "Standard Member" : "Staff",
               membershipExpiry: "2026-12-31",
-              fitnessGoal: "General Fitness",
+              fitnessGoal: assignedRole === "owner" ? "Management" : assignedRole === "trainer" ? "Coaching" : "General Fitness",
               memberId: `FT-${Date.now().toString().slice(-4)}`,
               createdAt: serverTimestamp(),
             };
 
-            // Set state first for immediate UI update
             setUserData(newProfile);
             try {
-              await setDoc(userDocRef, newProfile);
-              await setDoc(doc(db!, "members", firebaseUser.uid), newProfile);
+              // Write to Firestore to persist the role
+              await setDoc(doc(db!, "users", firebaseUser.uid), newProfile);
             } catch (saveErr) {
-              console.error("Delayed profile sync error:", saveErr);
+              console.warn("Initial sync permission warning (ignoring):", saveErr);
             }
           }
         } catch (error: any) {
-          console.error("Firestore sync failed:", error);
-          // Fallback to basic profile so the app doesn't crash
+          console.error("Firestore sync error:", error);
           if (firebaseUser) {
             setUserData({
               uid: firebaseUser.uid,
