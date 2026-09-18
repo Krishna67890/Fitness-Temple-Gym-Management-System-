@@ -22,6 +22,8 @@ import { FitnessAvatar3D, ExerciseDemoType } from "./FitnessAvatar3D";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useVoice } from "@/hooks/useVoice";
+import { Mic, MicOff } from "lucide-react";
 
 export interface ExerciseItem {
   id: string;
@@ -55,6 +57,7 @@ export const WorkoutPlayer: React.FC<WorkoutPlayerProps> = ({
   onWorkoutComplete,
 }) => {
   const { user, userData, updateUserData } = useAuth();
+  const { speak, isListening, startListening, stopListening, lastTranscript } = useVoice();
 
   // Exercise Navigation
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -117,6 +120,46 @@ export const WorkoutPlayer: React.FC<WorkoutPlayerProps> = ({
     }, 1000);
     return () => clearInterval(timer);
   }, [isResting, restSecondsLeft]);
+
+  // Voice Command Processing
+  useEffect(() => {
+    if (!lastTranscript) return;
+
+    const cmd = lastTranscript.toLowerCase();
+
+    if (cmd.includes("next set") || cmd.includes("log set")) {
+      const nextIncompleteIdx = currentSets.findIndex((s) => !s.completed);
+      if (nextIncompleteIdx !== -1) {
+        handleCompleteSet(nextIncompleteIdx);
+        speak(`Set ${nextIncompleteIdx + 1} logged.`);
+      }
+    } else if (cmd.includes("skip rest")) {
+      if (isResting) {
+        setIsResting(false);
+        setRestSecondsLeft(null);
+        speak("Rest skipped.");
+      }
+    } else if (cmd.includes("pause")) {
+      setIsWorkoutPaused(true);
+      speak("Workout paused.");
+    } else if (cmd.includes("resume")) {
+      setIsWorkoutPaused(false);
+      speak("Workout resumed.");
+    } else if (cmd.includes("next exercise")) {
+      if (currentExIndex < exercises.length - 1) {
+        setCurrentExIndex((idx) => idx + 1);
+        speak(`Moving to ${exercises[currentExIndex + 1].name}`);
+      }
+    } else if (cmd.includes("previous exercise")) {
+      if (currentExIndex > 0) {
+        setCurrentExIndex((idx) => idx - 1);
+        speak(`Back to ${exercises[currentExIndex - 1].name}`);
+      }
+    } else if (cmd.includes("finish workout")) {
+      handleFinishWorkout();
+      speak("Great job! Finishing workout.");
+    }
+  }, [lastTranscript]);
 
   // Format MM:SS
   const formatTime = (secs: number) => {
@@ -255,6 +298,25 @@ export const WorkoutPlayer: React.FC<WorkoutPlayerProps> = ({
             >
               {isWorkoutPaused ? <Play size={14} /> : <Pause size={14} />}
             </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={isListening ? stopListening : startListening}
+              className={`p-2 rounded-xl border transition-all ${
+                isListening
+                  ? "bg-primary/20 border-primary text-primary animate-pulse"
+                  : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+              }`}
+              title={isListening ? "Stop Voice Commands" : "Start Voice Commands"}
+            >
+              {isListening ? <Mic size={18} /> : <MicOff size={18} />}
+            </button>
+            {isListening && (
+              <span className="text-[10px] font-mono text-primary animate-pulse hidden lg:inline">
+                Listening...
+              </span>
+            )}
           </div>
 
           <div className="hidden md:flex items-center gap-3">

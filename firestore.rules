@@ -85,9 +85,22 @@ service cloud.firestore {
 
     // Reviews
     match /reviews/{reviewId} {
-      allow read: if resource.data.status == 'published' || (isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner()));
+      allow read: if resource.data.status == 'published' ||
+                   (isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner()));
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
       allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner());
+    }
+
+    // Advanced Workout Engine & Wearables
+    match /workout_plans/{planId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner() || isTrainer();
+    }
+    match /user_workouts/{userId}/{allPaths=**} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
+    }
+    match /wearable_sync/{userId}/{allPaths=**} {
+      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isOwner());
     }
   }
 }

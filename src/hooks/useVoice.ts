@@ -1,71 +1,51 @@
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 
 export const useVoice = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState('');
+
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = false;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onstart = () => setIsListening(true);
+        recognitionRef.current.onend = () => setIsListening(false);
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+          setLastTranscript(transcript);
+        };
+      }
+    }
+  }, []);
 
   const speak = useCallback((text: string) => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-
       const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
-
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-        setIsPaused(false);
-      };
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        setIsPaused(false);
-      };
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        setIsPaused(false);
-      };
-
-      utterance.rate = 0.9; // Slightly slower for clarity
-      utterance.pitch = 1;
-      utterance.volume = 1;
-
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.rate = 0.95;
       window.speechSynthesis.speak(utterance);
     }
   }, []);
 
-  const stop = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      setIsPaused(false);
+  const startListening = useCallback(() => {
+    if (recognitionRef.current && !isListening) {
+      try { recognitionRef.current.start(); } catch (e) { console.error(e); }
     }
+  }, [isListening]);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) recognitionRef.current.stop();
   }, []);
 
-  const pause = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.pause();
-      setIsPaused(true);
-    }
-  }, []);
-
-  const resume = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.resume();
-      setIsPaused(false);
-    }
-  }, []);
-
-  const toggle = useCallback((text: string) => {
-    if (isSpeaking) {
-      if (isPaused) {
-        resume();
-      } else {
-        pause();
-      }
-    } else {
-      speak(text);
-    }
-  }, [isSpeaking, isPaused, speak, pause, resume]);
-
-  return { speak, stop, pause, resume, toggle, isSpeaking, isPaused };
+  return { speak, isSpeaking, isListening, startListening, stopListening, lastTranscript };
 };

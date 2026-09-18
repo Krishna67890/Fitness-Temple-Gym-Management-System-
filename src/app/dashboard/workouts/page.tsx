@@ -17,109 +17,34 @@ import {
   Youtube,
   Trophy,
   Volume2,
-  VolumeX
+  VolumeX,
+  Calendar,
+  Activity,
+  Heart,
+  Zap,
+  Mic
 } from "lucide-react";
 import { useVoice } from "@/hooks/useVoice";
-
 import { useAuth } from "@/context/AuthContext";
 
-const exercises = [
-  {
-    id: 1,
-    name: "Barbell Bench Press",
-    category: "Chest",
-    difficulty: "Intermediate",
-    instructions: "1. Lie flat on bench. 2. Grip bar slightly wider than shoulders. 3. Lower bar to mid-chest. 4. Press bar back up until arms are straight.",
-    muscles: ["Chest", "Triceps", "Shoulders"],
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    name: "Standing Overhead Press",
-    category: "Shoulders",
-    difficulty: "Advanced",
-    instructions: "1. Stand with feet shoulder-width. 2. Press barbell from shoulders to overhead. 3. Keep core tight and avoid leaning back.",
-    muscles: ["Shoulders", "Triceps"],
-    image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 3,
-    name: "Barbell Back Squat",
-    category: "Legs",
-    difficulty: "Advanced",
-    instructions: "1. Bar on upper traps. 2. Feet shoulder-width. 3. Lower until thighs are parallel to floor. 4. Drive up through heels.",
-    muscles: ["Quads", "Glutes", "Hamstrings"],
-    image: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 4,
-    name: "Conventional Deadlift",
-    category: "Back",
-    difficulty: "Advanced",
-    instructions: "1. Feet hip-width. 2. Grip bar outside knees. 3. Neutral spine. 4. Stand up by extending hips and knees.",
-    muscles: ["Back", "Hamstrings", "Glutes"],
-    image: "https://images.unsplash.com/photo-1605296867304-46d5465a13f1?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 5,
-    name: "Lat Pulldowns",
-    category: "Back",
-    difficulty: "Beginner",
-    instructions: "1. Sit at machine. 2. Pull bar to upper chest. 3. Squeeze shoulder blades. 4. Return with control.",
-    muscles: ["Lats", "Biceps"],
-    image: "https://images.unsplash.com/photo-1598971639058-fab3c3109a00?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 6,
-    name: "Romanian Deadlift",
-    category: "Legs",
-    difficulty: "Intermediate",
-    instructions: "1. Hinge at hips. 2. Lower bar along legs. 3. Feel stretch in hamstrings. 4. Snap hips forward to stand.",
-    muscles: ["Hamstrings", "Glutes"],
-    image: "https://images.unsplash.com/photo-1590487988256-9ed24133863e?q=80&w=2070&auto=format&fit=crop"
-  }
-];
-
-const workouts = [
-  {
-    id: 1,
-    title: "Push (Chest/Shoulders/Triceps)",
-    level: "Intermediate",
-    duration: "60 mins",
-    calories: "450 kcal",
-    exercisesCount: 6,
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    title: "Pull (Back/Biceps)",
-    level: "Intermediate",
-    duration: "60 mins",
-    calories: "400 kcal",
-    exercisesCount: 6,
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef03a71018?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 3,
-    title: "Legs (Quads/Hams/Glutes)",
-    level: "Advanced",
-    duration: "75 mins",
-    calories: "600 kcal",
-    exercisesCount: 5,
-    image: "https://images.unsplash.com/photo-1574680096145-d05b474e2158?q=80&w=2070&auto=format&fit=crop"
-  }
-];
+// Advanced Workout Engine Data
+const weeklyRoutine = {
+  Monday: { focus: "Chest & Triceps", exercises: ["Bench Press", "Incline DB Press", "Tricep Pushdowns"], color: "from-blue-500/20" },
+  Tuesday: { focus: "Back & Biceps", exercises: ["Deadlifts", "Pull-ups", "Barbell Curls"], color: "from-emerald-500/20" },
+  Wednesday: { focus: "Legs & Core", exercises: ["Squats", "Leg Press", "Plank"], color: "from-orange-500/20" },
+  Thursday: { focus: "Shoulders & Front", exercises: ["Overhead Press", "Lateral Raises", "Front Raises"], color: "from-purple-500/20" },
+  Friday: { focus: "Chest & Back (Hypertrophy)", exercises: ["DB Flyes", "Rows", "Pulldowns"], color: "from-pink-500/20" },
+  Saturday: { focus: "Arms & Weak Points", exercises: ["Skull Crushers", "Hammer Curls", "Calf Raises"], color: "from-yellow-500/20" },
+  Sunday: { focus: "Rest & Recovery", exercises: ["Stretching", "Light Walking"], color: "from-gray-500/20" }
+};
 
 const WorkoutsPage = () => {
   const { userData } = useAuth();
   const role = userData?.role || 'member';
   const { speak, stop, isSpeaking } = useVoice();
-  const [view, setView] = useState<"plans" | "library">("plans");
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedExercise, setSelectedExercise] = useState<any>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPlanDetails, setSelectedPlanDetails] = useState<any>(null);
-  const [localWorkouts, setLocalWorkouts] = useState(workouts);
+  const [view, setView] = useState<"plans" | "library" | "calendar" | "wearable">("calendar");
+  const [selectedDay, setSelectedDay] = useState(new Date().toLocaleDateString('en-US', { weekday: 'long' }));
+  const [isListening, setIsListening] = useState(false);
 
   const [newPlan, setNewPlan] = useState({
     name: "",
@@ -167,11 +92,25 @@ const WorkoutsPage = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
+            onClick={() => setView("calendar")}
+            className={`btn-outline py-3 px-6 flex items-center space-x-2 ${view === 'calendar' ? 'border-primary text-primary' : ''}`}
+          >
+            <Calendar size={20} />
+            <span className="text-sm">Calendar</span>
+          </button>
+          <button
+            onClick={() => setView("wearable")}
+            className={`btn-outline py-3 px-6 flex items-center space-x-2 ${view === 'wearable' ? 'border-primary text-primary' : ''}`}
+          >
+            <Activity size={20} />
+            <span className="text-sm">Wearable Sync</span>
+          </button>
+          <button
             onClick={() => setView(view === "plans" ? "library" : "plans")}
             className="btn-outline py-3 px-6 flex items-center space-x-2"
           >
             <Dumbbell size={20} />
-            <span className="text-sm">{view === "plans" ? "Browse Library" : "View My Plans"}</span>
+            <span className="text-sm">{view === "plans" ? "Library" : "Plans"}</span>
           </button>
           {(role === 'owner' || role === 'trainer') && (
             <button
@@ -185,7 +124,138 @@ const WorkoutsPage = () => {
         </div>
       </div>
 
-      {view === "plans" ? (
+      {view === "calendar" ? (
+        <div className="space-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            {Object.keys(weeklyRoutine).map((day) => (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className={`glass p-4 rounded-3xl border transition-all text-center ${
+                  selectedDay === day ? 'border-primary bg-primary/10' : 'border-white/5 hover:border-white/20'
+                }`}
+              >
+                <p className="text-[10px] font-black uppercase text-gray-500">{day.substring(0, 3)}</p>
+                <p className={`text-sm font-bold ${selectedDay === day ? 'text-primary' : ''}`}>{day === 'Sunday' ? 'Rest' : 'Workout'}</p>
+              </button>
+            ))}
+          </div>
+
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`glass p-8 rounded-[3rem] border border-white/10 bg-gradient-to-br ${weeklyRoutine[selectedDay as keyof typeof weeklyRoutine].color} to-transparent`}
+          >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+              <div>
+                <span className="text-primary text-[10px] font-black uppercase tracking-widest bg-primary/20 px-3 py-1 rounded-full mb-3 inline-block">
+                  Current Session: {selectedDay}
+                </span>
+                <h2 className="text-4xl font-black uppercase italic tracking-tighter">
+                  {weeklyRoutine[selectedDay as keyof typeof weeklyRoutine].focus.split(' ')[0]} <span className="text-primary">{weeklyRoutine[selectedDay as keyof typeof weeklyRoutine].focus.split(' ').slice(1).join(' ')}</span>
+                </h2>
+              </div>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    const routine = weeklyRoutine[selectedDay as keyof typeof weeklyRoutine];
+                    speak(`Today is ${selectedDay}. Your focus is ${routine.focus}. You have ${routine.exercises.length} exercises scheduled: ${routine.exercises.join(', ')}. Let's get to work!`);
+                  }}
+                  className="w-14 h-14 bg-primary text-black rounded-2xl flex items-center justify-center hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+                >
+                  <Volume2 size={24} />
+                </button>
+                <button
+                  onClick={() => setIsListening(!isListening)}
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 animate-pulse' : 'bg-white/5 hover:bg-white/10'}`}
+                >
+                  <Mic size={24} />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {weeklyRoutine[selectedDay as keyof typeof weeklyRoutine].exercises.map((ex, i) => (
+                <div key={i} className="glass p-6 rounded-[2rem] border border-white/5 hover:border-primary/30 transition-all group">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center font-black text-primary">
+                      {i + 1}
+                    </div>
+                    <PlayCircle size={20} className="text-gray-500 group-hover:text-primary transition-colors" />
+                  </div>
+                  <h4 className="text-lg font-black uppercase italic mb-1">{ex}</h4>
+                  <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">3 Sets • 12 Reps • 60s Rest</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      ) : view === "wearable" ? (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="glass p-8 rounded-[3rem] border border-white/10 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 text-primary/10 group-hover:scale-110 transition-transform">
+                <Heart size={120} />
+              </div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center gap-2">
+                <Heart size={14} className="text-red-500" /> Live Heart Rate
+              </h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-6xl font-black italic">128</span>
+                <span className="text-xl font-bold text-gray-400 uppercase">BPM</span>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-green-400 text-[10px] font-black uppercase">
+                <Activity size={12} /> Target Zone: Aerobic
+              </div>
+            </div>
+
+            <div className="glass p-8 rounded-[3rem] border border-white/10 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 text-primary/10 group-hover:scale-110 transition-transform">
+                <Flame size={120} />
+              </div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center gap-2">
+                <Flame size={14} className="text-orange-500" /> Active Calories
+              </h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-6xl font-black italic">482</span>
+                <span className="text-xl font-bold text-gray-400 uppercase">KCAL</span>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-primary text-[10px] font-black uppercase">
+                <Zap size={12} /> 65% of daily goal
+              </div>
+            </div>
+
+            <div className="glass p-8 rounded-[3rem] border border-white/10 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 text-primary/10 group-hover:scale-110 transition-transform">
+                <Activity size={120} />
+              </div>
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center gap-2">
+                <Activity size={14} className="text-blue-500" /> Recovery Score
+              </h3>
+              <div className="flex items-baseline gap-2">
+                <span className="text-6xl font-black italic">84</span>
+                <span className="text-xl font-bold text-gray-400 uppercase">%</span>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase">
+                <Check size={12} /> Ready for high intensity
+              </div>
+            </div>
+          </div>
+
+          <div className="glass p-10 rounded-[3rem] border border-white/10 text-center">
+            <h3 className="text-2xl font-black uppercase italic mb-4">Connect <span className="text-primary">Wearables</span></h3>
+            <p className="text-gray-400 text-sm max-w-lg mx-auto mb-8">
+              Sync your Apple Watch, Garmin, or WHOOP to unlock deep bio-metric insights and adaptive workout intensity.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <button className="px-8 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase border border-white/10 transition-all">Link Apple Health</button>
+              <button className="px-8 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase border border-white/10 transition-all">Link Google Fit</button>
+              <button className="px-8 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase border border-white/10 transition-all">Link Garmin</button>
+            </div>
+          </div>
+        </div>
+      ) : view === "plans" ? (
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-3/4 space-y-6">
             {/* Workout Cards */}

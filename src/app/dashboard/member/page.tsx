@@ -345,23 +345,42 @@ const MemberDashboardPage = () => {
 
       {/* 2. Top Summary Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4">
+        <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4 relative overflow-hidden">
           <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
             <Flame size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Today's Split</p>
-            <p className="text-sm font-black uppercase italic text-white truncate max-w-[140px]">{routine.focus.split(" ")[0]}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Live Heart Rate</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-black font-mono text-white animate-pulse">
+                {isWorkoutStarted ? 110 + Math.floor(Math.random() * 40) : 72}
+              </span>
+              <span className="text-[10px] font-bold text-red-500">BPM</span>
+            </div>
           </div>
+          {isWorkoutStarted && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20">
+              <motion.div
+                animate={{ x: ["0%", "100%"] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="w-1/3 h-full bg-primary"
+              />
+            </div>
+          )}
         </div>
 
         <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400">
-            <CheckCircle2 size={24} />
+            <TrendingUp size={24} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Workout Progress</p>
-            <p className="text-lg font-black font-mono text-white">{progressPercent}%</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Est. Calories</p>
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-black font-mono text-white">
+                {isWorkoutStarted ? 120 + Math.floor(Math.random() * 200) : 0}
+              </span>
+              <span className="text-[10px] font-bold text-green-500">KCAL</span>
+            </div>
           </div>
         </div>
 

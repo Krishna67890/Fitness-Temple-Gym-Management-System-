@@ -336,11 +336,14 @@ export const GymEquipment3D: React.FC<GymEquipment3DProps> = ({
 
     // Animation Loop
     let animId: number;
-    const clock = new THREE.Clock();
+    let lastTime = performance.now();
+    let elapsed = 0;
 
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+      const now = performance.now();
+      elapsed += (now - lastTime) / 1000;
+      lastTime = now;
 
       if (isRotating && !isDragging) {
         equipmentGroup.rotation.y += 0.01;
