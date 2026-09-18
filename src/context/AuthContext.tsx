@@ -499,12 +499,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (type === "member") {
-      // For members, we assume Firebase auth is enough, but we can verify against the logged in user
-      if (user && user.email?.toLowerCase() === email.toLowerCase()) {
+      // For members, we assume Firebase auth or existence of userData is enough
+      const isMatch = (user && user.email?.toLowerCase() === cleanEmail) ||
+                      (userData && userData.email?.toLowerCase() === cleanEmail);
+
+      if (isMatch) {
         const session = {
-          uid: user.uid,
+          uid: user?.uid || userData?.uid || "verified_member",
           role: "member",
-          name: userData?.name || user.displayName || "Member",
+          name: userData?.name || user?.displayName || "Member",
           authenticated: true,
           loginAt: Date.now()
         };

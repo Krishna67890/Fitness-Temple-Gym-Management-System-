@@ -114,12 +114,13 @@ const LoginPage = () => {
     handleRoleRedirect(role);
   };
 
-  const handlePortalAccess = async (e?: React.FormEvent) => {
+  const handlePortalAccess = async (e?: React.FormEvent, portalOverride?: UserRole) => {
     if (e) e.preventDefault();
-    if (!selectedPortal) return;
+    const activePortal = portalOverride || selectedPortal;
+    if (!activePortal) return;
 
     // Member portal bypasses secondary password if already logged in via Firebase
-    if (selectedPortal === 'member') {
+    if (activePortal === 'member') {
       setPortalLoading(true);
       const success = await verifyPortalAccess(user?.email || userData?.email || "", "", 'member');
       if (success) {
@@ -137,7 +138,7 @@ const LoginPage = () => {
     }
 
     // MANDATORY: Owner portal requires specific password for entry
-    if (selectedPortal === 'owner' && portalPassword !== 'FitnessTemple@123') {
+    if (activePortal === 'owner' && portalPassword !== 'FitnessTemple@123') {
       setPortalError("Unauthorized access key. Owner verification failed.");
       return;
     }
@@ -146,9 +147,9 @@ const LoginPage = () => {
     setPortalError("");
 
     try {
-      const success = await verifyPortalAccess(user?.email || userData?.email || "", portalPassword, selectedPortal);
+      const success = await verifyPortalAccess(user?.email || userData?.email || "", portalPassword, activePortal);
       if (success) {
-        handleRoleRedirect(selectedPortal);
+        handleRoleRedirect(activePortal);
       } else {
         setPortalError("Invalid portal security key.");
       }
@@ -338,6 +339,12 @@ const LoginPage = () => {
                 <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-3">Developer Quick Access</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <button
+                    onClick={() => handleDemoSelect('owner')}
+                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
+                  >
+                    OWNER/ADMIN
+                  </button>
+                  <button
                     onClick={() => handleDemoSelect('trainer', 'suraj')}
                     className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
                   >
@@ -375,7 +382,7 @@ const LoginPage = () => {
               <button
                 onClick={() => {
                   setSelectedPortal('member');
-                  handlePortalAccess();
+                  handlePortalAccess(undefined, 'member');
                 }}
                 className="portal-card group relative p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-500 overflow-hidden text-left"
               >
