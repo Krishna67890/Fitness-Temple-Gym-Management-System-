@@ -37,6 +37,13 @@ export const useVoice = () => {
     }
   }, []);
 
+  const stop = useCallback(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, []);
+
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
       try { recognitionRef.current.start(); } catch (e) { console.error(e); }
@@ -47,5 +54,5 @@ export const useVoice = () => {
     if (recognitionRef.current) recognitionRef.current.stop();
   }, []);
 
-  return { speak, isSpeaking, isListening, startListening, stopListening, lastTranscript };
+  return { speak, stop, isSpeaking, isListening, startListening, stopListening, lastTranscript };
 };
