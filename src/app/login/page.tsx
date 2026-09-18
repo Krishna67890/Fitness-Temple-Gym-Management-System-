@@ -8,7 +8,7 @@ import { useAuth, UserRole } from "@/context/AuthContext";
 import { gsap } from "gsap";
 
 const LoginPage = () => {
-  const { login, loginWithGoogle, resetPassword, setDemoRole, isFirebaseConfigured, user, userData, verifyPortalAccess } = useAuth();
+  const { login, loginWithGoogle, resetPassword, setDemoRole, isFirebaseConfigured, user, userData, verifyPortalAccess, updateUserData } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -17,9 +17,13 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [resetSent, setResetSent] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+
+  // Developer Setup State
+  const [showDevSetup, setShowDevSetup] = useState(false);
+  const [devName, setDevName] = useState("");
+  const [devGender, setDevGender] = useState<"boy" | "girl">("boy");
 
   // Portal Selection State
   const [stage, setStage] = useState<'login' | 'portal-selection'>('login');
@@ -110,8 +114,27 @@ const LoginPage = () => {
   };
 
   const handleDemoSelect = (role: "member" | "trainer" | "owner", trainerChoice?: "suraj" | "sanket") => {
+    if (role === 'member') {
+      setDevName(role === 'member' ? "Krishna Patil" : "");
+      setShowDevSetup(true);
+      return;
+    }
     setDemoRole(role, trainerChoice);
     handleRoleRedirect(role);
+  };
+
+  const handleStartDevWorkout = async () => {
+    setDemoRole('member');
+
+    // Update profile data in state immediately
+    await updateUserData({
+      name: devName || "Fitness Warrior",
+      gender: devGender,
+      photoURL: devGender === 'boy' ? "/assets/boy.png" : "/assets/girl.png"
+    });
+
+    setShowDevSetup(false);
+    handleRoleRedirect('member');
   };
 
   const handlePortalAccess = async (e?: React.FormEvent, portalOverride?: UserRole) => {
@@ -339,22 +362,23 @@ const LoginPage = () => {
                 <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-3">Developer Quick Access</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <button
-                    onClick={() => handleDemoSelect('owner')}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
+                    onClick={() => {
+                      setDevName("Krishna Patil");
+                      setShowDevSetup(true);
+                    }}
+                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-xl text-[10px] font-black text-primary transition-all uppercase tracking-widest flex items-center gap-2"
                   >
-                    OWNER/ADMIN
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                    Developer: Krishna Patil
                   </button>
                   <button
-                    onClick={() => handleDemoSelect('trainer', 'suraj')}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
+                    onClick={() => {
+                      setDevName("");
+                      setShowDevSetup(true);
+                    }}
+                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black text-gray-400 transition-all uppercase tracking-widest"
                   >
-                    TRAINER (SURAJ)
-                  </button>
-                  <button
-                    onClick={() => handleDemoSelect('member')}
-                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-gray-400 transition-all"
-                  >
-                    MEMBER
+                    Member Only
                   </button>
                 </div>
               </div>
@@ -581,6 +605,97 @@ const LoginPage = () => {
                   </div>
                 </form>
               )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Developer Setup Modal */}
+      <AnimatePresence>
+        {showDevSetup && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              className="glass max-w-md w-full p-8 md:p-10 rounded-[2.5rem] border border-white/10 relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
+
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4 relative">
+                  <User className="text-primary" size={40} />
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-[#0A0A0A] animate-pulse" />
+                </div>
+                <h3 className="text-2xl font-black uppercase italic tracking-wider mb-2 text-white">
+                  Profile Setup
+                </h3>
+                <p className="text-gray-400 text-xs font-medium uppercase tracking-[0.2em]">
+                  Initialize Your Warrior Identity
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {/* Name Input */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 ml-1">
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    value={devName}
+                    onChange={(e) => setDevName(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm font-bold"
+                    placeholder="Enter your name..."
+                    autoFocus
+                  />
+                </div>
+
+                {/* Gender Selection */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 ml-1 text-center block">
+                    Identity
+                  </label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setDevGender('boy')}
+                      className={`py-4 rounded-2xl border transition-all flex flex-col items-center gap-2 ${
+                        devGender === 'boy'
+                        ? 'bg-primary/20 border-primary text-primary shadow-[0_0_20px_rgba(255,215,0,0.2)]'
+                        : 'bg-white/5 border-white/10 text-gray-500 grayscale hover:grayscale-0'
+                      }`}
+                    >
+                      <img src="/assets/boy.png" alt="Boy" className="w-12 h-12 object-contain" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Boy</span>
+                    </button>
+                    <button
+                      onClick={() => setDevGender('girl')}
+                      className={`py-4 rounded-2xl border transition-all flex flex-col items-center gap-2 ${
+                        devGender === 'girl'
+                        ? 'bg-primary/20 border-primary text-primary shadow-[0_0_20px_rgba(255,215,0,0.2)]'
+                        : 'bg-white/5 border-white/10 text-gray-500 grayscale hover:grayscale-0'
+                      }`}
+                    >
+                      <img src="/assets/girl.png" alt="Girl" className="w-12 h-12 object-contain" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Girl</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button
+                    onClick={() => setShowDevSetup(false)}
+                    className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleStartDevWorkout}
+                    className="flex-1 py-4 btn-primary rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-[0_10px_20px_rgba(255,215,0,0.2)]"
+                  >
+                    Start Workout
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

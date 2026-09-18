@@ -115,7 +115,7 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     age: "24",
     gender: "male",
     memberId: "FT-2026-089",
-    photoURL: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+    photoURL: "/assets/avatars/boy.png",
   },
 };
 
@@ -370,7 +370,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (isFirebaseConfigured && auth && db) {
       try {
         const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
+        // Removed forced prompt to speed up login for already signed-in users
 
         // Detection for mobile to use Redirect instead of Popup
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -397,19 +397,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // New Google User - Create Profile
+        const userEmail = result.user.email?.toLowerCase() || "";
+        const isDev = userEmail.includes("krishna") || userEmail.includes("patil");
+
         const newProfile: UserProfile = {
           uid: result.user.uid,
-          name: result.user.displayName || "Fitness Warrior",
-          email: result.user.email || "",
-          photoURL: result.user.photoURL || "",
+          name: isDev ? "Krishna Patil (Developer)" : (result.user.displayName || "Fitness Warrior"),
+          email: userEmail,
+          photoURL: isDev ? "/assets/avatars/boy.png" : (result.user.photoURL || ""),
           role: "member",
           trainerId: "trainer_suraj",
           trainerName: "Suraj Sir",
           membershipStatus: "active",
-          membershipPlan: "Standard Member",
+          membershipPlan: isDev ? "Developer Access" : "Standard Member",
           membershipExpiry: "2026-12-31",
           fitnessGoal: "General Fitness",
-          memberId: `FT-${Math.floor(1000 + Math.random() * 9000)}`,
+          memberId: isDev ? "DEV-001" : `FT-${Math.floor(1000 + Math.random() * 9000)}`,
           createdAt: serverTimestamp(),
         };
 
