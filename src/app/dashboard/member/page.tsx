@@ -24,6 +24,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { GymEquipment3D, EquipmentType } from "@/components/portal/GymEquipment3D";
 import { FitnessAvatar3D, ExerciseDemoType } from "@/components/portal/FitnessAvatar3D";
 import { WorkoutTimer } from "@/components/portal/WorkoutTimer";
@@ -285,10 +286,10 @@ const MemberDashboardPage = () => {
       <div className="relative rounded-[2.5rem] bg-gradient-to-r from-[#111111] via-[#161616] to-[#0A0A0A] border border-white/10 p-6 md:p-8 overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="relative">
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-3xl overflow-hidden border-2 border-primary shadow-[0_0_20px_rgba(255,215,0,0.3)] bg-black">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div className="flex items-center gap-4 md:gap-5">
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl overflow-hidden border-2 border-primary shadow-[0_0_20px_rgba(255,215,0,0.3)] bg-black">
                 {userData?.photoURL ? (
                   <img src={userData.photoURL} alt="Member Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -309,8 +310,8 @@ const MemberDashboardPage = () => {
                 </span>
                 <span className="text-[10px] font-mono text-gray-400">ID: {userData?.memberId || "FT-2026"}</span>
               </div>
-              <h1 className="text-2xl md:text-4xl font-black uppercase italic tracking-tight">
-                Welcome Back, <span className="ft-gradient-text">{userData?.name || user?.displayName || "Member"}</span>
+              <h1 className="text-xl md:text-4xl font-black uppercase italic tracking-tight leading-tight">
+                Welcome Back, <span className="ft-gradient-text block sm:inline">{userData?.name || user?.displayName || "Member"}</span>
               </h1>
               <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                 <Calendar size={14} className="text-primary" />
@@ -400,7 +401,7 @@ const MemberDashboardPage = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10">
+          <div className="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar max-w-full">
             {daysOfWeek.map((day) => {
               const isSelected = selectedDay === day;
               return (
@@ -410,7 +411,7 @@ const MemberDashboardPage = () => {
                     setSelectedDay(day);
                     setActiveExerciseIndex(0);
                   }}
-                  className={`px-3 md:px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                  className={`px-3 md:px-5 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
                     isSelected
                       ? "bg-primary text-black shadow-[0_0_15px_rgba(255,215,0,0.4)] scale-105"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
