@@ -231,6 +231,13 @@ const MemberDashboardPage = () => {
     }
   }, [userData, loading, router]);
 
+  // Check if gender is set, if not show modal
+  useEffect(() => {
+    if (!loading && userData && !userData.gender) {
+      setShowGenderModal(true);
+    }
+  }, [userData, loading]);
+
   if (loading || !userData) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center space-y-4">
@@ -299,9 +306,29 @@ const MemberDashboardPage = () => {
 
   const handleGenderSelection = async (gender: "boy" | "girl") => {
     const avatarPath = gender === "boy" ? "/assets/boy.png" : "/assets/girl.png";
+
+    // Update local state immediately for instant feedback
+    const updatedData = {
+      ...userData,
+      gender,
+      profileImage: avatarPath,
+      photoURL: avatarPath
+    };
+
+    // Persist to local storage for offline users
+    const storedLocalUsers = localStorage.getItem("ft_local_users");
+    if (storedLocalUsers && userData?.uid) {
+      const localUsers = JSON.parse(storedLocalUsers);
+      if (localUsers[userData.uid]) {
+        localUsers[userData.uid] = { ...localUsers[userData.uid], gender, profileImage: avatarPath, photoURL: avatarPath };
+        localStorage.setItem("ft_local_users", JSON.stringify(localUsers));
+      }
+    }
+
     await updateUserData({
       gender,
-      profileImage: avatarPath
+      profileImage: avatarPath,
+      photoURL: avatarPath
     });
     setShowGenderModal(false);
   };

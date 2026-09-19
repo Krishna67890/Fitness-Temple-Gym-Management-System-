@@ -103,7 +103,7 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
   },
   member: {
     uid: "local_member_001",
-    name: "Krishna Patil",
+    name: "Krishna Patil Rajput",
     email: "krishna@fitnesstemple.com",
     role: "member",
     phone: "+91 98765 43210",
@@ -116,10 +116,10 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     height: "178",
     weight: "74",
     age: "24",
-    gender: "boy",
+    gender: "",
     memberId: "FT-2026-089",
-    photoURL: "/assets/boy.png",
-    profileImage: "/assets/boy.png",
+    photoURL: "",
+    profileImage: "",
   },
 };
 
@@ -484,7 +484,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const cleanEmail = email.trim().toLowerCase();
 
     // Check for Master Security Key for Owners and Trainers
-    if ((type === "owner" || type === "trainer") && pass === "FitnessTemple@123") {
+    if ((type === "owner" || type === "trainer") && pass === "Sanket@123") {
       const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail);
       const session = {
         uid: user?.uid || matchedProfile?.uid || "verified_portal_user",

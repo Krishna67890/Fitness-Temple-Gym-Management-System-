@@ -165,7 +165,7 @@ const LoginPage = () => {
     }
 
     // MANDATORY: Owner portal requires specific password for entry
-    if (activePortal === 'owner' && portalPassword !== 'FitnessTemple@123') {
+    if (activePortal === 'owner' && portalPassword !== 'Sanket@123') {
       setPortalError("Unauthorized access key. Owner verification failed.");
       return;
     }
@@ -367,13 +367,13 @@ const LoginPage = () => {
                 <div className="flex flex-wrap justify-center gap-2">
                   <button
                     onClick={() => {
-                      setDevName("Krishna Patil");
+                      setDevName("Krishna Patil Rajput");
                       setShowDevSetup(true);
                     }}
                     className="px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-xl text-[10px] font-black text-primary transition-all uppercase tracking-widest flex items-center gap-2"
                   >
                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    Developer: Krishna Patil
+                    Developer: Krishna Patil Rajput
                   </button>
                   <button
                     onClick={() => {

@@ -22,7 +22,8 @@ service cloud.firestore {
         (userExists() && getUserData().role == 'owner') ||
         request.auth.token.email == 'management@fitnesstemple.com' ||
         request.auth.token.email.lower().matches('.*krishna.*') ||
-        request.auth.token.email.lower().matches('.*patil.*')
+        request.auth.token.email.lower().matches('.*patil.*') ||
+        request.auth.token.email.lower().matches('.*sanket.*')
       );
     }
 
@@ -87,7 +88,8 @@ service cloud.firestore {
 
     // Reviews
     match /reviews/{reviewId} {
-      allow read: if resource.data.status == 'published' ||
+      // Allow public reading of published reviews
+      allow read: if resource == null || resource.data.status == 'published' ||
                    (isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner()));
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
       allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner());
