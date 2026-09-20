@@ -176,11 +176,13 @@ export const saveMemberReview = async ({
   rating: number;
   comment: string;
 }): Promise<void> => {
-  if (!userId) throw new Error("Authentication required: Member ID missing.");
+  if (!userId) throw new Error("Identification required: Please enter your name.");
   if (rating < 1 || rating > 5) throw new Error("Rating must be between 1 and 5 stars.");
   if (!comment.trim()) throw new Error("Review comment cannot be empty.");
 
-  const payload = {
+  const isLocalUser = userId.startsWith('local_');
+
+  const payload: any = {
     userId,
     userName: userName || "Member",
     userPhotoURL: userPhotoURL || "",
@@ -191,23 +193,28 @@ export const saveMemberReview = async ({
   };
 
   if (db) {
-    const docRef = doc(db, "reviews", userId);
-    const existingSnap = await getDoc(docRef);
+    try {
+      // Use a random ID for local reviews so they don't overwrite each other if multiple people use "local_" logic
+      const docId = isLocalUser ? `${userId}_${Date.now()}` : userId;
+      const docRef = doc(db, "reviews", docId);
 
-    if (existingSnap.exists()) {
-      await updateDoc(docRef, payload);
-    } else {
       await setDoc(docRef, {
         ...payload,
         createdAt: serverTimestamp(),
       });
+    } catch (err: any) {
+      console.error("Firestore saveMemberReview error:", err);
+      // If Firebase fails (e.g. permission issues), we still have local storage fallback
+      if (err.code !== 'permission-denied') {
+         throw err;
+      }
     }
   }
 
-  // Synchronize local store for instant UI feedback
+  // Synchronize local store for instant UI feedback and offline support
   const local = getLocalReviews();
   const localReview: GymReview = {
-    id: userId.startsWith('local_') ? userId : `local_${userId}_${Date.now()}`,
+    id: isLocalUser ? `${userId}_${Date.now()}` : userId,
     userId,
     userName: userName || "Member",
     userPhotoURL: userPhotoURL || "",
@@ -218,13 +225,7 @@ export const saveMemberReview = async ({
     status: "published",
   };
 
-  // If it's a local review, we might want to avoid duplicates by checking userId
-  const existingIdx = local.findIndex((r) => r.userId === userId);
-  if (existingIdx >= 0) {
-    local[existingIdx] = { ...local[existingIdx], ...localReview };
-  } else {
-    local.unshift(localReview);
-  }
+  local.unshift(localReview);
   saveLocalReviews(local);
 };
 

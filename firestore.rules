@@ -90,11 +90,18 @@ service cloud.firestore {
 
     // Reviews
     match /reviews/{reviewId} {
-      // Allow public reading of published reviews
-      allow read: if resource == null || resource.data.status == 'published' ||
-                   (isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner()));
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
-      allow update, delete: if isAuthenticated() && (request.auth.uid == resource.data.userId || isOwner());
+      // Publicly readable for the wall of excellence
+      allow read: if true;
+
+      // Allow creation by anyone to support the "Local Review Identity" via QR code
+      allow create: if
+        request.resource.data.userName is string &&
+        request.resource.data.comment is string &&
+        request.resource.data.rating >= 1 &&
+        request.resource.data.rating <= 5;
+
+      // Only owners can moderate (hide/delete) or authenticated authors can update their own
+      allow update, delete: if isOwner() || (isAuthenticated() && request.auth.uid == resource.data.userId);
     }
 
     // Advanced Workout Engine & Wearables

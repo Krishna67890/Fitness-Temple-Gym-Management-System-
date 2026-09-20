@@ -104,34 +104,22 @@ export default function ReviewsPage() {
             Your feedback fuels our fire. Share your transformation journey and rate your experience at Fitness Arena.
           </p>
 
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <button
-              onClick={() => setShowQR(!showQR)}
-              className="flex items-center gap-2 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl hover:bg-primary hover:text-black transition-all group"
-            >
-              <QrIcon size={20} />
-              <span className="text-[10px] font-black uppercase tracking-widest">{showQR ? "Hide Review QR" : "Generate Review QR"}</span>
-            </button>
+          <div className="mt-12 flex flex-col items-center">
+            <div className="bg-white p-6 rounded-[2.5rem] shadow-[0_0_60px_rgba(255,215,0,0.15)] border-4 border-primary/20 group hover:scale-105 transition-all duration-500">
+              {/* Permanent QR linking to the reviews page - ALWAYS VISIBLE */}
+              <QRCodeSVG
+                value={reviewPageUrl}
+                size={220}
+                level="H"
+                includeMargin={true}
+              />
+            </div>
+            <div className="mt-6 text-center">
+              <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">PERMANENT REVIEW PORTAL</p>
+              <p className="text-[10px] text-gray-500 font-bold mt-2 uppercase tracking-widest italic">Scan to share your experience with the world</p>
+            </div>
           </div>
         </div>
-
-        <AnimatePresence>
-          {showQR && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="mb-16 flex flex-col items-center"
-            >
-              <div className="bg-white p-6 rounded-[2rem] shadow-[0_0_50px_rgba(255,215,0,0.2)] mb-4">
-                {/* Permanent QR linking to the reviews page */}
-                <QRCodeSVG value={reviewPageUrl} size={200} />
-              </div>
-              <p className="text-[10px] font-black uppercase text-primary tracking-[0.3em]">Permanent Review Portal QR</p>
-              <p className="text-[9px] text-gray-500 font-bold mt-2 uppercase">Scan to share your experience with the world</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Review Form */}
