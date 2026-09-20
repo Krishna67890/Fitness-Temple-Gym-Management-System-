@@ -30,7 +30,13 @@ const BiometricsPage = () => {
   const connectBluetooth = async () => {
     try {
       setSyncing("heartrate");
-      const device = await navigator.bluetooth.requestDevice({
+      // Use type assertion for navigator.bluetooth to satisfy TypeScript
+      const nav = navigator as any;
+      if (!nav.bluetooth) {
+        throw new Error("Bluetooth not supported in this browser");
+      }
+
+      const device = await nav.bluetooth.requestDevice({
         filters: [{ services: ['heart_rate'] }]
       });
       const server = await device.gatt?.connect();
