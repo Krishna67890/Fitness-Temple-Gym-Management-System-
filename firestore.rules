@@ -93,15 +93,17 @@ service cloud.firestore {
       // Publicly readable for the wall of excellence
       allow read: if true;
 
-      // Allow creation by anyone to support the "Local Review Identity" via QR code
+      // Allow creation by anyone (members)
       allow create: if
         request.resource.data.userName is string &&
         request.resource.data.comment is string &&
         request.resource.data.rating >= 1 &&
         request.resource.data.rating <= 5;
 
-      // Only owners can moderate (hide/delete) or authenticated authors can update their own
-      allow update, delete: if isOwner() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      // Only owners can delete reviews.
+      // Authors can update their own reviews (e.g., editing comment/rating), but owners can also update (moderate).
+      allow update: if isOwner() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      allow delete: if isOwner();
     }
 
     // Advanced Workout Engine & Wearables

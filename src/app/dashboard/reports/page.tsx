@@ -278,6 +278,73 @@ const ReportsPage = () => {
                   </button>
                </div>
 
+               <div className="mb-8">
+                  <div className="h-[300px] w-full">
+                    <Bar
+                      data={{
+                        labels: ["Muscle Gain", "Weight Loss", "Endurance", "Maintenance"],
+                        datasets: [
+                          {
+                            label: 'Warriors Active',
+                            data: [42, 28, 15, 20],
+                            backgroundColor: [
+                              'rgba(255, 215, 0, 0.6)',
+                              'rgba(59, 130, 246, 0.6)',
+                              'rgba(34, 197, 94, 0.6)',
+                              'rgba(168, 85, 247, 0.6)',
+                            ],
+                            borderColor: [
+                              '#FFD700',
+                              '#3B82F6',
+                              '#22C55E',
+                              '#A855F7',
+                            ],
+                            borderWidth: 1,
+                            borderRadius: 8,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: false,
+                          },
+                          tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: { size: 12, weight: 'bold' },
+                            bodyFont: { size: 10 },
+                            padding: 12,
+                            displayColors: false,
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            grid: {
+                              color: 'rgba(255, 255, 255, 0.05)',
+                            },
+                            ticks: {
+                              color: 'rgba(255, 255, 255, 0.5)',
+                              font: { size: 10 },
+                            },
+                          },
+                          x: {
+                            grid: {
+                              display: false,
+                            },
+                            ticks: {
+                              color: 'rgba(255, 255, 255, 0.5)',
+                              font: { size: 10, weight: 'bold' },
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+               </div>
+
                <div className="space-y-6">
                   {[
                     { goal: "Muscle Gain", count: 42, color: "bg-primary", percentage: 75 },

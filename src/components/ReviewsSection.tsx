@@ -16,8 +16,11 @@ import {
   Lock,
   MessageSquare,
   ShieldCheck,
+  Share2,
+  ExternalLink,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import {
   subscribeToPublishedReviews,
   getMemberReview,
@@ -26,7 +29,7 @@ import {
   GymReview,
 } from "@/lib/reviewsService";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 
 export const ReviewsSection = () => {
   const router = useRouter();
@@ -55,6 +58,15 @@ export const ReviewsSection = () => {
 
   // Active Carousel Index
   const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // 0. Portal URL setup to avoid hydration mismatch
+  const [portalUrl, setPortalUrl] = useState("https://rajarajeshwari-fitness.vercel.app/reviews");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setPortalUrl(`${window.location.origin}/reviews`);
+    }
+  }, []);
 
   // 1. Subscribe to real published reviews from Firestore
   useEffect(() => {
@@ -130,7 +142,7 @@ export const ReviewsSection = () => {
     const currentUid = user?.uid || userData?.uid;
     if (!currentUid) return;
 
-    if (confirm("Are you sure you want to delete your review? This action cannot be undone.")) {
+    if (confirm("Are you sure you want to delete your review? Note: Only administrators have final deletion authority in some cases.")) {
       try {
         await deleteMemberReview(currentUid);
         setMyReview(null);
@@ -197,16 +209,17 @@ export const ReviewsSection = () => {
   const filteredReviews = reviews
     .filter((r) => (filterRating === "All" ? true : r.rating === parseInt(filterRating)))
     .sort((a, b) => {
+      const getSafeTime = (date: any): number => {
+        if (!date) return 0;
+        if (typeof date.seconds === "number") return date.seconds * 1000;
+        if (date instanceof Date) return date.getTime();
+        const parsed = new Date(date).getTime();
+        return isNaN(parsed) ? 0 : parsed;
+      };
+
       if (sortBy === "Highest") return b.rating - a.rating;
-      if (sortBy === "Oldest") {
-        const tA = a.createdAt?.seconds ? a.createdAt.seconds : new Date(a.createdAt || 0).getTime();
-        const tB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt || 0).getTime();
-        return tA - tB;
-      }
-      // Newest
-      const tA = a.createdAt?.seconds ? a.createdAt.seconds : new Date(a.createdAt || 0).getTime();
-      const tB = b.createdAt?.seconds ? b.createdAt.seconds : new Date(b.createdAt || 0).getTime();
-      return tB - tA;
+      if (sortBy === "Oldest") return getSafeTime(a.createdAt) - getSafeTime(b.createdAt);
+      return getSafeTime(b.createdAt) - getSafeTime(a.createdAt);
     });
 
   // Featured reviews with 5 stars
@@ -240,15 +253,44 @@ export const ReviewsSection = () => {
             Authentic, verified reviews from real members training inside Fitness Temple.
           </p>
 
-          {/* Action CTA & Role Notice */}
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <Link
-              href="/reviews"
-              className="btn-primary px-8 py-4 rounded-2xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all"
+          {/* QR Code Portal & Role Notice */}
+          <div className="mt-12 flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="bg-white p-5 rounded-[2.5rem] shadow-[0_0_50px_rgba(255,215,0,0.3)] border-2 border-primary/20 hover:scale-105 transition-transform duration-500 relative group">
+                <div className="absolute -top-3 -right-3 bg-primary text-black text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-tighter shadow-lg z-20">
+                  Live Portal
+                </div>
+                <QRCodeSVG
+                  value={portalUrl}
+                  size={160}
+                  level="H"
+                  includeMargin={true}
+                  imageSettings={{
+                    src: "/assets/FitnessTempleGym.png",
+                    x: undefined,
+                    y: undefined,
+                    height: 30,
+                    width: 30,
+                    excavate: true,
+                  }}
+                />
+              </div>
+              <div className="text-center mt-2">
+                <p className="text-[11px] font-black uppercase text-primary tracking-[0.4em] mb-1">Permanent Review Portal</p>
+                <div className="flex items-center justify-center gap-2 text-[9px] text-gray-500 font-bold uppercase tracking-widest italic">
+                   <ShieldCheck size={10} className="text-green-500" />
+                   Verified Member Discovery
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleOpenReviewAction}
+              className="btn-primary px-8 py-4 rounded-2xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all mt-4"
             >
               <MessageSquare size={16} />
-              <span>Share & View All Reviews</span>
-            </Link>
+              <span>Write a Review</span>
+            </button>
 
             {roleNotice && (
               <motion.div
@@ -290,13 +332,7 @@ export const ReviewsSection = () => {
                   onClick={handleEditMyReview}
                   className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-primary hover:text-black text-xs font-bold transition-all flex items-center gap-1.5"
                 >
-                  <Edit size={13} /> Edit
-                </button>
-                <button
-                  onClick={handleDeleteMyReview}
-                  className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500 hover:text-white text-red-400 text-xs font-bold transition-all flex items-center gap-1.5"
-                >
-                  <Trash2 size={13} /> Delete
+                  <Edit size={13} /> Edit My Review
                 </button>
               </div>
             </div>

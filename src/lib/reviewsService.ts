@@ -50,9 +50,19 @@ const saveLocalReviews = (reviews: GymReview[]) => {
 };
 
 /**
+ * Helper to get a stable timestamp from various date formats
+ */
+const getSafeTime = (date: any): number => {
+  if (!date) return 0;
+  if (typeof date.seconds === "number") return date.seconds * 1000;
+  if (date instanceof Date) return date.getTime();
+  const parsed = new Date(date).getTime();
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+/**
  * Real-time listener for public published reviews from Firestore
  * Strictly filters by status == 'published'
- * If 0 reviews exist in database, returns empty array (ZERO fake fallback!)
  */
 export const subscribeToPublishedReviews = (
   callback: (reviews: GymReview[]) => void
@@ -83,28 +93,15 @@ export const subscribeToPublishedReviews = (
             });
           });
 
-          // Merge Firestore and Local Reviews seamlessly
-          const local = getLocalReviews().filter((r) => r.status === "published");
-          const combined = [...reviews];
-
-          local.forEach((lr) => {
-            if (!combined.some((cr) => cr.userId === lr.userId)) {
-              combined.push(lr);
-            }
-          });
-
           // Sort newest first in memory
-          combined.sort((a, b) => {
-            const timeA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt || 0).getTime();
-            const timeB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt || 0).getTime();
-            return timeB - timeA;
-          });
+          reviews.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
 
-          callback(combined);
+          callback(reviews);
         },
         (error) => {
           console.warn("Firestore reviews listener error, reading local store:", error);
           const local = getLocalReviews().filter((r) => r.status === "published");
+          local.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
           callback(local);
         }
       );
@@ -115,8 +112,8 @@ export const subscribeToPublishedReviews = (
     }
   }
 
-  // Fallback for local development if Firebase keys not provided
   const local = getLocalReviews().filter((r) => r.status === "published");
+  local.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
   callback(local);
   return () => {};
 };
@@ -129,6 +126,7 @@ export const getMemberReview = async (userId: string): Promise<GymReview | null>
 
   if (db) {
     try {
+      // For real users, id matches userId
       const docRef = doc(db, "reviews", userId);
       const snap = await getDoc(docRef);
       if (snap.exists()) {
@@ -145,23 +143,35 @@ export const getMemberReview = async (userId: string): Promise<GymReview | null>
           status: data.status || "published",
         };
       }
-      return null;
+
+      // If not found by direct ID (might be a local user who logged in)
+      const q = query(collection(db, "reviews"), where("userId", "==", userId));
+      const qSnap = await getDocs(q);
+      if (!qSnap.empty) {
+        const docSnap = qSnap.docs[0];
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          userId: data.userId,
+          userName: data.userName,
+          userPhotoURL: data.userPhotoURL,
+          rating: data.rating,
+          comment: data.comment,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          status: data.status,
+        };
+      }
     } catch (err) {
       console.warn("Firestore getMemberReview error:", err);
     }
   }
 
-  // Local fallback
-  const local = getLocalReviews();
-  return local.find((r) => r.userId === userId) || null;
+  return null;
 };
 
 /**
- * Submit or update an authentic review for a member
- * Automatically enforces:
- * - userId matches the authenticated user
- * - userName comes from authenticated user profile
- * - rating between 1 and 5
+ * Submit or update an authentic review
  */
 export const saveMemberReview = async ({
   userId,
@@ -176,11 +186,11 @@ export const saveMemberReview = async ({
   rating: number;
   comment: string;
 }): Promise<void> => {
-  if (!userId) throw new Error("Identification required: Please enter your name.");
+  if (!userId) throw new Error("Identification required.");
   if (rating < 1 || rating > 5) throw new Error("Rating must be between 1 and 5 stars.");
   if (!comment.trim()) throw new Error("Review comment cannot be empty.");
 
-  const isLocalUser = userId.startsWith('local_');
+  const isLocalUser = userId.startsWith('local_') || userId.startsWith('demo_');
 
   const payload: any = {
     userId,
@@ -194,106 +204,81 @@ export const saveMemberReview = async ({
 
   if (db) {
     try {
-      // Use a random ID for local reviews so they don't overwrite each other if multiple people use "local_" logic
-      const docId = isLocalUser ? `${userId}_${Date.now()}` : userId;
+      // Use userId as docId for members to ensure one review per person.
+      // Generate unique ID for anonymous local users.
+      const docId = isLocalUser ? `local_${Date.now()}_${Math.random().toString(36).substr(2, 5)}` : userId;
       const docRef = doc(db, "reviews", docId);
 
-      await setDoc(docRef, {
-        ...payload,
-        createdAt: serverTimestamp(),
-      });
+      // Check for update if not local
+      if (!isLocalUser) {
+        const existing = await getDoc(docRef);
+        if (existing.exists()) {
+          await updateDoc(docRef, payload);
+        } else {
+          await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
+        }
+      } else {
+        await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
+      }
     } catch (err: any) {
       console.error("Firestore saveMemberReview error:", err);
-      // If Firebase fails (e.g. permission issues), we still have local storage fallback
-      if (err.code !== 'permission-denied') {
-         throw err;
-      }
+      throw err;
     }
   }
 
-  // Synchronize local store for instant UI feedback and offline support
+  // Backup to local storage
   const local = getLocalReviews();
-  const localReview: GymReview = {
-    id: isLocalUser ? `${userId}_${Date.now()}` : userId,
+  const reviewObj: GymReview = {
+    id: userId,
     userId,
-    userName: userName || "Member",
-    userPhotoURL: userPhotoURL || "",
-    rating: Math.min(5, Math.max(1, Math.round(rating))),
-    comment: comment.trim(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    userName,
+    userPhotoURL,
+    rating,
+    comment,
     status: "published",
+    createdAt: new Date().toISOString()
   };
-
-  local.unshift(localReview);
-  saveLocalReviews(local);
+  local.unshift(reviewObj);
+  saveLocalReviews(local.slice(0, 50));
 };
 
 /**
- * Delete a member's own review
- */
-export const deleteMemberReview = async (userId: string): Promise<void> => {
-  if (!userId) return;
-
-  if (db) {
-    try {
-      const docRef = doc(db, "reviews", userId);
-      await deleteDoc(docRef);
-    } catch (err) {
-      console.warn("Firestore delete review error:", err);
-    }
-  }
-
-  const local = getLocalReviews().filter((r) => r.userId !== userId);
-  saveLocalReviews(local);
-};
-
-/**
- * Real-time listener for ALL reviews (both published and hidden) for the Gym Owner control center
+ * Real-time listener for ALL reviews for the Gym Owner
  */
 export const subscribeToAllReviewsForOwner = (
   callback: (reviews: GymReview[]) => void
 ): (() => void) => {
   if (db) {
     try {
-      const q = collection(db, "reviews");
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const reviews: GymReview[] = [];
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            reviews.push({
-              id: docSnap.id,
-              userId: data.userId || docSnap.id,
-              userName: data.userName || "Member",
-              userPhotoURL: data.userPhotoURL || "",
-              rating: Number(data.rating) || 5,
-              comment: data.comment || "",
-              createdAt: data.createdAt,
-              updatedAt: data.updatedAt,
-              status: data.status || "published",
-            });
+      const q = query(collection(db, "reviews"), orderBy("updatedAt", "desc"));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const reviews: GymReview[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          reviews.push({
+            id: docSnap.id,
+            userId: data.userId || docSnap.id,
+            userName: data.userName || "Member",
+            userPhotoURL: data.userPhotoURL || "",
+            rating: Number(data.rating) || 5,
+            comment: data.comment || "",
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            status: data.status || "published",
           });
-          callback(reviews);
-        },
-        (err) => {
-          console.warn("Owner reviews subscription error:", err);
-          callback(getLocalReviews());
-        }
-      );
+        });
+        callback(reviews);
+      });
       return unsubscribe;
     } catch (err) {
       console.warn("Owner reviews query error:", err);
     }
   }
-
-  callback(getLocalReviews());
   return () => {};
 };
 
 /**
- * Owner moderation action: Change status (published / hidden)
+ * Owner moderation action: Change status
  */
 export const setReviewStatusByOwner = async (
   reviewId: string,
@@ -306,26 +291,22 @@ export const setReviewStatusByOwner = async (
       updatedAt: serverTimestamp(),
     });
   }
-
-  const local = getLocalReviews();
-  const found = local.find((r) => r.id === reviewId || r.userId === reviewId);
-  if (found) {
-    found.status = status;
-    saveLocalReviews(local);
-  }
 };
 
 /**
- * Owner moderation action: Permanently delete inappropriate review
+ * Owner moderation action: Permanently delete
  */
 export const deleteReviewByOwner = async (reviewId: string): Promise<void> => {
   if (db) {
     const docRef = doc(db, "reviews", reviewId);
     await deleteDoc(docRef);
   }
+};
 
-  const local = getLocalReviews().filter(
-    (r) => r.id !== reviewId && r.userId !== reviewId
-  );
-  saveLocalReviews(local);
+/**
+ * Legacy support for components using deleteMemberReview
+ * Now redirects to Owner-only logic (will fail for members due to Firestore rules)
+ */
+export const deleteMemberReview = async (userId: string): Promise<void> => {
+  return deleteReviewByOwner(userId);
 };
