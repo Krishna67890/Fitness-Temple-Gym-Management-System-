@@ -352,38 +352,47 @@ const LoginPage = () => {
               )}
             </button>
 
-            {/* Footer links */}
+            {/* Footer links - Removed Register, Simplified for Admin Access */}
             <div className="mt-8 text-center space-y-4">
-              <p className="text-gray-500 text-xs">
-                Don't have an active membership?{" "}
-                <Link href="/register" className="text-primary font-black uppercase tracking-wider hover:underline ml-1">
-                  Join Tribe
-                </Link>
-              </p>
-
-              {/* Instant Admin/Dev Login - Added for quick access */}
               <div className="pt-6 border-t border-white/5">
-                <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-3">Developer Quick Access</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <button
-                    onClick={() => {
-                      setDevName("Krishna Patil Rajput");
-                      setShowDevSetup(true);
-                    }}
-                    className="px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 rounded-xl text-[10px] font-black text-primary transition-all uppercase tracking-widest flex items-center gap-2"
-                  >
-                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                    Developer: Krishna Patil Rajput
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDevName("");
-                      setShowDevSetup(true);
-                    }}
-                    className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black text-gray-400 transition-all uppercase tracking-widest"
-                  >
-                    Member Only
-                  </button>
+                <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-4 text-center">Permanent Access Accounts</p>
+
+                <div className="space-y-3">
+                  {/* Owner Quick Access */}
+                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col gap-1 items-start">
+                     <span className="text-[8px] font-black uppercase text-primary tracking-widest">Gym Management (Owner)</span>
+                     <div className="flex justify-between w-full items-center">
+                        <span className="text-[10px] font-bold text-gray-400">sanket@fitnesstemple.com</span>
+                        <button
+                          onClick={() => { setEmail("sanket@fitnesstemple.com"); setPassword("Sanket@123"); }}
+                          className="text-[9px] font-black uppercase text-primary hover:underline"
+                        >
+                          Auto-Fill
+                        </button>
+                     </div>
+                  </div>
+
+                  {/* Trainers Quick Access */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                      <span className="text-[7px] font-black uppercase text-gray-500">Trainer: Suraj</span>
+                      <button
+                        onClick={() => { setEmail("suraj@fitnesstemple.com"); setPassword("Suraj@123"); }}
+                        className="text-[9px] font-bold text-white hover:text-primary text-left truncate"
+                      >
+                        suraj@...
+                      </button>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                      <span className="text-[7px] font-black uppercase text-gray-500">Trainer: Bhavesh</span>
+                      <button
+                        onClick={() => { setEmail("Bhavesh@ftnesstemple.com"); setPassword("bhavesh@123"); }}
+                        className="text-[9px] font-bold text-white hover:text-primary text-left truncate"
+                      >
+                        Bhavesh@...
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

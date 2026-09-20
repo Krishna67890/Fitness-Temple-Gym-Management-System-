@@ -82,21 +82,6 @@ const Navbar = () => {
           <div className="h-8 w-[1px] bg-white/10 mx-2" />
 
           <div className="flex items-center space-x-4">
-            {/* Highly Visible Access Member Portal Button */}
-            <Link
-              href="/portal"
-              className="relative group overflow-hidden rounded-2xl p-[1px] focus:outline-none shadow-[0_0_20px_rgba(255,215,0,0.3)] transition-transform hover:scale-105"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] rounded-2xl animate-pulse" />
-              <span className="relative flex items-center space-x-2 bg-black px-4 py-2.5 rounded-2xl transition-colors group-hover:bg-black/90">
-                <ShieldCheck size={16} className="text-primary" />
-                <span className="text-[11px] font-black uppercase tracking-wider text-primary">
-                  Access Portal
-                </span>
-                <ChevronRight size={14} className="text-primary group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-
             {isLoggedIn ? (
               <>
                 <Link href={getDashboardLink()} className="flex items-center space-x-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded-2xl hover:bg-primary hover:text-black transition-all group shadow-xl">
@@ -112,28 +97,34 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <>
-                <Link href="/login" className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-primary transition-colors">
-                  Login
-                </Link>
-                <Link href="/membership" className="btn-primary px-6 py-2.5 text-[11px] rounded-2xl shadow-[0_0_20px_rgba(255,215,0,0.2)]">
-                  Join Now
-                </Link>
-              </>
+              <Link
+                href="/login"
+                className="relative group overflow-hidden rounded-2xl p-[1px] focus:outline-none shadow-[0_0_20px_rgba(255,215,0,0.3)] transition-transform hover:scale-105"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] rounded-2xl animate-pulse" />
+                <span className="relative flex items-center space-x-2 bg-black px-6 py-2.5 rounded-2xl transition-colors group-hover:bg-black/90">
+                  <ShieldCheck size={16} className="text-primary" />
+                  <span className="text-[11px] font-black uppercase tracking-wider text-primary">
+                    Dashboard Login
+                  </span>
+                  <ChevronRight size={14} className="text-primary group-hover:translate-x-1 transition-transform" />
+                </span>
+              </Link>
             )}
           </div>
         </div>
 
         {/* Mobile Controls */}
         <div className="flex items-center space-x-3 lg:hidden">
-          <Link
-            href="/portal"
-            className="px-3 py-2 rounded-xl bg-primary/20 border border-primary/40 text-primary text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
-          >
-            <ShieldCheck size={14} />
-            <span>Portal</span>
-          </Link>
-          {isLoggedIn && (
+          {!isLoggedIn ? (
+            <Link
+              href="/login"
+              className="px-4 py-2 rounded-xl bg-primary/20 border border-primary/40 text-primary text-[10px] font-black uppercase tracking-wider flex items-center gap-2"
+            >
+              <ShieldCheck size={14} />
+              <span>Login</span>
+            </Link>
+          ) : (
              <Link href={getDashboardLink()} className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
                 <LayoutDashboard size={20} />
              </Link>
