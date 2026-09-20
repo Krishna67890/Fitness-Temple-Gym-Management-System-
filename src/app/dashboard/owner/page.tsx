@@ -27,8 +27,9 @@ import {
   Sparkles,
   Star,
   MessageSquare,
+  RotateCcw,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, UserProfile } from "@/context/AuthContext";
 import {
   subscribeToAllReviewsForOwner,
   setReviewStatusByOwner,
