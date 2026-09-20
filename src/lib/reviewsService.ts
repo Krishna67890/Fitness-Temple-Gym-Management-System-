@@ -211,11 +211,17 @@ export const saveMemberReview = async ({
 
       // Check for update if not local
       if (!isLocalUser) {
-        const existing = await getDoc(docRef);
-        if (existing.exists()) {
-          await updateDoc(docRef, payload);
-        } else {
-          await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
+        try {
+          const existing = await getDoc(docRef);
+          if (existing.exists()) {
+            await updateDoc(docRef, payload);
+          } else {
+            await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
+          }
+        } catch (getErr) {
+          // If getDoc fails due to permissions (unlikely with 'allow read: if true'), try direct setDoc
+          console.warn("Direct update failed, trying setDoc:", getErr);
+          await setDoc(docRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
         }
       } else {
         await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
