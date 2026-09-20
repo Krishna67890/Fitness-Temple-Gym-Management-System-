@@ -12,7 +12,6 @@ import ReviewsSection from "@/components/ReviewsSection";
 import WorkoutBuilder from "@/components/WorkoutBuilder";
 import TrialBooking from "@/components/TrialBooking";
 import GoalSelector from "@/components/GoalSelector";
-import Dashboard from "@/components/Dashboard";
 import ContactSection from "@/components/ContactSection";
 import { Dumbbell, Users, Trophy, ShieldCheck, Clock, Zap, MapPin } from "lucide-react";
 
@@ -29,7 +28,6 @@ export default function Home() {
   return (
     <>
       <GoalSelector />
-      <Dashboard />
       <Hero />
       <Stats />
 

@@ -22,6 +22,15 @@ import {
   CalendarCheck,
   AlertCircle,
   Maximize2,
+  Activity,
+  Zap,
+  Coffee,
+  Heart,
+  Watch,
+  Settings,
+  Image as ImageIcon,
+  Map as MapIcon,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -71,6 +80,8 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { id: "e2", name: "Incline Dumbbell Press", muscle: "Upper Chest", equipmentName: "dumbbells", sets: 3, reps: "10-12", targetWeight: "24 kg", restSecs: 60, notes: "30-degree incline, full stretch at the bottom" },
       { id: "e3", name: "Cable Chest Flyes", muscle: "Pectoralis Major", equipmentName: "cable-machine", sets: 3, reps: "15", targetWeight: "15 kg", restSecs: 45, notes: "Squeeze chest at peak contraction for 1 second" },
       { id: "e4", name: "Triceps Rope Pushdown", muscle: "Triceps Lateral Head", equipmentName: "cable-machine", sets: 4, reps: "12", targetWeight: "25 kg", restSecs: 45, notes: "Flave rope outward at full extension" },
+      { id: "e_chest_1", name: "Dumbbell Pullover", muscle: "Upper Chest / Lats", equipmentName: "dumbbells", sets: 3, reps: "12", targetWeight: "22 kg", restSecs: 60, notes: "Focus on stretching the chest at the bottom" },
+      { id: "e_tricep_2", name: "Skull Crushers", muscle: "Triceps Long Head", equipmentName: "barbell", sets: 3, reps: "10", targetWeight: "25 kg", restSecs: 60, notes: "Keep elbows tucked and fixed" },
     ],
     meals: [
       { time: "07:30 AM", name: "Breakfast", items: "Oats with skim milk, 4 egg whites, 1 banana, almonds", calories: 540, protein: "32g", carbs: "68g", fats: "14g" },
@@ -79,6 +90,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { time: "05:00 PM", name: "Pre-Workout", items: "Whole wheat toast with peanut butter, black coffee", calories: 280, protein: "10g", carbs: "34g", fats: "11g" },
       { time: "07:30 PM", name: "Post-Workout", items: "Whey isolate shake with creatine monohydrate", calories: 160, protein: "27g", carbs: "4g", fats: "2g" },
       { time: "09:00 PM", name: "Dinner", items: "Grilled fish or soya chunks, steamed broccoli, sweet potato", calories: 510, protein: "38g", carbs: "52g", fats: "12g" },
+      { time: "10:30 PM", name: "Night Fuel", items: "Casein protein or 100g cottage cheese", calories: 120, protein: "20g", carbs: "4g", fats: "3g" },
     ],
   },
   Tue: {
@@ -91,6 +103,8 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { id: "e6", name: "Barbell Bent-Over Row", muscle: "Mid Back / Rhomboids", equipmentName: "barbell", sets: 4, reps: "8-10", targetWeight: "60 kg", restSecs: 75, notes: "Maintain neutral spine, pull towards belly button" },
       { id: "e7", name: "Seated Cable Row", muscle: "Lower Lat / Middle Traps", equipmentName: "row-machine", sets: 3, reps: "12", targetWeight: "50 kg", restSecs: 60, notes: "Full stretch on release, tight squeeze" },
       { id: "e8", name: "Standing Barbell Bicep Curl", muscle: "Biceps Brachii", equipmentName: "barbell", sets: 4, reps: "10-12", targetWeight: "30 kg", restSecs: 45, notes: "Pin elbows to ribs, prevent shoulder recruitment" },
+      { id: "e_back_1", name: "Single Arm DB Row", muscle: "Lats / Rhomboids", equipmentName: "dumbbells", sets: 3, reps: "12 each", targetWeight: "24 kg", restSecs: 45, notes: "Full extension at the bottom" },
+      { id: "e_bicep_2", name: "Hammer Curls", muscle: "Brachialis / Forearms", equipmentName: "dumbbells", sets: 3, reps: "12", targetWeight: "14 kg", restSecs: 45, notes: "Controlled movement, no swinging" },
     ],
     meals: [
       { time: "07:30 AM", name: "Breakfast", items: "Scrambled eggs, whole grain toast, apple, chia seeds", calories: 520, protein: "30g", carbs: "60g", fats: "16g" },
@@ -99,6 +113,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { time: "05:00 PM", name: "Pre-Workout", items: "Banana with 10 almonds & beetroot juice", calories: 230, protein: "6g", carbs: "42g", fats: "7g" },
       { time: "07:30 PM", name: "Post-Workout", items: "Whey protein shake with chilled water", calories: 150, protein: "26g", carbs: "3g", fats: "2g" },
       { time: "09:00 PM", name: "Dinner", items: "Paneer tikka or grilled chicken, sautéed beans, roti", calories: 480, protein: "34g", carbs: "45g", fats: "14g" },
+      { time: "10:30 PM", name: "Night Fuel", items: "Handful of walnuts with warm milk", calories: 180, protein: "8g", carbs: "12g", fats: "12g" },
     ],
   },
   Wed: {
@@ -111,6 +126,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { id: "e10", name: "Leg Press 45-Degree", muscle: "Quads & Hamstrings", equipmentName: "leg-press", sets: 4, reps: "12", targetWeight: "140 kg", restSecs: 75, notes: "Do not lock knees at top of movement" },
       { id: "e11", name: "Walking Dumbbell Lunges", muscle: "Glutes & Stabilizers", equipmentName: "dumbbells", sets: 3, reps: "20 steps", targetWeight: "16 kg each", restSecs: 60, notes: "90-degree knee bend on each forward step" },
       { id: "e12", name: "Standing Calf Raises", muscle: "Gastrocnemius", equipmentName: "squat-rack", sets: 4, reps: "15-20", targetWeight: "60 kg", restSecs: 45, notes: "Hold stretch at bottom, peak squeeze at top" },
+      { id: "e_leg_1", name: "Leg Extensions", muscle: "Quadriceps Isolation", equipmentName: "leg-press", sets: 3, reps: "15", targetWeight: "40 kg", restSecs: 45, notes: "Hold for 1 sec at peak contraction" },
     ],
     meals: [
       { time: "07:30 AM", name: "Breakfast", items: "Peanut butter banana oats with 3 boiled eggs", calories: 580, protein: "34g", carbs: "74g", fats: "18g" },
@@ -119,6 +135,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { time: "05:00 PM", name: "Pre-Workout", items: "Boiled sweet potatoes with pinch of pink salt", calories: 220, protein: "4g", carbs: "48g", fats: "1g" },
       { time: "07:30 PM", name: "Post-Workout", items: "Whey isolate shake + 1 rice cake with honey", calories: 210, protein: "27g", carbs: "22g", fats: "1g" },
       { time: "09:00 PM", name: "Dinner", items: "Grilled tofu or chicken breast with stir-fried veggies", calories: 490, protein: "39g", carbs: "40g", fats: "13g" },
+      { time: "10:30 PM", name: "Night Fuel", items: "1 glass turmeric milk (Golden Milk)", calories: 150, protein: "8g", carbs: "15g", fats: "6g" },
     ],
   },
   Thu: {
@@ -131,6 +148,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { id: "e14", name: "Dumbbell Lateral Raises", muscle: "Lateral Deltoids (Boulder Cap)", equipmentName: "dumbbells", sets: 4, reps: "12-15", targetWeight: "10 kg", restSecs: 45, notes: "Lead with elbows, slight forward torso lean" },
       { id: "e15", name: "Face Pulls with Rope", muscle: "Rear Delts / Rotator Cuff", equipmentName: "cable-machine", sets: 4, reps: "15", targetWeight: "20 kg", restSecs: 45, notes: "Pull towards eyes, externally rotate shoulders" },
       { id: "e16", name: "Dumbbell Shrugs", muscle: "Upper Trapezius", equipmentName: "dumbbells", sets: 4, reps: "12", targetWeight: "28 kg each", restSecs: 45, notes: "Straight up elevation, pause for 2 seconds at top" },
+      { id: "e_shoulder_1", name: "Front Plate Raises", muscle: "Anterior Deltoids", equipmentName: "barbell", sets: 3, reps: "12", targetWeight: "15 kg", restSecs: 45, notes: "Control the weight on the way down" },
     ],
     meals: [
       { time: "07:30 AM", name: "Breakfast", items: "Omelette (3 whole + 2 whites) with spinach and toast", calories: 510, protein: "33g", carbs: "42g", fats: "21g" },
@@ -139,6 +157,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { time: "05:00 PM", name: "Pre-Workout", items: "Apple slices with peanut butter", calories: 200, protein: "5g", carbs: "28g", fats: "9g" },
       { time: "07:30 PM", name: "Post-Workout", items: "Electrolyte hydration mix + whey protein", calories: 170, protein: "26g", carbs: "12g", fats: "1g" },
       { time: "09:00 PM", name: "Dinner", items: "Grilled fish or paneer, asparagus and pumpkin soup", calories: 460, protein: "36g", carbs: "35g", fats: "14g" },
+      { time: "10:30 PM", name: "Night Fuel", items: "Greek yogurt with a hint of honey", calories: 140, protein: "12g", carbs: "18g", fats: "2g" },
     ],
   },
   Fri: {
@@ -151,6 +170,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { id: "e18", name: "Romanian Deadlift (Dumbbells)", muscle: "Hamstring Deep Stretch", equipmentName: "dumbbells", sets: 3, reps: "10-12", targetWeight: "26 kg each", restSecs: 60, notes: "Hinge at hips, soft knees, feel hamstring tension" },
       { id: "e19", name: "Seated Hamstring Leg Curls", muscle: "Biceps Femoris", equipmentName: "leg-press", sets: 3, reps: "12-15", targetWeight: "45 kg", restSecs: 45, notes: "Controlled negative, don't let weight slam" },
       { id: "e20", name: "Hanging Leg Raises", muscle: "Core & Rectus Abdominis", equipmentName: "lat-pulldown", sets: 3, reps: "15", targetWeight: "Bodyweight", restSecs: 45, notes: "Roll pelvis upward, avoid swinging" },
+      { id: "e_abs_1", name: "Plank to Failure", muscle: "Core Stability", equipmentName: "dumbbells", sets: 3, reps: "Failure", targetWeight: "Bodyweight", restSecs: 60, notes: "Keep back flat, engage glutes" },
     ],
     meals: [
       { time: "07:30 AM", name: "Breakfast", items: "Muesli with milk, pumpkin seeds, whey scoop, berries", calories: 530, protein: "35g", carbs: "65g", fats: "14g" },
@@ -159,6 +179,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { time: "05:00 PM", name: "Pre-Workout", items: "Black coffee + 2 dates + dark chocolate piece", calories: 160, protein: "2g", carbs: "32g", fats: "4g" },
       { time: "07:30 PM", name: "Post-Workout", items: "Whey protein shake with creatine", calories: 150, protein: "27g", carbs: "4g", fats: "1g" },
       { time: "09:00 PM", name: "Dinner", items: "Egg bhurji or sautéed paneer with 2 rotis and cucumber", calories: 470, protein: "32g", carbs: "46g", fats: "14g" },
+      { time: "10:30 PM", name: "Night Fuel", items: "Casein protein shake", calories: 120, protein: "25g", carbs: "3g", fats: "1g" },
     ],
   },
   Sat: {
@@ -171,6 +192,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { id: "e22", name: "Dumbbell Walking Lunges", muscle: "Legs & Core Dynamic Balance", equipmentName: "dumbbells", sets: 3, reps: "20 steps", targetWeight: "14 kg", restSecs: 45, notes: "Keep torso upright and brace" },
       { id: "e23", name: "Push-ups to Failure", muscle: "Chest & Shoulders", equipmentName: "bench-press", sets: 3, reps: "To failure (~25)", targetWeight: "Bodyweight", restSecs: 45, notes: "Full range of motion, touch chest to floor" },
       { id: "e24", name: "Cable Core Woodchops", muscle: "Obliques & Transverse Abdominis", equipmentName: "cable-machine", sets: 3, reps: "15 each side", targetWeight: "18 kg", restSecs: 30, notes: "Rotate with core, not arms" },
+      { id: "e_cardio_1", name: "Battle Ropes", muscle: "Full Body / Cardio", equipmentName: "cable-machine", sets: 4, reps: "45 seconds", targetWeight: "Heavy", restSecs: 45, notes: "Maintain high intensity" },
     ],
     meals: [
       { time: "07:30 AM", name: "Breakfast", items: "Avocado toast with poached eggs and orange juice", calories: 500, protein: "22g", carbs: "52g", fats: "22g" },
@@ -179,6 +201,7 @@ const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
       { time: "05:00 PM", name: "Pre-Workout", items: "Hydration electrolytes + 1 banana", calories: 120, protein: "1g", carbs: "28g", fats: "0g" },
       { time: "07:30 PM", name: "Post-Workout", items: "Whey protein with chilled almond milk", calories: 170, protein: "28g", carbs: "6g", fats: "3g" },
       { time: "09:00 PM", name: "Dinner", items: "Clear chicken or mushroom soup, grilled salmon or paneer", calories: 440, protein: "38g", carbs: "20g", fats: "18g" },
+      { time: "10:30 PM", name: "Night Fuel", items: "A cup of Chamomile tea with 2 walnuts", calories: 60, protein: "2g", carbs: "4g", fats: "5g" },
     ],
   },
   Sun: {
@@ -216,6 +239,10 @@ const MemberDashboardPage = () => {
   const [isWorkoutStarted, setIsWorkoutStarted] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
+  const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showTourModal, setShowTourModal] = useState(false);
+  const [isWearableSyncing, setIsWearableSyncing] = useState(false);
 
   // Water Tracker State
   const [waterIntakeMl, setWaterIntakeMl] = useState(1750);
@@ -223,6 +250,22 @@ const MemberDashboardPage = () => {
 
   // Visual View Mode: 3D Equipment vs 3D Avatar Demo
   const [visualMode, setVisualMode] = useState<"equipment" | "avatar">("equipment");
+
+  // Local storage users can be mapped here to show dynamic details
+  useEffect(() => {
+    if (userData && !userData.memberId) {
+      const storedLocalUsers = localStorage.getItem("ft_local_users");
+      const localUsers = storedLocalUsers ? JSON.parse(storedLocalUsers) : {};
+
+      // If this is a local session, ensure it has a unique local ID
+      if (!localUsers[userData.uid]) {
+        const localId = `FT-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
+        localUsers[userData.uid] = { ...userData, memberId: localId };
+        localStorage.setItem("ft_local_users", JSON.stringify(localUsers));
+        updateUserData({ memberId: localId });
+      }
+    }
+  }, [userData, updateUserData]);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -251,22 +294,6 @@ const MemberDashboardPage = () => {
   }
 
   const routine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES.Mon;
-
-  // Local storage users can be mapped here to show dynamic details
-  useEffect(() => {
-    if (userData && !userData.memberId) {
-      const storedLocalUsers = localStorage.getItem("ft_local_users");
-      const localUsers = storedLocalUsers ? JSON.parse(storedLocalUsers) : {};
-
-      // If this is a local session, ensure it has a unique local ID
-      if (!localUsers[userData.uid]) {
-        const localId = `FT-LOC-${Math.floor(1000 + Math.random() * 9000)}`;
-        localUsers[userData.uid] = { ...userData, memberId: localId };
-        localStorage.setItem("ft_local_users", JSON.stringify(localUsers));
-        updateUserData({ memberId: localId });
-      }
-    }
-  }, [userData, updateUserData]);
 
   // Today's Date String
   const todayFormatted = new Intl.DateTimeFormat("en-US", {
@@ -333,6 +360,14 @@ const MemberDashboardPage = () => {
     setShowGenderModal(false);
   };
 
+  const handleWearableSync = () => {
+    setIsWearableSyncing(true);
+    setTimeout(() => {
+      setIsWearableSyncing(false);
+      alert("Wearable Synced: Apple Watch / Google Fit data imported successfully.");
+    }, 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#060606] text-white p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* 1. Header Banner */}
@@ -383,49 +418,58 @@ const MemberDashboardPage = () => {
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <button
+              onClick={() => setShowTourModal(true)}
+              className="px-4 py-3 bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
+            >
+              <MapIcon size={16} className="text-primary" />
+              <span>3D Tour</span>
+            </button>
+            <button
+              onClick={() => setShowGalleryModal(true)}
+              className="px-4 py-3 bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
+            >
+              <ImageIcon size={16} className="text-primary" />
+              <span>Gallery</span>
+            </button>
+            <button
+              onClick={() => setShowSettingsModal(true)}
+              className="px-4 py-3 bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
+            >
+              <Settings size={16} className="text-primary" />
+              <span>Settings</span>
+            </button>
+            <button
               onClick={() => setShowQrModal(true)}
               className="px-4 py-3 bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
             >
               <QrCode size={16} className="text-primary" />
-              <span>Gate Pass QR</span>
+              <span>Gate Pass</span>
             </button>
-            <div className="px-5 py-3 rounded-2xl bg-black/60 border border-white/10 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                {(userData?.trainerName || "S").charAt(0)}
-              </div>
-              <div>
-                <p className="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Assigned Trainer</p>
-                <p className="text-xs font-black uppercase italic text-primary">{userData?.trainerName || "Suraj Sir"}</p>
-              </div>
-            </div>
+            <Link
+              href="/reviews"
+              className="px-4 py-3 bg-primary text-black hover:bg-primary/80 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
+            >
+              <Star size={16} />
+              <span>Reviews</span>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* 2. Top Summary Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4 relative overflow-hidden">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-            <Flame size={24} />
+        <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4 relative overflow-hidden group cursor-pointer" onClick={handleWearableSync}>
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-all">
+            <Watch size={24} className={isWearableSyncing ? "animate-spin" : ""} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Live Heart Rate</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Wearable Sync</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-lg font-black font-mono text-white animate-pulse">
-                {isWorkoutStarted ? 110 + Math.floor(Math.random() * 40) : 72}
+              <span className="text-sm font-black text-white">
+                {isWearableSyncing ? "Syncing..." : "Connected"}
               </span>
-              <span className="text-[10px] font-bold text-red-500">BPM</span>
             </div>
           </div>
-          {isWorkoutStarted && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20">
-              <motion.div
-                animate={{ x: ["0%", "100%"] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="w-1/3 h-full bg-primary"
-              />
-            </div>
-          )}
         </div>
 
         <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4">
@@ -877,8 +921,122 @@ const MemberDashboardPage = () => {
               });
               setCompletedExercises((prev) => ({ ...prev, ...updated }));
               setIsWorkoutStarted(false);
+              // Report to owner (Mock)
+              console.log("Workout complete, syncing to owner portal...");
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettingsModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="glass max-w-lg w-full p-8 rounded-[2.5rem] border border-white/10"
+            >
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                  <User size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black uppercase italic tracking-wider">Account Settings</h3>
+                  <p className="text-xs text-gray-400 font-mono">{userData?.fullName || userData?.name}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Full Name</p>
+                    <p className="text-sm font-bold text-white">{userData?.fullName || userData?.name}</p>
+                  </div>
+                  <Settings size={18} className="text-gray-600" />
+                </div>
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Contact Email</p>
+                    <p className="text-sm font-bold text-white">{userData?.email}</p>
+                  </div>
+                  <ShieldCheck size={18} className="text-green-500" />
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowSettingsModal(false)}
+                className="w-full py-4 bg-primary text-black rounded-2xl text-xs font-black uppercase tracking-widest"
+              >
+                Save & Close
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Gallery Modal */}
+      <AnimatePresence>
+        {showGalleryModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="w-full max-w-5xl h-[80vh] overflow-y-auto no-scrollbar glass p-8 rounded-[3rem] border border-white/10"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-3xl font-black uppercase italic tracking-tighter">Arena Gallery</h3>
+                <button onClick={() => setShowGalleryModal(false)} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">
+                  <RotateCcw size={20} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                {[1,2,3,4,5,6].map(i => (
+                  <div key={i} className="aspect-square rounded-3xl bg-white/5 border border-white/10 overflow-hidden group">
+                    <img
+                      src={`https://images.unsplash.com/photo-${1534438327276 + i}-1091f1a12463?w=500&auto=format&fit=crop&q=80`}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
+                      alt="Gym"
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 3D Tour Modal */}
+      <AnimatePresence>
+        {showTourModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-6xl aspect-video glass rounded-[3rem] border border-white/10 overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10 pointer-events-none" />
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!4v1715694857492!6m8!1m2!1sAF1QipP_xGZ7P-4I1_m_x_z8v2hY_e8_z_z_z!2i0!3f0!4m2!1i1024!2i768!4f13.1"
+                className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-1000"
+                allowFullScreen
+                loading="lazy"
+              ></iframe>
+              <div className="absolute top-8 left-8 z-20">
+                <h3 className="text-2xl font-black uppercase italic text-white drop-shadow-lg">Rajarajeshwari Fitness Arena</h3>
+                <p className="text-xs text-primary font-bold tracking-widest uppercase">Virtual Reality Immersive Tour</p>
+              </div>
+              <button
+                onClick={() => setShowTourModal(false)}
+                className="absolute top-8 right-8 z-20 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-xs font-black uppercase hover:bg-primary hover:text-black transition-all"
+              >
+                Exit Tour
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

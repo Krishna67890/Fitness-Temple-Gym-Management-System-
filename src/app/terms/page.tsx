@@ -31,7 +31,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-black text-white uppercase italic mb-4">4. Payment Terms</h2>
-            <p>Membership fees must be paid in advance. For the 3-month standard plan, the full amount is due at registration.</p>
+            <p>Membership fees must be paid in advance. Registration and payments are processed manually via WhatsApp verification. Once payment is confirmed by the owner, your account will be fully activated. All payments are non-refundable.</p>
           </section>
         </div>
       </div>

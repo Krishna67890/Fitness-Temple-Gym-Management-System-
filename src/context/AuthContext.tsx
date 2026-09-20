@@ -252,7 +252,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, pass: string): Promise<UserProfile> => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check Local Credentials first for instant access
+    // 1. Check ft_local_users registry for local registrations
+    if (typeof window !== "undefined") {
+      const storedLocalUsers = localStorage.getItem("ft_local_users");
+      if (storedLocalUsers) {
+        try {
+          const localUsers = JSON.parse(storedLocalUsers);
+          // We search for a user matching email and use pass as simple verification (e.g. member123)
+          const matchedUid = Object.keys(localUsers).find(uid =>
+            localUsers[uid].email?.toLowerCase() === cleanEmail
+          );
+
+          if (matchedUid && pass === "member123") {
+            const profile = localUsers[matchedUid];
+            setUserData(profile);
+            setIsDemoMode(true);
+            localStorage.setItem("ft_demo_role", profile.role || "member");
+            return profile;
+          }
+        } catch (e) {
+          console.error("Error parsing local users", e);
+        }
+      }
+    }
+
+    // 2. Check hardcoded Local Credentials for staff/demo accounts
     if (LOCAL_CREDENTIALS[cleanEmail] && LOCAL_CREDENTIALS[cleanEmail] === pass) {
       let matchedProfile = DEMO_PROFILES.member;
       if (cleanEmail.includes("management")) matchedProfile = DEMO_PROFILES.owner;
@@ -369,8 +393,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       photoURL: details?.photoURL || defaultAvatar,
       profileImage: details?.profileImage || defaultAvatar,
       fitnessGoal: details?.fitnessGoal || "General Fitness",
-      memberId: `FT-${Math.floor(1000 + Math.random() * 9000)}`,
+      memberId: `FT-LOC-${Math.floor(1000 + Math.random() * 9000)}`,
     };
+
+    // Persist to ft_local_users for persistence across sessions in demo mode
+    if (typeof window !== "undefined") {
+      const storedLocalUsers = localStorage.getItem("ft_local_users");
+      const localUsers = storedLocalUsers ? JSON.parse(storedLocalUsers) : {};
+      localUsers[demoProfile.uid] = demoProfile;
+      localStorage.setItem("ft_local_users", JSON.stringify(localUsers));
+    }
+
     setUserData(demoProfile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", "member");
@@ -397,9 +430,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userRef = doc(db, "users", result.user.uid);
 
         // Wait slightly for Firestore to be ready for the new user
-        let snap = await getDoc(userRef);
+        let snap;
+        try {
+          snap = await getDoc(userRef);
+        } catch (e) {
+          console.warn("Initial profile fetch failed, likely permission delay:", e);
+        }
 
-        if (snap.exists()) {
+        if (snap && snap.exists()) {
           const data = snap.data() as UserProfile;
           setUserData(data);
           setUser(result.user);
@@ -410,7 +448,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         // New Google User - Create Profile
         const userEmail = result.user.email?.toLowerCase() || "";
-        const isDev = userEmail.includes("krishna") || userEmail.includes("patil");
+        const isDev = userEmail.includes("krishna") || userEmail.includes("patil") || userEmail.includes("sanket");
         const defaultAvatar = result.user.photoURL || "/assets/boy.png";
 
         const newProfile: UserProfile = {

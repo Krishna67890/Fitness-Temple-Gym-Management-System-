@@ -183,63 +183,8 @@ Details:
     }
   };
 
-  const handleRazorpayPayment = async () => {
-    setLoading(true);
-
-    const priceMap: Record<string, number> = {
-      'basic-1': 700, 'basic-3': 1800, 'basic-6': 3500, 'basic-12': 6000,
-      'cardio-1': 800, 'cardio-3': 2000, 'cardio-6': 4000, 'cardio-12': 7000,
-      'pt': 3000
-    };
-    const amount = priceMap[formData.membershipType] || 700;
-
-    try {
-      const response = await fetch("/api/razorpay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: amount,
-          currency: "INR",
-        }),
-      });
-
-      const order = await response.json();
-
-      if (order.is_mock) {
-          setIsDemoMode(true);
-          setTimeout(() => {
-              finalizeRegistration(order.id);
-          }, 2000);
-          return;
-      }
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Fitness Temple Gym",
-        description: `${formData.membershipType.toUpperCase()} Membership`,
-        order_id: order.id,
-        handler: async function (response: any) {
-          await finalizeRegistration(response.razorpay_payment_id || response.razorpay_order_id);
-        },
-        prefill: {
-          name: formData.fullName,
-          email: formData.email,
-          contact: formData.mobile,
-        },
-        theme: {
-          color: "#FFD700",
-        },
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (error: any) {
-      console.error("Payment Error:", error);
-      // Fallback for demo
-      finalizeRegistration("FT-DEMO-PAY-" + Date.now());
-    }
+  const handleManualPayment = async () => {
+    finalizeRegistration("FT-WHATSAPP-" + Date.now());
   };
 
   const priceMap: Record<string, number> = {
@@ -365,42 +310,30 @@ Details:
               exit={{ opacity: 0, scale: 1.05 }}
               className="glass p-8 md:p-16 rounded-[4rem] border border-primary/20 text-center"
             >
-              <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2">SECURE <span className="text-primary">PAYMENT</span></h2>
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-10">Total Payable: ₹{amount}</p>
+              <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2">COMPLETE <span className="text-primary">REGISTRATION</span></h2>
+              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-10">Subscription Plan: {formData.membershipType.toUpperCase()}</p>
 
-              {isDemoMode && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-6 p-4 bg-primary/10 border border-primary/20 rounded-2xl"
-                >
-                  <p className="text-primary text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2">
-                    <Zap size={14} /> Demo Mode Active: Processing Test Payment...
-                  </p>
-                </motion.div>
-              )}
-
-              <div className="relative w-64 h-64 mx-auto mb-10 bg-white p-6 rounded-[3rem] border-4 border-primary shadow-[0_0_40px_rgba(255,215,0,0.2)]">
-                <QrCode size="100%" className="text-black" />
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black text-primary px-4 py-1 rounded-full text-[10px] font-black uppercase border border-primary">
-                  Scan to Pay
+              <div className="bg-primary/5 border border-primary/20 p-8 rounded-[3rem] mb-10">
+                <p className="text-sm font-bold text-gray-300 mb-4 italic">You will be registered in our system. Please make the payment via WhatsApp to activate your membership fully.</p>
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <ShieldCheck size={20} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Safe & Secure Registration</span>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
                 <button
-                  onClick={handleRazorpayPayment}
+                  onClick={handleManualPayment}
                   disabled={loading}
                   className="w-full bg-primary text-black font-black uppercase italic py-6 rounded-2xl flex items-center justify-center gap-4 text-xl hover:scale-105 transition-all"
                 >
-                  {loading ? <Loader2 className="animate-spin" /> : <><CreditCard size={24} /> Pay with Razorpay</>}
+                  {loading ? <Loader2 className="animate-spin" /> : <>Finalize Registration</>}
                 </button>
                 <button
-                  onClick={() => finalizeRegistration("FT-MANUAL-" + Date.now())}
-                  disabled={loading}
+                  onClick={() => setStep(1)}
                   className="w-full bg-white/5 border border-white/10 text-white font-black uppercase italic py-4 rounded-2xl hover:bg-white/10 transition-all"
                 >
-                  Confirm Manual Payment
+                  Go Back
                 </button>
               </div>
             </motion.div>

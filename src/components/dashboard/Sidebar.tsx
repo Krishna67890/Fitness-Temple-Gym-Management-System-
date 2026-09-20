@@ -18,7 +18,8 @@ import {
   Menu,
   X,
   Trophy,
-  Watch
+  Watch,
+  Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
@@ -79,12 +80,6 @@ const Sidebar = () => {
       roles: ['owner', 'trainer', 'user', 'member']
     },
     {
-      name: "Arena Leaderboard",
-      href: "/dashboard/leaderboard",
-      icon: Trophy,
-      roles: ['owner', 'trainer', 'user', 'member']
-    },
-    {
       name: "Wearable Sync",
       href: "/biometrics",
       icon: Watch,
@@ -94,6 +89,12 @@ const Sidebar = () => {
       name: "Gallery",
       href: "/dashboard/gallery",
       icon: ImageIcon,
+      roles: ['owner', 'trainer', 'user', 'member']
+    },
+    {
+      name: "Reviews",
+      href: "/reviews",
+      icon: Star,
       roles: ['owner', 'trainer', 'user', 'member']
     },
     {

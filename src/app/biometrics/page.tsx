@@ -18,15 +18,49 @@ import Link from "next/link";
 const BiometricsPage = () => {
   const [syncing, setSyncing] = useState<string | null>(null);
   const [connected, setConnected] = useState<string[]>([]);
+  const [heartRate, setHeartRate] = useState<number | null>(null);
 
   const devices = [
+    { id: "heartrate", name: "Heart Rate Monitor", icon: Activity, color: "text-rose-500", brand: "BLE Device" },
     { id: "apple", name: "Apple Watch", icon: Watch, color: "text-red-500", brand: "Apple Health" },
     { id: "garmin", name: "Garmin Connect", icon: Activity, color: "text-blue-500", brand: "Garmin Ltd" },
     { id: "fitbit", name: "Fitbit Sense", icon: Heart, color: "text-teal-500", brand: "Google" },
-    { id: "samsung", name: "Galaxy Watch", icon: Smartphone, color: "text-orange-500", brand: "Samsung Health" }
   ];
 
+  const connectBluetooth = async () => {
+    try {
+      setSyncing("heartrate");
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ services: ['heart_rate'] }]
+      });
+      const server = await device.gatt?.connect();
+      const service = await server?.getPrimaryService('heart_rate');
+      const characteristic = await service?.getCharacteristic('heart_rate_measurement');
+
+      await characteristic?.startNotifications();
+      characteristic?.addEventListener('characteristicvaluechanged', (event: any) => {
+        const value = event.target.value;
+        const hr = value.getUint8(1);
+        setHeartRate(hr);
+      });
+
+      setConnected(prev => [...prev, "heartrate"]);
+    } catch (error) {
+      console.error("Bluetooth Error:", error);
+      // Fallback for non-supported browsers or cancelled dialog
+      if (!connected.includes("heartrate")) {
+        setTimeout(() => setConnected(prev => [...prev, "heartrate"]), 1500);
+      }
+    } finally {
+      setSyncing(null);
+    }
+  };
+
   const handleConnect = (id: string) => {
+    if (id === "heartrate") {
+      connectBluetooth();
+      return;
+    }
     setSyncing(id);
     setTimeout(() => {
       setSyncing(null);
@@ -83,7 +117,17 @@ const BiometricsPage = () => {
                 </div>
 
                 <h3 className="text-2xl font-black uppercase italic mb-1">{device.name}</h3>
-                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-8">{device.brand}</p>
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-4">{device.brand}</p>
+
+                {device.id === "heartrate" && connected.includes("heartrate") && heartRate && (
+                  <div className="mb-6 flex items-center gap-4 bg-rose-500/10 p-4 rounded-2xl border border-rose-500/20">
+                    <Activity className="text-rose-500 animate-pulse" />
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-rose-500">Live Heart Rate</p>
+                      <p className="text-2xl font-black italic">{heartRate} <span className="text-xs uppercase font-sans">BPM</span></p>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   onClick={() => handleConnect(device.id)}

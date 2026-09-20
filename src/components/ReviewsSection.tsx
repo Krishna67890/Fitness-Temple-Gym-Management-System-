@@ -242,13 +242,13 @@ export const ReviewsSection = () => {
 
           {/* Action CTA & Role Notice */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            <button
-              onClick={handleOpenReviewAction}
+            <Link
+              href="/reviews"
               className="btn-primary px-8 py-4 rounded-2xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all"
             >
-              <Plus size={16} />
-              <span>{myReview ? "Manage Your Review" : "Write a Member Review"}</span>
-            </button>
+              <MessageSquare size={16} />
+              <span>Share & View All Reviews</span>
+            </Link>
 
             {roleNotice && (
               <motion.div

@@ -111,62 +111,16 @@ const SettingsContent = () => {
     { id: "billing", label: "Billing", icon: CreditCard },
   ];
 
-  const handleRazorpayUpgrade = async (plan: string) => {
-    const amount = plan === "standard" ? 1800 : 700;
-    try {
-      const response = await fetch("/api/razorpay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, currency: "INR" }),
-      });
-      const order = await response.json();
+  const handleWhatsAppUpgrade = (plan: string) => {
+    const phone = '9665231230'; // Owner Phone
+    const message = `Hello! I would like to UPGRADE my membership.
+Current User: ${userData?.fullName} (${userData?.email})
+New Plan: ${plan.toUpperCase()}`;
 
-      const finalizeUpgrade = async (paymentId: string) => {
-        if (!db || !userData?.uid) return;
-        const expiryDate = new Date();
-        expiryDate.setMonth(expiryDate.getMonth() + (plan === "standard" ? 3 : 1));
-
-        const updates = {
-          membershipType: plan,
-          expiryDate: expiryDate.toISOString(),
-          lastPaymentId: paymentId,
-          updatedAt: serverTimestamp()
-        };
-
-        await Promise.all([
-          updateDoc(doc(db!, "users", userData.uid), updates),
-          updateDoc(doc(db!, "members", userData.uid), updates)
-        ]);
-        alert("Plan upgraded successfully!");
-        window.location.reload();
-      };
-
-      if (order.is_mock) {
-        finalizeUpgrade(order.id);
-        return;
-      }
-
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: "Fitness Temple Gym",
-        description: `${plan.toUpperCase()} Membership Upgrade`,
-        order_id: order.id,
-        handler: (res: any) => finalizeUpgrade(res.razorpay_payment_id),
-        prefill: {
-          name: userData?.fullName,
-          email: userData?.email,
-          contact: userData?.mobile,
-        },
-        theme: { color: "#FFD700" },
-      };
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
-    } catch (e) {
-      console.error(e);
-      alert("Upgrade failed. Please contact support.");
-    }
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/91${phone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+    alert("Request sent via WhatsApp. Our team will update your plan once payment is verified.");
   };
 
   return (
@@ -396,21 +350,18 @@ const SettingsContent = () => {
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col gap-2">
                       <button
-                        onClick={() => handleRazorpayUpgrade("standard")}
+                        onClick={() => handleWhatsAppUpgrade("standard")}
                         className="btn-primary py-3 px-8 text-xs"
                       >
-                        Upgrade to Standard
+                        Upgrade via WhatsApp
                       </button>
-                      {userData?.membershipType === "standard" && (
-                         <button
-                           onClick={() => handleRazorpayUpgrade("basic")}
-                           className="btn-outline py-2 px-8 text-[10px]"
-                         >
-                           Switch to Basic
-                         </button>
-                      )}
+                      <button
+                        onClick={() => handleWhatsAppUpgrade("annual")}
+                        className="bg-white/10 hover:bg-white/20 text-white py-3 px-8 text-xs rounded-xl font-black uppercase italic transition-all border border-white/10"
+                      >
+                        Go Annual (Elite)
+                      </button>
                     </div>
-                    <button className="text-xs font-black uppercase text-red-500 hover:text-red-400 transition-colors">Cancel Plan</button>
                   </div>
                 </div>
                 <CreditCard className="absolute right-[-20px] bottom-[-20px] text-primary/10" size={120} />
@@ -420,16 +371,19 @@ const SettingsContent = () => {
                 <h4 className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Payment Methods</h4>
                 <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-8 bg-white/10 rounded flex items-center justify-center font-bold text-[10px]">VISA</div>
+                    <div className="w-12 h-8 bg-green-500/10 rounded flex items-center justify-center font-bold text-[10px] text-green-500 italic">WHATSAPP</div>
                     <div>
-                      <p className="text-sm font-bold">•••• •••• •••• 4242</p>
-                      <p className="text-[10px] text-gray-500 uppercase">Expires 12/25</p>
+                      <p className="text-sm font-bold uppercase">Manual Verification</p>
+                      <p className="text-[10px] text-gray-500 uppercase">Payments verified by Owner</p>
                     </div>
                   </div>
-                  <button className="text-[10px] font-black uppercase text-primary hover:underline">Edit</button>
+                  <span className="text-[10px] font-black uppercase text-green-500 bg-green-500/10 px-3 py-1 rounded-full">Active</span>
                 </div>
-                <button className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-[10px] font-black uppercase text-gray-500 hover:border-primary hover:text-primary transition-all">
-                  + Add New Payment Method
+                <button
+                  onClick={() => handleWhatsAppUpgrade("payment")}
+                  className="w-full py-4 border border-dashed border-white/20 rounded-2xl text-[10px] font-black uppercase text-gray-500 hover:border-primary hover:text-primary transition-all"
+                >
+                  Contact for Payment Queries
                 </button>
               </div>
 

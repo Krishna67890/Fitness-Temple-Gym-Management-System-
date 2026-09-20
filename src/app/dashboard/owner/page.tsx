@@ -205,6 +205,21 @@ const OwnerDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "active" | "expiring" | "expired">("all");
   const [filterTrainer, setFilterTrainer] = useState<"all" | "suraj" | "sanket">("all");
+  const [localRegistry, setLocalRegistry] = useState<UserProfile[]>([]);
+  const [showLocalRegistry, setShowLocalRegistry] = useState(false);
+
+  // Load local registry from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("ft_local_users");
+    if (stored) {
+      try {
+        const users = JSON.parse(stored);
+        setLocalRegistry(Object.values(users));
+      } catch (e) {
+        console.error("Local registry parse error", e);
+      }
+    }
+  }, []);
 
   // Real-time Firestore listener for all members
   useEffect(() => {
@@ -465,6 +480,14 @@ const OwnerDashboard = () => {
               Executive control of members, trainers, attendance logs, and workout pipelines.
             </p>
           </div>
+
+          <button
+            onClick={() => setShowLocalRegistry(true)}
+            className="px-6 py-3.5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
+          >
+            <ShieldCheck size={16} className="text-primary" />
+            <span>Local Registry ({localRegistry.length})</span>
+          </button>
 
           <button
             onClick={() => setShowAddModal(true)}
@@ -1048,6 +1071,91 @@ const OwnerDashboard = () => {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Local Registry Modal */}
+      <AnimatePresence>
+        {showLocalRegistry && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass max-w-4xl w-full p-8 rounded-[2.5rem] border border-white/10 relative flex flex-col max-h-[85vh]"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-black uppercase italic tracking-wider">
+                    Browser Local Registry
+                  </h3>
+                  <p className="text-xs text-gray-400">Users stored in this browser's localStorage (ft_local_users)</p>
+                </div>
+                <button
+                  onClick={() => setShowLocalRegistry(false)}
+                  className="p-2 bg-white/5 hover:bg-white/10 rounded-xl"
+                >
+                  <RotateCcw size={20} className="rotate-45" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto pr-2 custom-scrollbar">
+                {localRegistry.length > 0 ? (
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[10px] font-black uppercase tracking-wider text-gray-500 bg-white/[0.02]">
+                        <th className="py-4 px-4">Name / ID</th>
+                        <th className="py-4 px-4">Email / Phone</th>
+                        <th className="py-4 px-4">Goal / Gender</th>
+                        <th className="py-4 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {localRegistry.map((u) => (
+                        <tr key={u.uid} className="hover:bg-white/[0.02]">
+                          <td className="py-4 px-4">
+                            <div className="flex items-center gap-3">
+                              <img src={u.profileImage || "/assets/boy.png"} className="w-8 h-8 rounded-lg bg-primary/20" alt="" />
+                              <div>
+                                <span className="font-bold text-white block">{u.name || u.fullName}</span>
+                                <span className="text-[10px] font-mono text-primary">{u.memberId}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 font-mono text-gray-400">
+                            {u.email} <br /> {u.phone || u.mobile}
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className="text-gray-300 block">{u.fitnessGoal}</span>
+                            <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${u.gender === 'girl' ? 'bg-pink-500/10 text-pink-400 border-pink-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                              {u.gender || 'Not Set'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                const newRegistry = localRegistry.filter(user => user.uid !== u.uid);
+                                setLocalRegistry(newRegistry);
+                                const registryMap = newRegistry.reduce((acc, curr) => ({ ...acc, [curr.uid]: curr }), {});
+                                localStorage.setItem("ft_local_users", JSON.stringify(registryMap));
+                              }}
+                              className="p-2 text-red-400 hover:bg-red-500/20 rounded-xl transition-all"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-20 bg-black/40 rounded-3xl border border-dashed border-white/10">
+                    <p className="text-gray-500 text-sm">No local users found in registry.</p>
+                  </div>
+                )}
+              </div>
             </motion.div>
           </div>
         )}

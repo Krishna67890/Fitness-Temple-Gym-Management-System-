@@ -20,10 +20,12 @@ service cloud.firestore {
     function isOwner() {
       return isAuthenticated() && (
         (userExists() && getUserData().role == 'owner') ||
-        request.auth.token.email == 'management@fitnesstemple.com' ||
-        request.auth.token.email.lower().matches('.*krishna.*') ||
-        request.auth.token.email.lower().matches('.*patil.*') ||
-        request.auth.token.email.lower().matches('.*sanket.*')
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'management@fitnesstemple.com' ||
+          request.auth.token.email.lower().matches('.*krishna.*') ||
+          request.auth.token.email.lower().matches('.*patil.*') ||
+          request.auth.token.email.lower().matches('.*sanket.*')
+        ))
       );
     }
 

@@ -21,7 +21,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-2xl font-black text-white uppercase italic mb-4">2. Use of Information</h2>
-            <p>We use your data to manage your membership, provide personalized workout and diet plans, and communicate important gym updates. Your payment information is securely processed by Razorpay.</p>
+            <p>We use your data to manage your membership, provide personalized workout and diet plans, and communicate important gym updates. Your registration and payments are verified through WhatsApp for maximum security.</p>
           </section>
 
           <section>
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-2xl font-black text-white uppercase italic mb-4">4. Third-Party Services</h2>
-            <p>Our website utilizes services like Google Maps, Firebase, and Razorpay, which have their own privacy policies regarding data usage.</p>
+            <p>Our website utilizes services like Google Maps and Firebase, which have their own privacy policies regarding data usage.</p>
           </section>
         </div>
       </div>

@@ -51,10 +51,6 @@ export default function RootLayout({
           <Footer />
           <Chatbot />
         </AuthProvider>
-        <Script
-          id="razorpay-checkout-js"
-          src="https://checkout.razorpay.com/v1/checkout.js"
-        />
       </body>
     </html>
   );
