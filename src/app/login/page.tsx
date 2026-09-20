@@ -352,47 +352,31 @@ const LoginPage = () => {
               )}
             </button>
 
-            {/* Footer links - Removed Register, Simplified for Admin Access */}
+            {/* Footer links */}
             <div className="mt-8 text-center space-y-4">
-              <div className="pt-6 border-t border-white/5">
-                <p className="text-[9px] text-gray-600 font-black uppercase tracking-[0.3em] mb-4 text-center">Permanent Access Accounts</p>
-
-                <div className="space-y-3">
-                  {/* Owner Quick Access */}
-                  <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col gap-1 items-start">
-                     <span className="text-[8px] font-black uppercase text-primary tracking-widest">Gym Management (Owner)</span>
-                     <div className="flex justify-between w-full items-center">
-                        <span className="text-[10px] font-bold text-gray-400">sanket@fitnesstemple.com</span>
-                        <button
-                          onClick={() => { setEmail("sanket@fitnesstemple.com"); setPassword("Sanket@123"); }}
-                          className="text-[9px] font-black uppercase text-primary hover:underline"
-                        >
-                          Auto-Fill
-                        </button>
-                     </div>
-                  </div>
-
-                  {/* Trainers Quick Access */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
-                      <span className="text-[7px] font-black uppercase text-gray-500">Trainer: Suraj</span>
-                      <button
-                        onClick={() => { setEmail("suraj@fitnesstemple.com"); setPassword("Suraj@123"); }}
-                        className="text-[9px] font-bold text-white hover:text-primary text-left truncate"
-                      >
-                        suraj@...
-                      </button>
-                    </div>
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
-                      <span className="text-[7px] font-black uppercase text-gray-500">Trainer: Bhavesh</span>
-                      <button
-                        onClick={() => { setEmail("Bhavesh@ftnesstemple.com"); setPassword("bhavesh@123"); }}
-                        className="text-[9px] font-bold text-white hover:text-primary text-left truncate"
-                      >
-                        Bhavesh@...
-                      </button>
-                    </div>
-                  </div>
+              <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                  New to the Temple?
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Link
+                    href="/register"
+                    className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all text-center"
+                  >
+                    Register
+                  </Link>
+                  <Link
+                    href="/login"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setStage('login');
+                      setEmail("");
+                      setPassword("");
+                    }}
+                    className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-all text-center"
+                  >
+                    Login
+                  </Link>
                 </div>
               </div>
             </div>

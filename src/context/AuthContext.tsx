@@ -68,14 +68,14 @@ interface AuthContextType {
 const DEMO_PROFILES: Record<string, UserProfile> = {
   owner: {
     uid: "local_owner_001",
-    name: "Omkar & Siddhant (Owners)",
-    email: "management@fitnesstemple.com",
+    name: "Sanket Sir (Owner)",
+    email: "sanket@fitnesstemple.com",
     role: "owner",
     phone: "+91 96652 31230",
     membershipStatus: "active",
     fitnessGoal: "Gym Director & Founder",
-    photoURL: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
-    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+    photoURL: "/assets/FitnessTempleGym.png",
+    profileImage: "/assets/FitnessTempleGym.png",
   },
   trainer_suraj: {
     uid: "local_trainer_suraj",
@@ -89,15 +89,15 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     photoURL: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
     profileImage: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
   },
-  trainer_sanket: {
-    uid: "local_trainer_sanket",
-    name: "Sanket Sir",
-    email: "sanket@fitnesstemple.com",
+  trainer_bhavesh: {
+    uid: "local_trainer_bhavesh",
+    name: "Bhavesh Sir",
+    email: "Bhavesh@ftnesstemple.com",
     role: "trainer",
-    phone: "+91 92345 67890",
-    trainerId: "trainer_sanket",
+    phone: "+91 93456 78901",
+    trainerId: "trainer_bhavesh",
     membershipStatus: "active",
-    fitnessGoal: "Biomechanics & Hypertrophy Specialist",
+    fitnessGoal: "Transformation Specialist",
     photoURL: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
     profileImage: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
   },
@@ -125,9 +125,9 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
 
 // Default passwords for local/demo accounts
 const LOCAL_CREDENTIALS: Record<string, string> = {
-  "management@fitnesstemple.com": "FitnessTemple@123",
-  "suraj@fitnesstemple.com": "FitnessTemple@123",
-  "sanket@fitnesstemple.com": "FitnessTemple@123",
+  "sanket@fitnesstemple.com": "Sanket@123",
+  "suraj@fitnesstemple.com": "Suraj@123",
+  "bhavesh@ftnesstemple.com": "bhavesh@123",
   "krishna@fitnesstemple.com": "member123",
 };
 
@@ -279,13 +279,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // 2. Check hardcoded Local Credentials for staff/demo accounts
     if (LOCAL_CREDENTIALS[cleanEmail] && LOCAL_CREDENTIALS[cleanEmail] === pass) {
       let matchedProfile = DEMO_PROFILES.member;
-      if (cleanEmail.includes("management")) matchedProfile = DEMO_PROFILES.owner;
-      else if (cleanEmail.includes("suraj")) matchedProfile = DEMO_PROFILES.trainer_suraj;
-      else if (cleanEmail.includes("sanket")) matchedProfile = DEMO_PROFILES.trainer_sanket;
+      if (cleanEmail === "sanket@fitnesstemple.com") matchedProfile = DEMO_PROFILES.owner;
+      else if (cleanEmail === "suraj@fitnesstemple.com") matchedProfile = DEMO_PROFILES.trainer_suraj;
+      else if (cleanEmail === "bhavesh@ftnesstemple.com") matchedProfile = DEMO_PROFILES.trainer_bhavesh;
 
       setUserData(matchedProfile);
       setIsDemoMode(true);
-      localStorage.setItem("ft_demo_role", matchedProfile.role === "trainer" ? (matchedProfile.trainerId || "trainer_suraj") : matchedProfile.role);
+      localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
       return matchedProfile;
     }
 
@@ -322,26 +322,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // Demo Mode match without plaintext leak in code (if not already matched by LOCAL_CREDENTIALS)
-    let matchedRole: UserRole = "member";
     let matchedProfile = DEMO_PROFILES.member;
 
-    if (cleanEmail.includes("owner") || cleanEmail.includes("omkar") || cleanEmail.includes("siddhant")) {
-      matchedRole = "owner";
+    if (cleanEmail === "sanket@fitnesstemple.com") {
       matchedProfile = DEMO_PROFILES.owner;
-    } else if (cleanEmail.includes("suraj")) {
-      matchedRole = "trainer";
+    } else if (cleanEmail === "suraj@fitnesstemple.com") {
       matchedProfile = DEMO_PROFILES.trainer_suraj;
-    } else if (cleanEmail.includes("sanket")) {
-      matchedRole = "trainer";
-      matchedProfile = DEMO_PROFILES.trainer_sanket;
-    } else if (cleanEmail.includes("trainer")) {
-      matchedRole = "trainer";
-      matchedProfile = DEMO_PROFILES.trainer_suraj;
+    } else if (cleanEmail === "bhavesh@ftnesstemple.com") {
+      matchedProfile = DEMO_PROFILES.trainer_bhavesh;
     }
 
     setUserData(matchedProfile);
     setIsDemoMode(true);
-    localStorage.setItem("ft_demo_role", matchedProfile.trainerId === "trainer_sanket" ? "trainer_sanket" : matchedRole === "trainer" ? "trainer_suraj" : matchedRole);
+    localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
     return matchedProfile;
   };
 
@@ -521,7 +514,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyPortalAccess = async (email: string, pass: string, type: "member" | "trainer" | "owner"): Promise<boolean> => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check for Master Security Key for Owners and Trainers
+    // Check Local Credentials first for Owner/Trainer specific access
+    if (LOCAL_CREDENTIALS[cleanEmail] === pass) {
+      const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail) || DEMO_PROFILES.member;
+
+      // Ensure role match if it's not member login
+      if (type !== 'member' && matchedProfile.role !== type) {
+          return false;
+      }
+
+      const session = {
+        uid: matchedProfile.uid,
+        role: matchedProfile.role,
+        name: matchedProfile.name,
+        authenticated: true,
+        isLocal: true,
+        loginAt: Date.now()
+      };
+      setPortalSession(session);
+      localStorage.setItem("ft_portal_session", JSON.stringify(session));
+      return true;
+    }
+
+    // Check for Master Security Key for Owners and Trainers (Fallback)
     if ((type === "owner" || type === "trainer") && pass === "Sanket@123") {
       const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail);
       const session = {
@@ -530,22 +545,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         name: userData?.name || matchedProfile?.name || "Verified Warrior",
         authenticated: true,
         isMasterKeyUsed: true,
-        loginAt: Date.now()
-      };
-      setPortalSession(session);
-      localStorage.setItem("ft_portal_session", JSON.stringify(session));
-      return true;
-    }
-
-    // Check Local Secondary Password (for Demo/Local IDs)
-    if (LOCAL_CREDENTIALS[cleanEmail] === pass) {
-      const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail) || DEMO_PROFILES.member;
-      const session = {
-        uid: matchedProfile.uid,
-        role: type,
-        name: matchedProfile.name,
-        authenticated: true,
-        isLocal: true,
         loginAt: Date.now()
       };
       setPortalSession(session);

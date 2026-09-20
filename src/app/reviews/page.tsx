@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Send, User, MessageSquare, CheckCircle, QrCode as QrIcon, LogOut } from "lucide-react";
+import { Star, Send, User, MessageSquare, CheckCircle, QrCode as QrIcon, LogOut, Trash2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { saveMemberReview, subscribeToPublishedReviews, GymReview } from "@/lib/reviewsService";
 import { useAuth } from "@/context/AuthContext";
@@ -274,7 +274,28 @@ export default function ReviewsPage() {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-black uppercase italic tracking-wider text-lg">{rev.userName}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-black uppercase italic tracking-wider text-lg">{rev.userName}</h4>
+                            {userData?.role === 'owner' && (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (confirm("Permanently delete this review?")) {
+                                    try {
+                                      const { deleteReviewByOwner } = await import("@/lib/reviewsService");
+                                      await deleteReviewByOwner(rev.id);
+                                    } catch (err: any) {
+                                      alert("Failed to delete: " + err.message);
+                                    }
+                                  }
+                                }}
+                                className="p-1.5 text-red-500/50 hover:text-red-500 transition-colors bg-red-500/5 rounded-lg border border-red-500/10"
+                                title="Owner Delete"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
                           <div className="flex gap-1 mt-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
