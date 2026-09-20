@@ -206,9 +206,8 @@ export const saveMemberReview = async ({
 
   // Synchronize local store for instant UI feedback
   const local = getLocalReviews();
-  const existingIdx = local.findIndex((r) => r.userId === userId);
   const localReview: GymReview = {
-    id: userId,
+    id: userId.startsWith('local_') ? userId : `local_${userId}_${Date.now()}`,
     userId,
     userName: userName || "Member",
     userPhotoURL: userPhotoURL || "",
@@ -219,6 +218,8 @@ export const saveMemberReview = async ({
     status: "published",
   };
 
+  // If it's a local review, we might want to avoid duplicates by checking userId
+  const existingIdx = local.findIndex((r) => r.userId === userId);
   if (existingIdx >= 0) {
     local[existingIdx] = { ...local[existingIdx], ...localReview };
   } else {

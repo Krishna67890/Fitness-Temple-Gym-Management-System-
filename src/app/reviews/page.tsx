@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Send, User, MessageSquare, CheckCircle, QrCode as QrIcon } from "lucide-react";
+import { Star, Send, User, MessageSquare, CheckCircle, QrCode as QrIcon, LogOut } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { saveMemberReview, subscribeToPublishedReviews, GymReview } from "@/lib/reviewsService";
 import { useAuth } from "@/context/AuthContext";
@@ -12,30 +12,61 @@ export default function ReviewsPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showQR, setShowQR] = useState(false);
+  const [showQR, setShowQR] = useState(true);
   const [submitted, setSubmitted] = useState(false);
 
+  // Local Review Account Logic
+  const [localName, setLocalName] = useState<string>("");
+  const [isNameSet, setIsNameSet] = useState(false);
+
   useEffect(() => {
+    // Check if name is already in local storage
+    const savedName = localStorage.getItem("review_display_name");
+    if (savedName) {
+      setLocalName(savedName);
+      setIsNameSet(true);
+    }
+
     const unsub = subscribeToPublishedReviews((revs) => {
       setReviews(revs);
     });
     return () => unsub();
   }, []);
 
+  const handleSetName = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (localName.trim()) {
+      localStorage.setItem("review_display_name", localName);
+      setIsNameSet(true);
+    }
+  };
+
+  const handleLogoutLocal = () => {
+    localStorage.removeItem("review_display_name");
+    setLocalName("");
+    setIsNameSet(false);
+  };
+
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      alert("Please login to leave a review!");
+
+    // Use either the logged in user or the local review name
+    const reviewerName = userData?.fullName || user?.displayName || localName || "Valued Member";
+    const reviewerId = user?.uid || `local_${Date.now()}`;
+
+    if (!isNameSet && !user) {
+      alert("Please set your name first!");
       return;
     }
+
     if (!comment.trim()) return;
 
     setIsSubmitting(true);
     try {
       await saveMemberReview({
-        userId: user.uid,
-        userName: userData?.fullName || user.displayName || "Valued Member",
-        userPhotoURL: userData?.profileImage || user.photoURL || "",
+        userId: reviewerId,
+        userName: reviewerName,
+        userPhotoURL: userData?.profileImage || user?.photoURL || "",
         rating,
         comment,
       });
@@ -49,7 +80,9 @@ export default function ReviewsPage() {
     }
   };
 
-  const reviewPageUrl = typeof window !== "undefined" ? window.location.href : "";
+  const reviewPageUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/reviews`
+    : "https://rajarajeshwari-fitness.vercel.app/reviews";
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-32 pb-20 px-4">
@@ -68,16 +101,18 @@ export default function ReviewsPage() {
             MEMBER <span className="text-primary">REVIEWS</span>
           </h1>
           <p className="text-gray-500 max-w-2xl mx-auto font-bold uppercase tracking-widest text-sm leading-relaxed">
-            Your feedback fuels our fire. Share your transformation journey and rate your experience at Fitness Temple.
+            Your feedback fuels our fire. Share your transformation journey and rate your experience at Fitness Arena.
           </p>
 
-          <button
-            onClick={() => setShowQR(!showQR)}
-            className="mt-8 flex items-center gap-2 mx-auto bg-white/5 border border-white/10 px-6 py-3 rounded-2xl hover:bg-primary hover:text-black transition-all group"
-          >
-            <QrIcon size={20} />
-            <span className="text-[10px] font-black uppercase tracking-widest">Generate Review QR</span>
-          </button>
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <button
+              onClick={() => setShowQR(!showQR)}
+              className="flex items-center gap-2 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl hover:bg-primary hover:text-black transition-all group"
+            >
+              <QrIcon size={20} />
+              <span className="text-[10px] font-black uppercase tracking-widest">{showQR ? "Hide Review QR" : "Generate Review QR"}</span>
+            </button>
+          </div>
         </div>
 
         <AnimatePresence>
@@ -89,9 +124,11 @@ export default function ReviewsPage() {
               className="mb-16 flex flex-col items-center"
             >
               <div className="bg-white p-6 rounded-[2rem] shadow-[0_0_50px_rgba(255,215,0,0.2)] mb-4">
+                {/* Permanent QR linking to the reviews page */}
                 <QRCodeSVG value={reviewPageUrl} size={200} />
               </div>
-              <p className="text-[10px] font-black uppercase text-primary tracking-widest">Scan to share your review</p>
+              <p className="text-[10px] font-black uppercase text-primary tracking-[0.3em]">Permanent Review Portal QR</p>
+              <p className="text-[9px] text-gray-500 font-bold mt-2 uppercase">Scan to share your experience with the world</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -102,18 +139,59 @@ export default function ReviewsPage() {
             <div className="glass p-8 rounded-[3rem] border border-white/10 sticky top-32">
               <h3 className="text-2xl font-black uppercase italic mb-6">Write a <span className="text-primary">Review</span></h3>
 
-              {!user ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 text-sm font-bold uppercase mb-6">You must be logged in to share your experience.</p>
-                  <button
-                    onClick={() => window.location.href = '/login'}
-                    className="btn-primary w-full py-4 rounded-2xl text-[10px]"
-                  >
-                    Login to Review
-                  </button>
+              {!user && !isNameSet ? (
+                <div className="text-center py-4">
+                  <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-6 leading-relaxed">
+                    Identify yourself to post a review.<br/>No gym login required.
+                  </p>
+                  <form onSubmit={handleSetName} className="space-y-4">
+                    <input
+                      type="text"
+                      placeholder="ENTER YOUR NAME..."
+                      value={localName}
+                      onChange={(e) => setLocalName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 outline-none focus:border-primary text-xs font-black uppercase tracking-widest"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className="btn-primary w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest"
+                    >
+                      Start Reviewing
+                    </button>
+                  </form>
+                  <div className="mt-6 pt-6 border-t border-white/5">
+                    <p className="text-[9px] text-gray-600 font-bold uppercase mb-4">Or use your gym account</p>
+                    <button
+                      onClick={() => window.location.href = '/login'}
+                      className="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white hover:bg-white/10 transition-all"
+                    >
+                      Member Login
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmitReview} className="space-y-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <User size={14} className="text-primary" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                        Reviewing as: <span className="text-white">{userData?.fullName || user?.displayName || localName}</span>
+                      </span>
+                    </div>
+                    {isNameSet && !user && (
+                      <button
+                        type="button"
+                        onClick={handleLogoutLocal}
+                        className="p-2 hover:text-red-500 transition-colors"
+                        title="Change Name"
+                      >
+                        <LogOut size={14} />
+                      </button>
+                    )}
+                  </div>
                   <div className="flex justify-center gap-2 mb-4">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
