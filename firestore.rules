@@ -53,8 +53,14 @@ service cloud.firestore {
 
     // Member records
     match /members/{memberId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == memberId;
-      allow read, write: if isOwner() || isAssignedTrainer(memberId);
+      // Allow public creation (so reviewers can be added as members automatically)
+      allow create: if true;
+      // Allow owners and trainers to see all members
+      allow read, list: if isOwner() || isTrainer();
+      // Allow members to see and update their own record
+      allow read, update: if isAuthenticated() && request.auth.uid == memberId;
+      // Only owners can delete
+      allow delete: if isOwner();
     }
 
     // Reviews - PUBLIC Visibility & Restricted Deletion

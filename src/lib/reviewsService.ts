@@ -74,8 +74,10 @@ export const subscribeToPublishedReviews = (
         where("status", "==", "published")
       );
 
+      // Using onSnapshot with includeMetadataChanges: true can help with cross-device sync visibility
       const unsubscribe = onSnapshot(
         q,
+        { includeMetadataChanges: true },
         (snapshot) => {
           const reviews: GymReview[] = [];
           snapshot.forEach((docSnap) => {
@@ -204,13 +206,10 @@ export const saveMemberReview = async ({
 
   if (db) {
     try {
-      // Use userId as docId for members to ensure one review per person.
-      // For local/demo users, we still use a random ID because they can't 'update'
-      // without Firebase Authentication (due to firestore.rules security).
       const docId = isLocalUser ? `local_${Date.now()}_${Math.random().toString(36).substr(2, 5)}` : userId;
       const docRef = doc(db, "reviews", docId);
 
-      // Check for update if not local
+      // 1. Save the review
       if (!isLocalUser) {
         try {
           const existing = await getDoc(docRef);
@@ -220,15 +219,29 @@ export const saveMemberReview = async ({
             await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
           }
         } catch (getErr) {
-          // If getDoc fails due to permissions, try direct setDoc with merge
           await setDoc(docRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
         }
       } else {
         await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
       }
+
+      // 2. AUTOMATICALLY add reviewer to "members" collection so they appear in Dashboard
+      const memberRef = doc(db, "members", docId);
+      await setDoc(memberRef, {
+        fullName: userName,
+        email: isLocalUser ? `${docId}@temporary.com` : (userId.includes('@') ? userId : `${userId}@gym.com`),
+        mobile: "Reviewer",
+        membershipType: "Reviewer/Guest",
+        status: "Active",
+        role: "member",
+        memberId: docId.substring(0, 8).toUpperCase(),
+        createdAt: serverTimestamp(),
+        lastActive: serverTimestamp(),
+        source: "Review System"
+      }, { merge: true });
+
     } catch (err: any) {
       console.error("Firestore saveMemberReview error:", err);
-      // Re-throw so the UI knows the sync failed
       throw new Error("Could not sync with gym servers. Please check your internet.");
     }
   }

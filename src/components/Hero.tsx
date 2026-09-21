@@ -7,13 +7,17 @@ import { ArrowRight, Play, Dumbbell, Star, Users, Trophy, ShieldCheck } from "lu
 const Hero = () => {
   return (
     <section className="relative min-h-[100vh] w-full flex items-center justify-center overflow-hidden py-20">
-      {/* Background Image with Elite Overlay */}
-      <div
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat scale-105"
-        style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')`,
-        }}
-      >
+      {/* Background Video with Elite Overlay */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover scale-105"
+        >
+          <source src="/assets/Fitness-Temple.mp4" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black/40 z-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-black/60 z-10" />
         {/* Animated Grid lines for tech feel */}

@@ -31,7 +31,7 @@ const trainerList = [
     role: "Fitness Consultant",
     specialization: "Female Fitness & Nutrition",
     experience: "4+ Years",
-    image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800&auto=format&fit=crop&q=60",
+    image: "/assets/Poonam-ghode.jpg",
     bio: "Poonam specializes in female transformation and lifestyle coaching.",
     certifications: ["Certified Nutritionist", "Yoga Instructor"],
     instagram: "https://www.instagram.com/pbwagh?stkn=ZnQyOWZ5dWk1OTZi"
