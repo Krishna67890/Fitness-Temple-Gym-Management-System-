@@ -53,7 +53,7 @@ const saveLocalReviews = (reviews: GymReview[]) => {
  * Helper to get a stable timestamp from various date formats
  */
 const getSafeTime = (date: any): number => {
-  if (!date) return 0;
+  if (!date) return Date.now(); // Use current time for pending server timestamps to keep them at the top
   if (typeof date.seconds === "number") return date.seconds * 1000;
   if (date instanceof Date) return date.getTime();
   const parsed = new Date(date).getTime();
@@ -205,7 +205,8 @@ export const saveMemberReview = async ({
   if (db) {
     try {
       // Use userId as docId for members to ensure one review per person.
-      // Generate unique ID for anonymous local users.
+      // For local/demo users, we still use a random ID because they can't 'update'
+      // without Firebase Authentication (due to firestore.rules security).
       const docId = isLocalUser ? `local_${Date.now()}_${Math.random().toString(36).substr(2, 5)}` : userId;
       const docRef = doc(db, "reviews", docId);
 
@@ -219,8 +220,7 @@ export const saveMemberReview = async ({
             await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
           }
         } catch (getErr) {
-          // If getDoc fails due to permissions (unlikely with 'allow read: if true'), try direct setDoc
-          console.warn("Direct update failed, trying setDoc:", getErr);
+          // If getDoc fails due to permissions, try direct setDoc with merge
           await setDoc(docRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
         }
       } else {
@@ -228,7 +228,8 @@ export const saveMemberReview = async ({
       }
     } catch (err: any) {
       console.error("Firestore saveMemberReview error:", err);
-      // Even if Firestore fails, local storage keeps it
+      // Re-throw so the UI knows the sync failed
+      throw new Error("Could not sync with gym servers. Please check your internet.");
     }
   }
 

@@ -210,7 +210,7 @@ export const ReviewsSection = () => {
     .filter((r) => (filterRating === "All" ? true : r.rating === parseInt(filterRating)))
     .sort((a, b) => {
       const getSafeTime = (date: any): number => {
-        if (!date) return 0;
+        if (!date) return Date.now(); // Ensure new/pending reviews stay at top
         if (typeof date.seconds === "number") return date.seconds * 1000;
         if (date instanceof Date) return date.getTime();
         const parsed = new Date(date).getTime();

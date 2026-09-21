@@ -14,7 +14,7 @@ const trainerList = [
     image: imageMap.suraj,
     bio: "Suraj is a dedicated bodybuilding and weight-loss coach focused on practical, sustainable results.",
     certifications: ["ACE Certified", "Nutrition Specialist"],
-    instagram: "https://www.instagram.com/suraj_ghode_?igsh=MWF5dzIxdmJhenN3eA=="
+    instagram: "https://www.instagram.com/_._s.u.r.a.j._?stkn=MWF5dzIxdmJhenN3eA=="
   },
   {
     name: "Sanket",
@@ -34,7 +34,7 @@ const trainerList = [
     image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800&auto=format&fit=crop&q=60",
     bio: "Poonam specializes in female transformation and lifestyle coaching.",
     certifications: ["Certified Nutritionist", "Yoga Instructor"],
-    instagram: "https://www.instagram.com/poonamghode?igsh=MTZ3NmJ5OXJsczV1aw=="
+    instagram: "https://www.instagram.com/pbwagh?stkn=ZnQyOWZ5dWk1OTZi"
   }
 ];
 
