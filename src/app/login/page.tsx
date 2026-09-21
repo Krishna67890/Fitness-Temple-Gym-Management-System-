@@ -165,9 +165,36 @@ const LoginPage = () => {
     }
 
     // MANDATORY: Owner portal requires specific password for entry
-    if (activePortal === 'owner' && portalPassword !== 'Sanket@123') {
-      setPortalError("Unauthorized access key. Owner verification failed.");
-      return;
+    if (activePortal === 'owner') {
+      const isOwnerEmail = (user?.email || userData?.email || "").toLowerCase() === 'sanket@fitnesstemple.com';
+      if (!isOwnerEmail) {
+        setPortalError("Unauthorized access. This portal is for the owner only.");
+        return;
+      }
+      if (portalPassword !== 'Sanket@123') {
+        setPortalError("Invalid owner security key. Verification failed.");
+        return;
+      }
+    }
+
+    // MANDATORY: Trainer portal requires specific password
+    if (activePortal === 'trainer') {
+      const email = (user?.email || userData?.email || "").toLowerCase();
+      const isTrainerEmail = email === 'suraj@fitnesstemple.com' || email === 'bhavesh@fitnesstemple.com';
+
+      if (!isTrainerEmail) {
+        setPortalError("Unauthorized access. This portal is for gym trainers only.");
+        return;
+      }
+
+      if (email === 'suraj@fitnesstemple.com' && portalPassword !== 'Suraj@123') {
+        setPortalError("Invalid security key for Suraj Sir.");
+        return;
+      }
+      if (email === 'bhavesh@fitnesstemple.com' && portalPassword !== 'Bhavesh@123') {
+        setPortalError("Invalid security key for Bhavesh Sir.");
+        return;
+      }
     }
 
     setPortalLoading(true);

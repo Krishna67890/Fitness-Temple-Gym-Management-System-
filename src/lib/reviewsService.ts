@@ -228,14 +228,14 @@ export const saveMemberReview = async ({
       }
     } catch (err: any) {
       console.error("Firestore saveMemberReview error:", err);
-      throw err;
+      // Even if Firestore fails, local storage keeps it
     }
   }
 
   // Backup to local storage
   const local = getLocalReviews();
   const reviewObj: GymReview = {
-    id: userId,
+    id: userId.startsWith('local_') ? `local_${Date.now()}` : userId,
     userId,
     userName,
     userPhotoURL,

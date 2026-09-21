@@ -5,9 +5,11 @@ import { Star, Send, User, MessageSquare, CheckCircle, QrCode as QrIcon, LogOut,
 import { QRCodeSVG } from "qrcode.react";
 import { saveMemberReview, subscribeToPublishedReviews, GymReview } from "@/lib/reviewsService";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function ReviewsPage() {
   const { user, userData } = useAuth();
+  const router = useRouter();
   const [reviews, setReviews] = useState<GymReview[]>([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -104,7 +106,7 @@ export default function ReviewsPage() {
             Your feedback fuels our fire. Share your transformation journey and rate your experience at Fitness Arena.
           </p>
 
-          <div className="mt-12 flex flex-col items-center">
+            <div className="mt-12 flex flex-col items-center">
             <div className="bg-white p-6 rounded-[2.5rem] shadow-[0_0_60px_rgba(255,215,0,0.15)] border-4 border-primary/20 group hover:scale-105 transition-all duration-500">
               {/* Permanent QR linking to the reviews page - ALWAYS VISIBLE */}
               <QRCodeSVG
@@ -117,6 +119,15 @@ export default function ReviewsPage() {
             <div className="mt-6 text-center">
               <p className="text-[12px] font-black uppercase text-primary tracking-[0.4em]">PERMANENT REVIEW PORTAL</p>
               <p className="text-[10px] text-gray-500 font-bold mt-2 uppercase tracking-widest italic">Scan to share your experience with the world</p>
+            </div>
+            {/* Review Portal Access Button */}
+            <div className="mt-8">
+              <button
+                onClick={() => router.push('/login')}
+                className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all"
+              >
+                Access Review Dashboard
+              </button>
             </div>
           </div>
         </div>
@@ -249,7 +260,7 @@ export default function ReviewsPage() {
               </span>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-h-[800px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
               {reviews.length === 0 ? (
                 <div className="glass p-20 rounded-[3rem] border border-dashed border-white/10 text-center">
                   <Star className="text-gray-800 mx-auto mb-4" size={48} />
@@ -262,8 +273,11 @@ export default function ReviewsPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     key={rev.id || idx}
-                    className="glass p-8 rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all group"
+                    className="glass p-8 rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden"
                   >
+                    {/* RGB Accent Line */}
+                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-red-500 via-green-500 to-blue-500 opacity-30" />
+
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
