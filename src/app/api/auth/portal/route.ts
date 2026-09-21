@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     );
 
     if (portalType === 'owner') {
-      if (cleanEmail === 'sanket@fitnesstemple.com' && password === 'Sanket@123') {
+      if (cleanEmail === 'sanket@fitnesstemple.com' && password === process.env.OWNER_SECURITY_KEY) {
         return NextResponse.json({
           success: true,
           role: 'owner',
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     }
 
     if (portalType === 'trainer') {
-      if (cleanEmail === 'suraj@fitnesstemple.com' && password === 'Suraj@123') {
+      if (cleanEmail === 'suraj@fitnesstemple.com' && password === process.env.TRAINER_SURAJ_SECURITY_KEY) {
         return NextResponse.json({
           success: true,
           role: 'trainer',
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       }
       if (
         (cleanEmail === 'bhavesh@fitnesstemple.com' || cleanEmail === 'bhavesh@ftnesstemple.com') &&
-        password === 'Bhavesh@123'
+        password === process.env.TRAINER_BHAVESH_SECURITY_KEY
       ) {
         return NextResponse.json({
           success: true,

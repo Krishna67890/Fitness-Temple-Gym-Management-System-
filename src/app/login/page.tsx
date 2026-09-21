@@ -64,15 +64,16 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // Direct portal verification for all staff accounts
-      if (email.toLowerCase().includes('fitnesstemple.com') || email.toLowerCase().includes('ftnesstemple.com')) {
-        setStage('portal-selection');
-        setLoading(false);
-        return;
-      }
+      const userProfile = await login(email, password);
 
-      await login(email, password);
-      setStage('portal-selection');
+      // Direct Role-Based Redirection
+      if (userProfile.role === 'owner') {
+        router.push("/dashboard/owner");
+      } else if (userProfile.role === 'trainer') {
+        router.push("/dashboard/trainer");
+      } else {
+        router.push("/dashboard/member");
+      }
     } catch (err: any) {
       console.error(err);
       const code = err.code || "";
@@ -94,8 +95,14 @@ const LoginPage = () => {
     setGoogleLoading(true);
     setError("");
     try {
-      await loginWithGoogle();
-      setStage('portal-selection');
+      const userProfile = await loginWithGoogle();
+      if (userProfile.role === 'owner') {
+        router.push("/dashboard/owner");
+      } else if (userProfile.role === 'trainer') {
+        router.push("/dashboard/trainer");
+      } else {
+        router.push("/dashboard/member");
+      }
     } catch (err: any) {
       console.error(err);
       if (err.code !== "auth/popup-closed-by-user") {
@@ -354,127 +361,18 @@ const LoginPage = () => {
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
                   New to the Temple?
                 </p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <Link
                     href="/register"
                     className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all text-center"
                   >
-                    Register
-                  </Link>
-                  <Link
-                    href="/login"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setStage('login');
-                      setEmail("");
-                      setPassword("");
-                    }}
-                    className="py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-white/5 text-white border border-white/10 hover:bg-white/10 transition-all text-center"
-                  >
-                    Login
+                    Register New Account
                   </Link>
                 </div>
               </div>
             </div>
           </motion.div>
-        ) : (
-          <motion.div
-            key="portal-selection"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-4xl"
-          >
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter mb-4">
-                CHOOSE YOUR <span className="text-primary">PORTAL</span>
-              </h2>
-              <p className="text-gray-400 font-medium">
-                Identity verified. Select the gateway to your destination.
-              </p>
-            </div>
-
-            <div ref={portalRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Member Card */}
-              <button
-                onClick={() => {
-                  setSelectedPortal('member');
-                  handlePortalAccess(undefined, 'member');
-                }}
-                className="portal-card group relative p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-500 overflow-hidden text-left"
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <User size={80} />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform">
-                    <Users size={24} />
-                  </div>
-                  <h3 className="text-2xl font-black uppercase italic mb-2">Member</h3>
-                  <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                    Access your personalized workout plans, diet charts, and progress tracking.
-                  </p>
-                  <div className="flex items-center text-primary text-xs font-black uppercase tracking-widest gap-2">
-                    Enter Portal <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </button>
-
-              {/* Trainer Card */}
-              <button
-                onClick={() => setSelectedPortal('trainer')}
-                className="portal-card group relative p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-500 overflow-hidden text-left"
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Dumbbell size={80} />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform">
-                    <Sparkles size={24} />
-                  </div>
-                  <h3 className="text-2xl font-black uppercase italic mb-2">Trainer</h3>
-                  <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                    Manage your athletes, update training programs, and monitor performance.
-                  </p>
-                  <div className="flex items-center text-primary text-xs font-black uppercase tracking-widest gap-2">
-                    Enter Portal <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </button>
-
-              {/* Owner Card */}
-              <button
-                onClick={() => setSelectedPortal('owner')}
-                className="portal-card group relative p-8 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-500 overflow-hidden text-left"
-              >
-                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <Crown size={80} />
-                </div>
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center mb-6 text-primary group-hover:scale-110 transition-transform">
-                    <ShieldCheck size={24} />
-                  </div>
-                  <h3 className="text-2xl font-black uppercase italic mb-2">Owner</h3>
-                  <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-                    Overview of gym operations, financial analytics, and management tools.
-                  </p>
-                  <div className="flex items-center text-primary text-xs font-black uppercase tracking-widest gap-2">
-                    Enter Portal <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            <div className="mt-12 text-center">
-              <button
-                onClick={() => setStage('login')}
-                className="text-gray-500 hover:text-white text-xs font-black uppercase tracking-widest transition-colors"
-              >
-                Back to Identity Verification
-              </button>
-            </div>
-          </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
 
       {/* Portal Secondary Auth Modal */}

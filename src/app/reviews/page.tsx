@@ -164,10 +164,17 @@ export default function ReviewsPage() {
             {/* Review Portal Access Button */}
             <div className="mt-8">
               <button
-                onClick={() => router.push('/login')}
-                className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all"
+                onClick={() => {
+                  if (userData) {
+                    const role = userData.role || 'member';
+                    router.push(`/dashboard/${role}`);
+                  } else {
+                    router.push('/login');
+                  }
+                }}
+                className="px-8 py-3 bg-white/5 hover:bg-primary hover:text-black border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-[0.3em] transition-all shadow-[0_0_20px_rgba(255,215,0,0.1)]"
               >
-                Access Review Dashboard
+                {userData ? `Back to ${userData.name}'s Dashboard` : "Access Staff Portal"}
               </button>
             </div>
           </div>
