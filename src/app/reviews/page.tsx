@@ -16,10 +16,10 @@ export default function ReviewsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showQR, setShowQR] = useState(true);
   const [submitted, setSubmitted] = useState(false);
-
-  // Local Review Account Logic
-  const [localName, setLocalName] = useState<string>("");
+  const [localName, setLocalName] = useState("");
   const [isNameSet, setIsNameSet] = useState(false);
+
+  const [theme, setTheme] = useState<"Default" | "RGB" | "Glass">("Default");
 
   useEffect(() => {
     // Check if name is already in local storage
@@ -29,11 +29,21 @@ export default function ReviewsPage() {
       setIsNameSet(true);
     }
 
+    const savedTheme = localStorage.getItem("review_theme_preference");
+    if (savedTheme === "RGB" || savedTheme === "Glass" || savedTheme === "Default") {
+      setTheme(savedTheme);
+    }
+
     const unsub = subscribeToPublishedReviews((revs) => {
       setReviews(revs);
     });
     return () => unsub();
   }, []);
+
+  const handleThemeChange = (newTheme: "Default" | "RGB" | "Glass") => {
+    setTheme(newTheme);
+    localStorage.setItem("review_theme_preference", newTheme);
+  };
 
   const handleSetName = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +72,20 @@ export default function ReviewsPage() {
     }
 
     if (!comment.trim()) return;
+
+    // Optimistic Update
+    const optimisticReview: GymReview = {
+      id: `optimistic_${Date.now()}`,
+      userId: reviewerId,
+      userName: reviewerName,
+      userPhotoURL: userData?.profileImage || user?.photoURL || "",
+      rating,
+      comment: comment.trim(),
+      status: "published",
+      createdAt: { seconds: Math.floor(Date.now() / 1000) }
+    };
+
+    setReviews(prev => [optimisticReview, ...prev]);
 
     setIsSubmitting(true);
     try {
@@ -106,6 +130,23 @@ export default function ReviewsPage() {
             Your feedback fuels our fire. Share your transformation journey and rate your experience at Fitness Arena.
           </p>
 
+          {/* Theme Selector */}
+          <div className="mt-8 flex justify-center gap-4">
+            {(["Default", "RGB", "Glass"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => handleThemeChange(t)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                  theme === t
+                    ? "bg-primary text-black border-primary font-black shadow-[0_0_15px_rgba(255,215,0,0.4)]"
+                    : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
+                }`}
+              >
+                {t} Theme
+              </button>
+            ))}
+          </div>
+
             <div className="mt-12 flex flex-col items-center">
             <div className="bg-white p-6 rounded-[2.5rem] shadow-[0_0_60px_rgba(255,215,0,0.15)] border-4 border-primary/20 group hover:scale-105 transition-all duration-500">
               {/* Permanent QR linking to the reviews page - ALWAYS VISIBLE */}
@@ -135,7 +176,9 @@ export default function ReviewsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Review Form */}
           <div className="lg:col-span-1">
-            <div className="glass p-8 rounded-[3rem] border border-white/10 sticky top-32">
+            <div className={`p-8 rounded-[3rem] sticky top-32 ${
+              theme === 'Glass' ? 'backdrop-blur-xl bg-white/5 border border-white/20 shadow-2xl' : 'glass border border-white/10'
+            }`}>
               <h3 className="text-2xl font-black uppercase italic mb-6">Write a <span className="text-primary">Review</span></h3>
 
               {!user && !isNameSet ? (
@@ -273,10 +316,24 @@ export default function ReviewsPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     key={rev.id || idx}
-                    className="glass p-8 rounded-[2.5rem] border border-white/5 hover:border-primary/20 transition-all group relative overflow-hidden"
+                    className={`p-8 rounded-[2.5rem] transition-all group relative overflow-hidden ${
+                      theme === 'Glass'
+                        ? 'backdrop-blur-xl bg-white/5 border border-white/20 shadow-2xl hover:border-primary/40'
+                        : theme === 'RGB'
+                        ? 'bg-black/60 border border-transparent shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,215,0,0.2)]'
+                        : 'glass border border-white/5 hover:border-primary/20'
+                    }`}
                   >
-                    {/* RGB Accent Line */}
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-red-500 via-green-500 to-blue-500 opacity-30" />
+                    {/* RGB Accent Line / Full border if RGB theme */}
+                    {theme === 'RGB' ? (
+                      <div className="absolute inset-0 p-[2px] rounded-[2.5rem] bg-gradient-to-r from-red-500 via-green-500 to-blue-500 -z-10 animate-pulse group-hover:scale-[1.01] transition-transform" style={{ maskComposite: 'exclude' } as React.CSSProperties} />
+                    ) : (
+                      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-red-500 via-green-500 to-blue-500 opacity-30" />
+                    )}
+
+                    {theme === 'RGB' && (
+                      <div className="absolute inset-0 bg-black/90 rounded-[2.5rem] -z-10" />
+                    )}
 
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex items-center gap-4">

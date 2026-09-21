@@ -514,44 +514,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyPortalAccess = async (email: string, pass: string, type: "member" | "trainer" | "owner"): Promise<boolean> => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check Local Credentials first for Owner/Trainer specific access
-    if (LOCAL_CREDENTIALS[cleanEmail] === pass) {
-      const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail) || DEMO_PROFILES.member;
-
-      // Ensure role match if it's not member login
-      if (type !== 'member' && matchedProfile.role !== type) {
-          return false;
-      }
-
-      const session = {
-        uid: matchedProfile.uid,
-        role: matchedProfile.role,
-        name: matchedProfile.name,
-        authenticated: true,
-        isLocal: true,
-        loginAt: Date.now()
-      };
-      setPortalSession(session);
-      localStorage.setItem("ft_portal_session", JSON.stringify(session));
-      return true;
-    }
-
-    // Check for Master Security Key for Owners and Trainers (Fallback)
-    if ((type === "owner" || type === "trainer") && pass === "Sanket@123") {
-      const matchedProfile = Object.values(DEMO_PROFILES).find(p => p.email.toLowerCase() === cleanEmail);
-      const session = {
-        uid: user?.uid || matchedProfile?.uid || "verified_portal_user",
-        role: type,
-        name: userData?.name || matchedProfile?.name || "Verified Warrior",
-        authenticated: true,
-        isMasterKeyUsed: true,
-        loginAt: Date.now()
-      };
-      setPortalSession(session);
-      localStorage.setItem("ft_portal_session", JSON.stringify(session));
-      return true;
-    }
-
     if (type === "member") {
       // For members, we assume Firebase auth or existence of userData is enough
       const isMatch = (user && user.email?.toLowerCase() === cleanEmail) ||
@@ -572,7 +534,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
 
-    // For Trainer/Owner, check via API (Hidden env vars)
+    // For Trainer/Owner, check strictly via API (Hidden env vars / hardcoded checks securely on server)
     try {
       const response = await fetch('/api/auth/portal', {
         method: 'POST',

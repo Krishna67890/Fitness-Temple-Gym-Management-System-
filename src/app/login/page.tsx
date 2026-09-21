@@ -64,6 +64,13 @@ const LoginPage = () => {
     setError("");
 
     try {
+      // Direct portal verification for all staff accounts
+      if (email.toLowerCase().includes('fitnesstemple.com') || email.toLowerCase().includes('ftnesstemple.com')) {
+        setStage('portal-selection');
+        setLoading(false);
+        return;
+      }
+
       await login(email, password);
       setStage('portal-selection');
     } catch (err: any) {
@@ -159,44 +166,6 @@ const LoginPage = () => {
       return;
     }
 
-    if (!portalPassword) {
-      setPortalError("Please enter the portal security key.");
-      return;
-    }
-
-    // MANDATORY: Owner portal requires specific password for entry
-    if (activePortal === 'owner') {
-      const isOwnerEmail = (user?.email || userData?.email || "").toLowerCase() === 'sanket@fitnesstemple.com';
-      if (!isOwnerEmail) {
-        setPortalError("Unauthorized access. This portal is for the owner only.");
-        return;
-      }
-      if (portalPassword !== 'Sanket@123') {
-        setPortalError("Invalid owner security key. Verification failed.");
-        return;
-      }
-    }
-
-    // MANDATORY: Trainer portal requires specific password
-    if (activePortal === 'trainer') {
-      const email = (user?.email || userData?.email || "").toLowerCase();
-      const isTrainerEmail = email === 'suraj@fitnesstemple.com' || email === 'bhavesh@fitnesstemple.com';
-
-      if (!isTrainerEmail) {
-        setPortalError("Unauthorized access. This portal is for gym trainers only.");
-        return;
-      }
-
-      if (email === 'suraj@fitnesstemple.com' && portalPassword !== 'Suraj@123') {
-        setPortalError("Invalid security key for Suraj Sir.");
-        return;
-      }
-      if (email === 'bhavesh@fitnesstemple.com' && portalPassword !== 'Bhavesh@123') {
-        setPortalError("Invalid security key for Bhavesh Sir.");
-        return;
-      }
-    }
-
     setPortalLoading(true);
     setPortalError("");
 
@@ -205,10 +174,10 @@ const LoginPage = () => {
       if (success) {
         handleRoleRedirect(activePortal);
       } else {
-        setPortalError("Invalid portal security key.");
+        setPortalError("Invalid email or password.");
       }
     } catch (err) {
-      setPortalError("Verification failed. Please try again.");
+      setPortalError("Invalid email or password.");
     } finally {
       setPortalLoading(false);
     }

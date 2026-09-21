@@ -3,51 +3,56 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const { email, password, portalType } = await request.json();
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    // Standard generic message to prevent account enumeration
+    const invalidResponse = () => NextResponse.json(
+      { success: false, message: 'Invalid email or password.' },
+      { status: 401 }
+    );
 
     if (portalType === 'owner') {
-      if (
-        email === process.env.OWNER_EMAIL &&
-        password === process.env.OWNER_PASSWORD
-      ) {
+      if (cleanEmail === 'sanket@fitnesstemple.com' && password === 'Sanket@123') {
         return NextResponse.json({
           success: true,
           role: 'owner',
-          name: 'Gym Owner',
+          name: 'Sanket Sir (Owner)',
+          email: 'sanket@fitnesstemple.com',
           id: 'owner_admin'
         });
       }
-    } else if (portalType === 'trainer') {
-      if (
-        email === process.env.TRAINER_SURAJ_EMAIL &&
-        password === process.env.TRAINER_SURAJ_PASSWORD
-      ) {
+      return invalidResponse();
+    }
+
+    if (portalType === 'trainer') {
+      if (cleanEmail === 'suraj@fitnesstemple.com' && password === 'Suraj@123') {
         return NextResponse.json({
           success: true,
           role: 'trainer',
           trainerId: 'trainer_suraj',
-          name: 'Suraj Sir'
+          name: 'Suraj Sir',
+          email: 'suraj@fitnesstemple.com'
         });
       }
       if (
-        email === process.env.TRAINER_SANKET_EMAIL &&
-        password === process.env.TRAINER_SANKET_PASSWORD
+        (cleanEmail === 'bhavesh@fitnesstemple.com' || cleanEmail === 'bhavesh@ftnesstemple.com') &&
+        password === 'Bhavesh@123'
       ) {
         return NextResponse.json({
           success: true,
           role: 'trainer',
-          trainerId: 'trainer_sanket',
-          name: 'Sanket Sir'
+          trainerId: 'trainer_bhavesh',
+          name: 'Bhavesh Sir',
+          email: 'bhavesh@ftnesstemple.com'
         });
       }
+      return invalidResponse();
     }
 
-    return NextResponse.json(
-      { success: false, message: 'Invalid portal credentials' },
-      { status: 401 }
-    );
+    return invalidResponse();
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: 'Internal server error' },
+      { success: false, message: 'Invalid email or password.' },
       { status: 500 }
     );
   }

@@ -90,11 +90,13 @@ service cloud.firestore {
 
     // Reviews - Enhanced for global visibility and strict owner-only deletion
     match /reviews/{reviewId} {
-      allow read, write: if true;
+      allow read, create, update: if true;
+      allow delete: if isOwner();
     }
 
     match /reviews {
-      allow read, write: if true;
+      allow read, create, update: if true;
+      allow delete: if isOwner();
     }
 
     // Advanced Workout Engine & Wearables

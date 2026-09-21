@@ -309,16 +309,7 @@ const OwnerDashboard = () => {
   }, []);
 
   const handleToggleReviewStatus = async (rev: GymReview) => {
-    const newStatus = rev.status === "published" ? "hidden" : "published";
-    await setReviewStatusByOwner(rev.id, newStatus);
-    setAuditLogs([
-      {
-        time: "Just now",
-        event: `Owner ${newStatus === "published" ? "published" : "hid"} review by ${rev.userName}`,
-        type: "owner",
-      },
-      ...auditLogs,
-    ]);
+    // Hidden status option removed based on owner-only deletion policy
   };
 
   const handleDeleteReviewByOwner = async (rev: GymReview) => {
@@ -858,12 +849,6 @@ const OwnerDashboard = () => {
             <span className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-gray-300">
               Total: <strong className="text-white">{ownerReviews.length}</strong>
             </span>
-            <span className="px-3 py-1.5 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400">
-              Published: <strong className="text-green-300">{ownerReviews.filter((r) => r.status === "published").length}</strong>
-            </span>
-            <span className="px-3 py-1.5 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
-              Hidden: <strong className="text-yellow-300">{ownerReviews.filter((r) => r.status === "hidden").length}</strong>
-            </span>
           </div>
         </div>
 
@@ -903,11 +888,7 @@ const OwnerDashboard = () => {
             {filteredOwnerReviews.map((rev) => (
               <div
                 key={rev.id}
-                className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                  rev.status === "published"
-                    ? "bg-black/50 border-white/10 hover:border-white/20"
-                    : "bg-red-500/5 border-yellow-500/20 opacity-70"
-                }`}
+                className="p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-black/50 border-white/10 hover:border-white/20"
               >
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-3">
@@ -923,15 +904,6 @@ const OwnerDashboard = () => {
                         />
                       ))}
                     </div>
-                    <span
-                      className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${
-                        rev.status === "published"
-                          ? "text-green-400 bg-green-500/10 border-green-500/20"
-                          : "text-yellow-400 bg-yellow-500/10 border-yellow-500/20"
-                      }`}
-                    >
-                      {rev.status}
-                    </span>
                   </div>
 
                   <p className="text-xs text-gray-300 italic leading-relaxed">
@@ -943,17 +915,6 @@ const OwnerDashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-2 self-end sm:self-center">
-                  <button
-                    onClick={() => handleToggleReviewStatus(rev)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-                      rev.status === "published"
-                        ? "bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 border-yellow-500/20"
-                        : "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20"
-                    }`}
-                  >
-                    {rev.status === "published" ? "Hide from Public" : "Publish to Public"}
-                  </button>
-
                   <button
                     onClick={() => handleDeleteReviewByOwner(rev)}
                     className="p-2 bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-xl transition-all"
