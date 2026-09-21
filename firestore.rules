@@ -8,7 +8,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Safer role checks that don't fail if doc doesn't exist
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
@@ -44,11 +43,11 @@ service cloud.firestore {
 
     // User authentication profile
     match /users/{userId} {
-      // Allow user to read/write their own document - simplified for initial sync
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow user to read/write their own document
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
       // Allow owners and trainers to see profiles
       allow read: if isOwner() || isTrainer();
-      // Only owners can change roles or delete users
+      // Only owners can change roles
       allow update: if isOwner() || (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
       allow delete: if isOwner();
     }
@@ -59,7 +58,7 @@ service cloud.firestore {
       allow read, write: if isOwner() || isAssignedTrainer(memberId);
     }
 
-    // Workouts, Diets, Progress - consistent access for user, trainer, owner
+    // Workouts, Diets, Progress
     match /workouts/{memberId}/{allPaths=**} {
       allow read, write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
     }
@@ -88,27 +87,12 @@ service cloud.firestore {
       allow write: if isOwner() || isTrainer() || (isAuthenticated() && request.auth.uid == userId);
     }
 
-    // Reviews - Enhanced for global visibility and strict owner-only deletion
+    // Reviews - Truly public read and create for guests
     match /reviews/{reviewId} {
-      allow read, create, update: if true;
+      allow read, create: if true;
+      // Only the author or owner can update/delete
+      allow update: if isOwner() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow delete: if isOwner();
-    }
-
-    match /reviews {
-      allow read, create, update: if true;
-      allow delete: if isOwner();
-    }
-
-    // Advanced Workout Engine & Wearables
-    match /workout_plans/{planId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner() || isTrainer();
-    }
-    match /user_workouts/{userId}/{allPaths=**} {
-      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
-    }
-    match /wearable_sync/{userId}/{allPaths=**} {
-      allow read, write: if isAuthenticated() && (request.auth.uid == userId || isOwner());
     }
   }
 }

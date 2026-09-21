@@ -203,12 +203,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (firebaseUser) {
         try {
           const userDocRef = doc(db!, "users", firebaseUser.uid);
-          const userSnap = await getDoc(userDocRef);
+          // Attempt to get the user document
+          let userSnap;
+          try {
+             userSnap = await getDoc(userDocRef);
+          } catch (e: any) {
+            console.warn("Initial user doc fetch failed (likely permission propagation delay):", e.message);
+            // If it's a permission error, we wait a moment and try one more time
+            if (e.code === 'permission-denied') {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              userSnap = await getDoc(userDocRef);
+            }
+          }
 
-          if (userSnap.exists()) {
+          if (userSnap && userSnap.exists()) {
             setUserData(userSnap.data() as UserProfile);
           } else {
-            // Check for specific role-based emails even for existing Firebase users
+            // New user detection
             const userEmail = firebaseUser.email?.toLowerCase() || "";
             let assignedRole: UserRole = "member";
 
@@ -227,12 +238,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
 
             setUserData(newProfile);
-            // Non-blocking write to avoid permission-denied crashes on UI
-            setDoc(userDocRef, newProfile).catch(e => console.warn("Profile sync deferred:", e));
+            // Try to create the document if it doesn't exist
+            try {
+              await setDoc(userDocRef, newProfile, { merge: true });
+            } catch (e) {
+              console.warn("Profile sync deferred (permission issue):", e);
+            }
           }
         } catch (error) {
           console.error("Auth state sync error:", error);
-          // Fallback to avoid "Application Error" crash
           setUserData({
             uid: firebaseUser.uid,
             name: firebaseUser.displayName || "Warrior",
