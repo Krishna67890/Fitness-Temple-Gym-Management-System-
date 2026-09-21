@@ -18,13 +18,12 @@ service cloud.firestore {
 
     function isOwner() {
       return isAuthenticated() && (
-        (userExists() && getUserData().role == 'owner') ||
         (request.auth.token.email != null && (
           request.auth.token.email.lower() == 'management@fitnesstemple.com' ||
           request.auth.token.email.lower().matches('.*krishna.*') ||
           request.auth.token.email.lower().matches('.*patil.*') ||
           request.auth.token.email.lower().matches('.*sanket.*')
-        ))
+        )) || (userExists() && getUserData().role == 'owner')
       );
     }
 
@@ -43,11 +42,8 @@ service cloud.firestore {
 
     // User authentication profile
     match /users/{userId} {
-      // Allow user to read/write their own document
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
-      // Allow owners and trainers to see profiles
-      allow read: if isOwner() || isTrainer();
-      // Only owners can change roles
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
+      allow write: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isOwner() || (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
       allow delete: if isOwner();
     }
@@ -90,9 +86,13 @@ service cloud.firestore {
     // Reviews - Truly public read and create for guests
     match /reviews/{reviewId} {
       allow read, create: if true;
-      // Only the author or owner can update/delete
       allow update: if isOwner() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow delete: if isOwner();
+    }
+
+    // Allow collection listing for published reviews
+    match /reviews {
+      allow read: if true;
     }
   }
 }

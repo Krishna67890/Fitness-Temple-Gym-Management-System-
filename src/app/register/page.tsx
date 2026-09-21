@@ -107,9 +107,15 @@ const RegisterContent = () => {
     setWhatsappModalOpen(true);
   };
 
-  const handleWhatsAppChoice = (target: 'dev' | 'owner') => {
-    const phone = target === 'dev' ? '8080690631' : '9665231230';
-    const message = `Hello! I would like to join Fitness Temple.
+  const handleWhatsAppChoice = async (target: 'dev' | 'owner') => {
+    setWhatsappModalOpen(false);
+
+    // Auto-register first before opening WhatsApp
+    const success = await finalizeRegistration("WHATSAPP-" + target.toUpperCase());
+
+    if (success) {
+      const phone = target === 'dev' ? '8080690631' : '9665231230';
+      const message = `Hello! I have just registered on the Fitness Temple website.
 Details:
 - Name: ${formData.fullName}
 - Mobile: ${formData.mobile}
@@ -118,15 +124,14 @@ Details:
 - Plan: ${formData.membershipType}
 - Gender: ${formData.gender}
 - Age: ${formData.age}
-- Weight: ${formData.weight}
-- Height: ${formData.height}`;
+- ID: ${memberId || 'Generating...'}`;
 
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/91${phone}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/91${phone}?text=${encodedMessage}`;
 
-    finalizeRegistration("WHATSAPP-" + target.toUpperCase());
-    setWhatsappModalOpen(false);
+      // Open WhatsApp in a new tab
+      window.open(whatsappUrl, '_blank');
+    }
   };
 
   const finalizeRegistration = async (paymentId: string) => {
@@ -149,7 +154,7 @@ Details:
 
       const defaultAvatar = formData.gender === 'boy' ? "/assets/boy.png" : "/assets/girl.png";
 
-      // Register in AuthContext (Firebase Auth + Firestore or Demo fallback)
+      // Register in AuthContext
       await register(formData.email, formData.password, {
         name: formData.fullName,
         phone: formData.mobile,
@@ -175,9 +180,16 @@ Details:
         audio.play();
       } catch (e) {}
 
+      return true;
     } catch (error: any) {
-      alert("Registration failed: " + error.message);
-      setStep(1);
+      console.error("Registration Error:", error);
+      if (error.code === 'auth/email-already-in-use') {
+        alert("This email is already registered! Please login instead.");
+        router.push("/login");
+      } else {
+        alert("Registration failed: " + (error.message || "Unknown error"));
+      }
+      return false;
     } finally {
       setLoading(false);
     }
