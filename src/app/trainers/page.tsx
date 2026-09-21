@@ -13,7 +13,8 @@ const trainerList = [
     experience: "8+ Years",
     image: imageMap.suraj,
     bio: "Suraj is a dedicated bodybuilding and weight-loss coach focused on practical, sustainable results.",
-    certifications: ["ACE Certified", "Nutrition Specialist"]
+    certifications: ["ACE Certified", "Nutrition Specialist"],
+    instagram: "https://www.instagram.com/suraj_ghode_?igsh=MWF5dzIxdmJhenN3eA=="
   },
   {
     name: "Sanket",
@@ -22,7 +23,18 @@ const trainerList = [
     experience: "6+ Years",
     image: imageMap.sanket,
     bio: "Sanket focuses on strength, power, and functional movement to improve athletic performance.",
-    certifications: ["Certified Strength Coach", "Sports Science Diploma"]
+    certifications: ["Certified Strength Coach", "Sports Science Diploma"],
+    instagram: "https://www.instagram.com/sanket_ghode10?igsh=MWwyZnF0bzJ2b3JpbQ=="
+  },
+  {
+    name: "Poonam Ghode",
+    role: "Fitness Consultant",
+    specialization: "Female Fitness & Nutrition",
+    experience: "4+ Years",
+    image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800&auto=format&fit=crop&q=60",
+    bio: "Poonam specializes in female transformation and lifestyle coaching.",
+    certifications: ["Certified Nutritionist", "Yoga Instructor"],
+    instagram: "https://www.instagram.com/poonamghode?igsh=MTZ3NmJ5OXJsczV1aw=="
   }
 ];
 
@@ -69,11 +81,16 @@ const TrainersPage = () => {
 
                   {/* Socials Floating */}
                   <div className="absolute bottom-10 left-10 flex gap-4">
-                    {[Instagram, Twitter].map((Icon, i) => (
-                       <button key={i} className="w-14 h-14 bg-black/50 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 hover:bg-primary hover:border-primary transition-all text-white">
-                          <Icon size={24} />
-                       </button>
-                    ))}
+                    <Link
+                      href={trainer.instagram}
+                      target="_blank"
+                      className="w-14 h-14 bg-black/50 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 hover:bg-primary hover:border-primary transition-all text-white"
+                    >
+                      <Instagram size={24} />
+                    </Link>
+                    <button className="w-14 h-14 bg-black/50 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 hover:bg-primary hover:border-primary transition-all text-white">
+                      <Twitter size={24} />
+                    </button>
                   </div>
                 </motion.div>
               </div>

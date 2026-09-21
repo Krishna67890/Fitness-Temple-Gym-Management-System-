@@ -8,12 +8,9 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function userExists() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    // Safer check for user document existence and data
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'member');
     }
 
     function isOwner() {
@@ -23,27 +20,33 @@ service cloud.firestore {
           request.auth.token.email.lower().matches('.*krishna.*') ||
           request.auth.token.email.lower().matches('.*patil.*') ||
           request.auth.token.email.lower().matches('.*sanket.*')
-        )) || (userExists() && getUserData().role == 'owner')
+        )) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserRole() == 'owner')
       );
     }
 
     function isTrainer() {
-      return isAuthenticated() && userExists() && getUserData().role == 'trainer';
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'trainer';
     }
 
     function isAssignedTrainer(memberId) {
       return isTrainer() && (
-        (resource != null && resource.data.trainerId == request.auth.uid) ||
-        (request.resource != null && request.resource.data.trainerId == request.auth.uid) ||
+        (resource != null && resource.data.get('trainerId', '') == request.auth.uid) ||
+        (request.resource != null && request.resource.data.get('trainerId', '') == request.auth.uid) ||
         (exists(/databases/$(database)/documents/members/$(memberId)) &&
-         get(/databases/$(database)/documents/members/$(memberId)).data.trainerId == request.auth.uid)
+         get(/databases/$(database)/documents/members/$(memberId)).data.get('trainerId', '') == request.auth.uid)
       );
     }
 
     // User authentication profile
     match /users/{userId} {
+      // Allow users to read their own profile, or owners/trainers to see it
       allow read: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
+      // Allow users to create/update their own profile
       allow write: if isAuthenticated() && request.auth.uid == userId;
+      // Only owners can change roles
       allow update: if isOwner() || (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
       allow delete: if isOwner();
     }
@@ -54,7 +57,24 @@ service cloud.firestore {
       allow read, write: if isOwner() || isAssignedTrainer(memberId);
     }
 
-    // Workouts, Diets, Progress
+    // Reviews - PUBLIC Visibility & Restricted Deletion
+    match /reviews/{reviewId} {
+      // Make reviews visible to everyone (all devices) permanent
+      allow read, get, list: if true;
+
+      // Allow creation by authenticated users (or guests if you prefer, currently set to anyone)
+      allow create: if true;
+
+      // Only the author can update their review, or the owner can moderate
+      allow update: if isOwner() || (
+        isAuthenticated() && (resource.data.get('userId', '') == request.auth.uid || reviewId == request.auth.uid)
+      );
+
+      // MANDATORY: Only owners can delete reviews
+      allow delete: if isOwner();
+    }
+
+    // Workouts, Diets, Progress - Standard access
     match /workouts/{memberId}/{allPaths=**} {
       allow read, write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
     }
@@ -71,28 +91,16 @@ service cloud.firestore {
       allow write: if isTrainer() || isOwner() || (isAuthenticated() && request.auth.uid == memberId);
     }
 
-    // Trainer profiles
-    match /trainers/{trainerId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner() || (isAuthenticated() && request.auth.uid == trainerId);
-    }
-
     // Notifications
     match /notifications/{userId}/{notifId} {
       allow read: if isAuthenticated() && request.auth.uid == userId;
       allow write: if isOwner() || isTrainer() || (isAuthenticated() && request.auth.uid == userId);
     }
 
-    // Reviews - Truly public read and create for guests
-    match /reviews/{reviewId} {
-      allow read, create: if true;
-      allow update: if isOwner() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow delete: if isOwner();
-    }
-
-    // Allow collection listing for published reviews
-    match /reviews {
-      allow read: if true;
+    // Global settings and others
+    match /trainers/{trainerId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner();
     }
   }
 }

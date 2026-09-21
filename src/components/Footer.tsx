@@ -27,7 +27,10 @@ const Footer = () => {
               Fitness Temple (फिटनेस टेंपल) - Nashik's elite fitness sanctuary. Transform your physique under the guidance of Sanket Sir, Suraj Sir, and our expert staff.
             </p>
             <div className="flex space-x-4">
-              {[Instagram, Facebook, Twitter, Youtube].map((Icon, i) => (
+              <a href="https://www.instagram.com/fitnesstemple_14?igsh=MWdqNTAwZXZkaWVjcg%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-2xl glass flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 hover:-translate-y-1 shadow-xl">
+                <Instagram size={20} />
+              </a>
+              {[Facebook, Twitter, Youtube].map((Icon, i) => (
                 <a key={i} href="#" className="w-12 h-12 rounded-2xl glass flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-300 hover:-translate-y-1 shadow-xl">
                   <Icon size={20} />
                 </a>

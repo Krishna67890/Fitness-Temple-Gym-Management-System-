@@ -10,13 +10,22 @@ const trainers = [
     name: "Suraj",
     role: "Certified Fitness Trainer",
     image: imageMap.suraj,
-    specialty: "Bodybuilding & Weight Loss"
+    specialty: "Bodybuilding & Weight Loss",
+    instagram: "https://www.instagram.com/suraj_ghode_?igsh=MWF5dzIxdmJhenN3eA=="
   },
   {
     name: "Sanket",
     role: "Strength & Conditioning Coach",
     image: imageMap.sanket,
-    specialty: "Functional Training & Powerlifting"
+    specialty: "Functional Training & Powerlifting",
+    instagram: "https://www.instagram.com/sanket_ghode10?igsh=MWwyZnF0bzJ2b3JpbQ=="
+  },
+  {
+    name: "Poonam Ghode",
+    role: "Fitness Consultant",
+    image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800&auto=format&fit=crop&q=60",
+    specialty: "Female Fitness & Nutrition",
+    instagram: "https://www.instagram.com/poonamghode?igsh=MTZ3NmJ5OXJsczV1aw=="
   }
 ];
 
@@ -34,7 +43,7 @@ const TrainersPreview = () => {
           <Link href="/trainers" className="btn-outline mt-10 md:mt-0">View All Coaches</Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {trainers.map((trainer, idx) => (
             <motion.div
               key={idx}
@@ -62,11 +71,16 @@ const TrainersPreview = () => {
                   </div>
 
                   <div className="flex flex-col gap-4 translate-y-20 group-hover:translate-y-0 transition-transform duration-500">
-                    {[Instagram, Twitter].map((Icon, i) => (
-                      <button key={i} className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all">
-                        <Icon size={20} />
-                      </button>
-                    ))}
+                    <Link
+                      href={trainer.instagram}
+                      target="_blank"
+                      className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all"
+                    >
+                      <Instagram size={20} />
+                    </Link>
+                    <button className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                      <Twitter size={20} />
+                    </button>
                   </div>
                 </div>
               </div>

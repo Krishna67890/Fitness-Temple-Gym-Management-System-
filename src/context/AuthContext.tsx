@@ -182,15 +182,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // 1. Check for stored demo session
     const storedDemo = typeof window !== "undefined" ? localStorage.getItem("ft_demo_role") : null;
+    const storedPortalSession = typeof window !== "undefined" ? localStorage.getItem("ft_portal_session") : null;
 
     if (!isFirebaseConfigured || storedDemo) {
       if (storedDemo && DEMO_PROFILES[storedDemo]) {
         setUserData(DEMO_PROFILES[storedDemo]);
         setIsDemoMode(true);
+        if (storedPortalSession) {
+          try {
+            setPortalSession(JSON.parse(storedPortalSession));
+          } catch (e) {}
+        }
       } else if (!isFirebaseConfigured) {
         // Fallback default demo for offline exploration
         setUserData(DEMO_PROFILES.member);
         setIsDemoMode(true);
+        if (storedPortalSession) {
+          try {
+            setPortalSession(JSON.parse(storedPortalSession));
+          } catch (e) {}
+        }
       }
       setLoading(false);
       return;
@@ -203,31 +214,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (firebaseUser) {
         try {
           const userDocRef = doc(db!, "users", firebaseUser.uid);
-          // Attempt to get the user document
           let userSnap;
-          try {
-             userSnap = await getDoc(userDocRef);
-          } catch (e: any) {
-            console.warn("Initial user doc fetch failed (likely permission propagation delay):", e.message);
-            // If it's a permission error, we wait a moment and try one more time
-            if (e.code === 'permission-denied') {
-              await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Retry logic for permission propagation
+          for (let i = 0; i < 3; i++) {
+            try {
               userSnap = await getDoc(userDocRef);
+              break;
+            } catch (e: any) {
+              if (e.code === 'permission-denied' && i < 2) {
+                await new Promise(resolve => setTimeout(resolve, 800 * (i + 1)));
+              } else {
+                throw e;
+              }
             }
           }
 
+          let profileData: UserProfile;
+
           if (userSnap && userSnap.exists()) {
-            setUserData(userSnap.data() as UserProfile);
+            profileData = userSnap.data() as UserProfile;
           } else {
             // New user detection
             const userEmail = firebaseUser.email?.toLowerCase() || "";
             let assignedRole: UserRole = "member";
 
-            if (userEmail.includes("management") || userEmail.includes("owner")) assignedRole = "owner";
-            else if (userEmail.includes("suraj")) assignedRole = "trainer";
-            else if (userEmail.includes("sanket")) assignedRole = "trainer";
+            if (userEmail.includes("management") ||
+                userEmail.includes("owner") ||
+                userEmail.includes("krishna") ||
+                userEmail.includes("patil") ||
+                userEmail.includes("sanket")) {
+              assignedRole = "owner";
+            } else if (userEmail.includes("suraj") || userEmail.includes("bhavesh")) {
+              assignedRole = "trainer";
+            }
 
-            const newProfile: UserProfile = {
+            profileData = {
               uid: firebaseUser.uid,
               name: firebaseUser.displayName || "Fitness Warrior",
               email: firebaseUser.email || "",
@@ -237,24 +259,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               createdAt: serverTimestamp(),
             };
 
-            setUserData(newProfile);
-            // Try to create the document if it doesn't exist
+            // Attempt to create the document if it doesn't exist
             try {
-              await setDoc(userDocRef, newProfile, { merge: true });
+              await setDoc(userDocRef, profileData, { merge: true });
             } catch (e) {
               console.warn("Profile sync deferred (permission issue):", e);
             }
           }
+
+          setUserData(profileData);
+          setIsDemoMode(false);
+          localStorage.removeItem("ft_demo_role");
+
+          // Update portal session
+          const session = {
+            uid: firebaseUser.uid,
+            role: profileData.role || 'member',
+            name: profileData.name || "Member",
+            authenticated: true,
+            loginAt: Date.now()
+          };
+          setPortalSession(session);
+          localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
         } catch (error) {
           console.error("Auth state sync error:", error);
-          setUserData({
-            uid: firebaseUser.uid,
-            name: firebaseUser.displayName || "Warrior",
-            role: "member"
-          } as UserProfile);
         }
       } else {
-        setUserData(null);
+        // If we are NOT in demo mode, clear everything
+        const isCurrentlyDemo = localStorage.getItem("ft_demo_role") !== null;
+        if (!isCurrentlyDemo) {
+          setUserData(null);
+          setPortalSession(null);
+          localStorage.removeItem("ft_portal_session");
+        } else {
+          // If we ARE in demo mode, ensure portalSession is populated from storage if available
+          const storedPortal = localStorage.getItem("ft_portal_session");
+          if (storedPortal && !portalSession) {
+            try {
+              setPortalSession(JSON.parse(storedPortal));
+            } catch (e) {
+              console.error("Portal session recovery error", e);
+            }
+          }
+        }
       }
       setLoading(false);
     });
@@ -282,6 +330,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUserData(profile);
             setIsDemoMode(true);
             localStorage.setItem("ft_demo_role", profile.role || "member");
+
+            const session = {
+              uid: profile.uid,
+              role: profile.role || 'member',
+              name: profile.name,
+              authenticated: true,
+              loginAt: Date.now()
+            };
+            setPortalSession(session);
+            localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
             return profile;
           }
         } catch (e) {
@@ -300,6 +359,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUserData(matchedProfile);
       setIsDemoMode(true);
       localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
+
+      // Set portal session for hardcoded accounts
+      const session = {
+        uid: matchedProfile.uid,
+        role: matchedProfile.role || 'member',
+        name: matchedProfile.name,
+        authenticated: true,
+        loginAt: Date.now()
+      };
+      setPortalSession(session);
+      localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
       return matchedProfile;
     }
 
@@ -307,31 +378,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (isFirebaseConfigured && auth && db) {
       try {
         const cred = await signInWithEmailAndPassword(auth, email, pass);
-        const userDoc = await getDoc(doc(db, "users", cred.user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data() as UserProfile;
-          setUserData(data);
-          setUser(cred.user);
-          setIsDemoMode(false);
-          localStorage.removeItem("ft_demo_role");
-          return data;
+        const userDocRef = doc(db, "users", cred.user.uid);
+        let data: UserProfile;
+
+        try {
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            data = userDoc.data() as UserProfile;
+          } else {
+            // New user profile creation
+            const userEmail = cred.user.email?.toLowerCase() || email.toLowerCase();
+            let assignedRole: UserRole = "member";
+            if (userEmail.includes("management") || userEmail.includes("owner") || userEmail.includes("krishna")) assignedRole = "owner";
+
+            data = {
+              uid: cred.user.uid,
+              name: cred.user.displayName || "Fitness Member",
+              email: userEmail,
+              role: assignedRole,
+              membershipStatus: "active",
+              createdAt: serverTimestamp(),
+            };
+            await setDoc(userDocRef, data);
+          }
+        } catch (profileErr) {
+          console.warn("Could not fetch/create Firebase profile, using minimal local data:", profileErr);
+          data = {
+            uid: cred.user.uid,
+            name: cred.user.displayName || "Fitness Warrior",
+            email: cred.user.email || email,
+            role: "member", // Default fallback
+            membershipStatus: "active",
+          };
         }
-        // If doc does not exist, default to member
-        const fallback: UserProfile = {
+
+        setUserData(data);
+        setUser(cred.user);
+        setIsDemoMode(false);
+        localStorage.removeItem("ft_demo_role");
+
+        const session = {
           uid: cred.user.uid,
-          name: cred.user.displayName || "Fitness Member",
-          email: cred.user.email || email,
-          role: "member",
-          trainerId: "trainer_suraj",
-          trainerName: "Suraj Sir",
-          membershipStatus: "active",
+          role: data.role || 'member',
+          name: data.name || "Member",
+          authenticated: true,
+          loginAt: Date.now()
         };
-        await setDoc(doc(db, "users", cred.user.uid), fallback);
-        setUserData(fallback);
-        return fallback;
-      } catch (err) {
-        // Fall through to demo if firebase fails but we want to allow demo login
-        console.warn("Firebase login failed, checking demo fallback...");
+        setPortalSession(session);
+        localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
+        return data;
+      } catch (err: any) {
+        // If it's a real Firebase auth error, don't fall back to demo unless it's a specific "user not found" scenario
+        console.warn("Firebase login failed:", err.code);
+        if (err.code !== 'auth/user-not-found' && err.code !== 'auth/wrong-password' && err.code !== 'auth/invalid-credential') {
+          throw err;
+        }
       }
     }
 
@@ -349,8 +451,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUserData(matchedProfile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
+
+    // Explicitly set portal session for demo accounts
+    const demoSession = {
+      uid: matchedProfile.uid,
+      role: matchedProfile.role || 'member',
+      name: matchedProfile.name,
+      authenticated: true,
+      loginAt: Date.now()
+    };
+    setPortalSession(demoSession);
+    localStorage.setItem("ft_portal_session", JSON.stringify(demoSession));
+
     return matchedProfile;
   };
+
 
   // Register with Email & Password
   const register = async (email: string, pass: string, details?: Partial<UserProfile>): Promise<UserProfile> => {
@@ -414,6 +529,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUserData(demoProfile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", "member");
+
+    const session = {
+      uid: demoProfile.uid,
+      role: demoProfile.role || 'member',
+      name: demoProfile.name,
+      authenticated: true,
+      loginAt: Date.now()
+    };
+    setPortalSession(session);
+    localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
     return demoProfile;
   };
 
@@ -501,6 +627,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUserData(profile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", "member");
+
+    const session = {
+      uid: profile.uid,
+      role: profile.role || 'member',
+      name: profile.name,
+      authenticated: true,
+      loginAt: Date.now()
+    };
+    setPortalSession(session);
+    localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
     return profile;
   };
 
