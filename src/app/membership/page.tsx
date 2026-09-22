@@ -116,7 +116,7 @@ const MembershipPage = () => {
               </div>
             </div>
             <div className="flex flex-col items-end">
-              <Link href="/register?plan=annual" className="btn-primary px-8 py-3 rounded-xl text-xs font-black uppercase italic">
+              <Link href="https://wa.me/919665231230?text=Hi!%20I%20want%20to%20enroll%20in%20the%20Annual%20Plan%20at%20Rajarajeshwari%20Fitness%20Arena." className="btn-primary px-8 py-3 rounded-xl text-xs font-black uppercase italic text-center flex items-center justify-center">
                 Get Annual Deal
               </Link>
             </div>
@@ -168,8 +168,8 @@ const MembershipPage = () => {
               </div>
 
               <Link
-                href={`/register?plan=${plan.id}`}
-                className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all ${
+                href={`https://wa.me/919665231230?text=Hi!%20I%20want%20to%20enroll%20in%20the%20${encodeURIComponent(plan.name)}%20(₹${plan.price})%20at%20Rajarajeshwari%20Fitness%20Arena.`}
+                className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all text-center flex items-center justify-center ${
                   plan.popular ? "bg-primary text-black" : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                 }`}
               >
@@ -201,7 +201,7 @@ const MembershipPage = () => {
                    </div>
                  ))}
                </div>
-               <Link href="/register?type=cardio" className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center">
+               <Link href="https://wa.me/919665231230?text=Hi!%20I%20want%20to%20enroll%20in%20the%20Gym%20%2B%20Cardio%20Plan%20at%20Rajarajeshwari%20Fitness%20Arena." className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center flex items-center justify-center">
                   Enroll In Cardio Plan
                </Link>
              </div>

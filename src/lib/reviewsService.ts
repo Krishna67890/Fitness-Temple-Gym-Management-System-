@@ -102,11 +102,14 @@ export const subscribeToPublishedReviews = (
           // Sort newest first in memory
           reviews.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
 
+          // Save backup to local storage for premium instant sync fallback
+          saveLocalReviews(reviews);
+
           callback(reviews);
         },
         (error) => {
           console.warn("Firestore reviews listener error, reading local store:", error);
-          const local = getLocalReviews().filter((r) => r.status === "published");
+          const local = getLocalReviews();
           local.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
           callback(local);
         }
@@ -229,21 +232,25 @@ export const saveMemberReview = async ({
       // 1. Save the review
       await setDoc(docRef, finalPayload, { merge: true });
 
-      // 2. AUTOMATICALLY add reviewer to "members" collection
-      const memberRef = doc(db, "members", docId);
-      await setDoc(memberRef, {
-        fullName: userName,
-        email: isLocalOrGuest ? `${docId}@guest.fitnesstemple.com` : (userId.includes('@') ? userId : `${userId}@fitnesstemple.com`),
-        mobile: "Reviewer",
-        membershipType: "Reviewer/Guest",
-        status: "Active",
-        role: "member",
-        memberId: docId.substring(0, 8).toUpperCase(),
-        updatedAt: serverTimestamp(),
-        lastActive: serverTimestamp(),
-        source: "Review System",
-        ...(docSnap.exists() ? {} : { createdAt: serverTimestamp() })
-      }, { merge: true });
+      // 2. AUTOMATICALLY add reviewer to "members" collection (optional fallback so it never blocks reviews)
+      try {
+        const memberRef = doc(db, "members", docId);
+        await setDoc(memberRef, {
+          fullName: userName,
+          email: isLocalOrGuest ? `${docId}@guest.fitnesstemple.com` : (userId.includes('@') ? userId : `${userId}@fitnesstemple.com`),
+          mobile: "Reviewer",
+          membershipType: "Reviewer/Guest",
+          status: "Active",
+          role: "member",
+          memberId: docId.substring(0, 8).toUpperCase(),
+          updatedAt: serverTimestamp(),
+          lastActive: serverTimestamp(),
+          source: "Review System",
+          ...(docSnap.exists() ? {} : { createdAt: serverTimestamp() })
+        }, { merge: true });
+      } catch (memberErr) {
+        console.warn("Could not auto-add to members collection (permissions/guest), continuing:", memberErr);
+      }
 
     } catch (err: any) {
       console.error("Detailed Firestore Error:", err);
@@ -252,8 +259,10 @@ export const saveMemberReview = async ({
     }
   }
 
-  // Backup to local storage
+  // Backup to local storage instantly
   const local = getLocalReviews();
+  // Filter out any previous review from the same user to avoid duplicates
+  const filteredLocal = local.filter((r) => r.id !== userId && r.userId !== userId);
   const reviewObj: GymReview = {
     id: userId,
     userId,
@@ -266,8 +275,8 @@ export const saveMemberReview = async ({
     status: "published",
     createdAt: new Date().toISOString()
   };
-  local.unshift(reviewObj);
-  saveLocalReviews(local.slice(0, 50));
+  filteredLocal.unshift(reviewObj);
+  saveLocalReviews(filteredLocal.slice(0, 50));
 };
 
 /**
