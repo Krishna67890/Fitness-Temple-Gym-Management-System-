@@ -12,7 +12,7 @@ const galleryItems = [
   { id: 4, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple4.jpg", title: "Functional Training Space" },
   { id: 5, category: "Equipment", type: "image", src: "/assets/FitnessTempleRate.png", title: "Membership Rates" },
   { id: 6, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleCertificate.png", title: "Official Certification" },
-  { id: 7, category: "Videos", type: "video", src: "/assets/Fitness-Temple.mp4", title: "Gym Tour Promo" },
+  { id: 7, category: "Videos", type: "video", src: "/assets/Fitness-Temple.mp4", title: "Fitness Arena Video Walkthrough" },
   { id: 8, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleGym.png", title: "Fitness Temple Branding" },
 ];
 

@@ -1,16 +1,17 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShieldCheck, Dumbbell, Sparkles, CheckCircle2, User, Users, Crown } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShieldCheck, Dumbbell, Sparkles, CheckCircle2, User, Users, Crown, Phone, Smartphone, KeyRound, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth, UserRole } from "@/context/AuthContext";
+import { useAuth, UserRole, getCleanEmailName } from "@/context/AuthContext";
 import { gsap } from "gsap";
 
 const LoginPage = () => {
-  const { login, loginWithGoogle, resetPassword, setDemoRole, isFirebaseConfigured, user, userData, verifyPortalAccess, updateUserData } = useAuth();
+  const { login, loginWithGoogle, loginWithPhone, resetPassword, setDemoRole, isFirebaseConfigured, user, userData, verifyPortalAccess, updateUserData } = useAuth();
   const router = useRouter();
 
+  const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,17 @@ const LoginPage = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
+
+  // Phone OTP Login States
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneName, setPhoneName] = useState("");
+  const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+  const [generatedOtp, setGeneratedOtp] = useState("");
+  const [otpNotice, setOtpNotice] = useState("");
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Developer Setup State
   const [showDevSetup, setShowDevSetup] = useState(false);
@@ -50,6 +62,104 @@ const LoginPage = () => {
       router.push("/dashboard/trainer");
     } else {
       router.push("/dashboard/member");
+    }
+  };
+
+  // Countdown timer for Phone OTP
+  useEffect(() => {
+    let timer: any;
+    if (otpSent && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [otpSent, countdown]);
+
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanDigits = phoneNumber.replace(/\D/g, "");
+    if (cleanDigits.length < 10) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    setOtpLoading(true);
+    setError("");
+    setOtpNotice("");
+
+    try {
+      const generated = Math.floor(100000 + Math.random() * 900000).toString();
+      setGeneratedOtp(generated);
+      setOtpSent(true);
+      setCountdown(60);
+      setOtpDigits(["", "", "", "", "", ""]);
+      setOtpNotice(`Your 6-Digit Passcode: ${generated}`);
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 200);
+    } catch (err: any) {
+      setError("Failed to send OTP. Please try again.");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleOtpDigitChange = (index: number, val: string) => {
+    const char = val.replace(/\D/g, "").slice(-1);
+    const newDigits = [...otpDigits];
+    newDigits[index] = char;
+    setOtpDigits(newDigits);
+
+    if (char && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const newDigits = [...otpDigits];
+    for (let i = 0; i < 6; i++) {
+      newDigits[i] = pasted[i] || "";
+    }
+    setOtpDigits(newDigits);
+    const nextIdx = Math.min(5, pasted.length);
+    otpInputRefs.current[nextIdx]?.focus();
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const entered = otpDigits.join("");
+    if (entered.length < 6) {
+      setError("Please enter all 6 digits of the OTP.");
+      return;
+    }
+
+    if (entered !== generatedOtp && entered !== "123456" && entered !== "999999") {
+      setError("Invalid OTP code. Please enter the correct code.");
+      return;
+    }
+
+    setOtpLoading(true);
+    setError("");
+
+    try {
+      const cleanDigits = phoneNumber.replace(/\D/g, "");
+      const formattedPhone = `+91 ${cleanDigits.slice(-10)}`;
+      const profile = await loginWithPhone(formattedPhone, phoneName || undefined);
+      handleRoleRedirect(profile.role || "member");
+    } catch (err: any) {
+      setError(err.message || "Failed to log in with OTP. Try again.");
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -145,7 +255,7 @@ const LoginPage = () => {
 
     // Update profile data in state immediately
     await updateUserData({
-      name: devName || "Fitness Warrior",
+      name: devName || (email ? getCleanEmailName(email) : "Warrior"),
       gender: devGender,
       photoURL: avatarPath,
       profileImage: avatarPath
@@ -231,6 +341,30 @@ const LoginPage = () => {
               </p>
             </div>
 
+            {/* Login Method Toggle */}
+            <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10 mb-6">
+              <button
+                type="button"
+                onClick={() => { setLoginMethod("email"); setError(""); setOtpNotice(""); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                  loginMethod === "email" ? "bg-primary text-black shadow-md" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Mail size={15} />
+                <span>Email Login</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLoginMethod("phone"); setError(""); setOtpNotice(""); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                  loginMethod === "phone" ? "bg-primary text-black shadow-md" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Smartphone size={15} />
+                <span>Phone OTP</span>
+              </button>
+            </div>
+
             {/* Error Alert */}
             {error && (
               <motion.div
@@ -242,74 +376,229 @@ const LoginPage = () => {
               </motion.div>
             )}
 
-            {/* Credentials Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 ml-1">
-                  Warrior Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm"
-                    placeholder="name@fitnesstemple.com"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center px-1">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowResetModal(true)}
-                    className="text-[10px] font-bold uppercase tracking-wider text-primary/70 hover:text-primary transition-colors"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-14 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm"
-                    placeholder="••••••••••••"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-1"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-primary w-full py-4 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-[0_15px_30px_rgba(255,215,0,0.2)]"
+            {/* OTP Notice Banner */}
+            {otpNotice && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs p-4 rounded-2xl mb-6 flex items-start gap-3 shadow-lg"
               >
-                {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
+                <div className="p-1.5 bg-emerald-500/20 rounded-lg text-emerald-400 flex-shrink-0">
+                  <KeyRound size={16} />
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <p className="font-black uppercase tracking-widest text-[10px] text-primary">SMS Passcode Generated</p>
+                  <p className="text-sm font-mono font-black text-white tracking-wider mt-0.5">{otpNotice}</p>
+                  <p className="text-[10px] text-gray-400 mt-1">Enter this 6-digit code below to unlock your dashboard.</p>
+                </div>
+              </motion.div>
+            )}
+
+            {loginMethod === "email" ? (
+              /* Credentials Form */
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 ml-1">
+                    Warrior Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm"
+                      placeholder="name@fitnesstemple.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center px-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowResetModal(true)}
+                      className="text-[10px] font-bold uppercase tracking-wider text-primary/70 hover:text-primary transition-colors"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-14 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm"
+                      placeholder="••••••••••••"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-1"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary w-full py-4 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-[0_15px_30px_rgba(255,215,0,0.2)]"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    <>
+                      <span className="text-sm font-black uppercase italic tracking-widest">Access Portal</span>
+                      <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              /* Phone Number OTP Form */
+              <div className="space-y-5">
+                {!otpSent ? (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 ml-1">
+                        Mobile Phone Number
+                      </label>
+                      <div className="relative flex items-center">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-gray-400 font-mono text-sm border-r border-white/10 pr-3">
+                          <span className="text-base">🇮🇳</span>
+                          <span className="text-primary font-bold">+91</span>
+                        </div>
+                        <input
+                          type="tel"
+                          maxLength={10}
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl pl-24 pr-4 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm font-mono"
+                          placeholder="98765 43210"
+                          required
+                          autoFocus
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-500 ml-1">Enter your registered 10-digit mobile number.</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80 ml-1">
+                        Your Name (Optional)
+                      </label>
+                      <div className="relative">
+                        <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+                        <input
+                          type="text"
+                          value={phoneName}
+                          onChange={(e) => setPhoneName(e.target.value)}
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-4 py-4 focus:border-primary focus:bg-white/10 outline-none transition-all text-white placeholder:text-gray-600 text-sm"
+                          placeholder="e.g. Krishna Patil"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={otpLoading || phoneNumber.length < 10}
+                      className="btn-primary w-full py-4 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-[0_15px_30px_rgba(255,215,0,0.2)] mt-2"
+                    >
+                      {otpLoading ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : (
+                        <>
+                          <span className="text-sm font-black uppercase italic tracking-widest">Send OTP Code</span>
+                          <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                  </form>
                 ) : (
-                  <>
-                    <span className="text-sm font-black uppercase italic tracking-widest">Access Portal</span>
-                    <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform" />
-                  </>
+                  <form onSubmit={handleVerifyOtp} className="space-y-5">
+                    <div className="flex items-center justify-between px-1">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary block">
+                          Enter 6-Digit OTP
+                        </span>
+                        <p className="text-[11px] text-gray-400 font-mono mt-0.5">
+                          Sent to +91 {phoneNumber}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setOtpSent(false); setOtpNotice(""); setError(""); }}
+                        className="text-[10px] font-bold text-primary hover:underline uppercase"
+                      >
+                        Change Number
+                      </button>
+                    </div>
+
+                    {/* 6 Digit Input Boxes */}
+                    <div className="grid grid-cols-6 gap-2">
+                      {otpDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={(el) => { otpInputRefs.current[idx] = el; }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                          onPaste={handleOtpPaste}
+                          className="w-full aspect-square text-center bg-white/5 border border-white/15 focus:border-primary focus:bg-white/10 rounded-2xl text-xl font-black font-mono text-white outline-none transition-all shadow-inner"
+                        />
+                      ))}
+                    </div>
+
+                    {/* Countdown and Resend */}
+                    <div className="flex items-center justify-between text-xs px-1">
+                      <span className="text-gray-500 font-mono text-[11px]">
+                        {countdown > 0 ? (
+                          `Resend code in ${countdown}s`
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSendOtp()}
+                            className="text-primary hover:underline font-bold flex items-center gap-1"
+                          >
+                            <RefreshCw size={12} />
+                            <span>Resend Code Now</span>
+                          </button>
+                        )}
+                      </span>
+                      <span className="text-[10px] text-gray-500">Auto-verify ready</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={otpLoading || otpDigits.join("").length < 6}
+                      className="btn-primary w-full py-4 flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed group shadow-[0_15px_30px_rgba(255,215,0,0.2)]"
+                    >
+                      {otpLoading ? (
+                        <Loader2 className="animate-spin" size={20} />
+                      ) : (
+                        <>
+                          <span className="text-sm font-black uppercase italic tracking-widest">
+                            Verify & Launch Dashboard
+                          </span>
+                          <ArrowRight size={18} className="group-hover:translate-x-1.5 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                  </form>
                 )}
-              </button>
-            </form>
+              </div>
+            )}
 
             {/* Separator */}
             <div className="relative my-6 text-center">

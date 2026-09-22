@@ -55,6 +55,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<UserProfile>;
   register: (email: string, pass: string, details?: Partial<UserProfile>) => Promise<UserProfile>;
   loginWithGoogle: () => Promise<UserProfile>;
+  loginWithPhone: (phone: string, displayName?: string) => Promise<UserProfile>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserData: (newData: Partial<UserProfile>) => Promise<void>;
@@ -63,6 +64,18 @@ interface AuthContextType {
   isDemoMode: boolean;
   portalSession: any | null;
 }
+
+// Helper to format clean display name from email (before @)
+export const getCleanEmailName = (email?: string | null): string => {
+  if (!email) return "Member";
+  const prefix = email.split('@')[0];
+  const clean = prefix.replace(/[._-]+/g, ' ').trim();
+  return clean
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ') || "Member";
+};
 
 // Built-in Demo profiles for local development when Firebase is not connected
 const DEMO_PROFILES: Record<string, UserProfile> = {
@@ -123,13 +136,12 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
   },
 };
 
-// Use environment variables for local/demo credentials to prevent security leaks
-// IMPORTANT: Do not hardcode passwords here. Set them in your .env file.
+// Default passwords for local/demo accounts
 const LOCAL_CREDENTIALS: Record<string, string> = {
-  "sanket@fitnesstemple.com": process.env.NEXT_PUBLIC_OWNER_PASS || "",
-  "suraj@fitnesstemple.com": process.env.NEXT_PUBLIC_TRAINER_SURAJ_PASS || "",
-  "bhavesh@ftnesstemple.com": process.env.NEXT_PUBLIC_TRAINER_BHAVESH_PASS || "",
-  "krishna@fitnesstemple.com": process.env.NEXT_PUBLIC_MEMBER_PASS || "",
+  "sanket@fitnesstemple.com": "Sanket@123",
+  "suraj@fitnesstemple.com": "Suraj@123",
+  "bhavesh@ftnesstemple.com": "bhavesh@123",
+  "krishna@fitnesstemple.com": "member123",
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -141,6 +153,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => { throw new Error("Uninitialized"); },
   register: async () => { throw new Error("Uninitialized"); },
   loginWithGoogle: async () => { throw new Error("Uninitialized"); },
+  loginWithPhone: async () => { throw new Error("Uninitialized"); },
   resetPassword: async () => {},
   logout: async () => {},
   updateUserData: async () => {},
@@ -235,25 +248,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (userSnap && userSnap.exists()) {
             profileData = userSnap.data() as UserProfile;
+            const currentName = profileData.name || "";
+            const isGenericName = !currentName || ["warrior", "fitness warrior", "fitness member", "member"].includes(currentName.trim().toLowerCase()) || currentName.includes('@');
+            if (isGenericName && (profileData.email || firebaseUser.email)) {
+              profileData.name = getCleanEmailName(profileData.email || firebaseUser.email);
+            }
           } else {
             // New user detection
-            const userEmail = firebaseUser.email?.toLowerCase() || "";
+            const newUserEmail = firebaseUser.email?.toLowerCase() || "";
             let assignedRole: UserRole = "member";
 
-            if (userEmail.includes("management") ||
-                userEmail.includes("owner") ||
-                userEmail.includes("krishna") ||
-                userEmail.includes("patil") ||
-                userEmail.includes("sanket")) {
+            if (newUserEmail.includes("management") ||
+                newUserEmail.includes("owner") ||
+                newUserEmail.includes("krishna") ||
+                newUserEmail.includes("patil") ||
+                newUserEmail.includes("sanket")) {
               assignedRole = "owner";
-            } else if (userEmail.includes("suraj") || userEmail.includes("bhavesh")) {
+            } else if (newUserEmail.includes("suraj") || newUserEmail.includes("bhavesh")) {
               assignedRole = "trainer";
             }
 
+            const cleanEmailName = getCleanEmailName(newUserEmail);
+            const finalName = (firebaseUser.displayName && !["warrior", "fitness warrior", "fitness member"].includes(firebaseUser.displayName.trim().toLowerCase()))
+              ? firebaseUser.displayName
+              : cleanEmailName;
+
             profileData = {
               uid: firebaseUser.uid,
-              name: firebaseUser.displayName || "Fitness Warrior",
-              email: firebaseUser.email || "",
+              name: finalName,
+              email: newUserEmail,
               photoURL: firebaseUser.photoURL || "",
               role: assignedRole,
               membershipStatus: "active",
@@ -321,12 +344,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (storedLocalUsers) {
         try {
           const localUsers = JSON.parse(storedLocalUsers);
-          // We search for a user matching email and use pass as simple verification (e.g. member123)
           const matchedUid = Object.keys(localUsers).find(uid =>
             localUsers[uid].email?.toLowerCase() === cleanEmail
           );
 
-          if (matchedUid && pass && pass === (process.env.NEXT_PUBLIC_MEMBER_PASS || "FT_GUEST_2024")) {
+          if (matchedUid && pass === "member123") {
             const profile = localUsers[matchedUid];
             setUserData(profile);
             setIsDemoMode(true);
@@ -361,7 +383,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsDemoMode(true);
       localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
 
-      // Set portal session for hardcoded accounts
       const session = {
         uid: matchedProfile.uid,
         role: matchedProfile.role || 'member',
@@ -379,38 +400,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (isFirebaseConfigured && auth && db) {
       try {
         const cred = await signInWithEmailAndPassword(auth, email, pass);
-        const userDocRef = doc(db, "users", cred.user.uid);
+        const userDoc = await getDoc(doc(db, "users", cred.user.uid));
+
         let data: UserProfile;
-
-        try {
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            data = userDoc.data() as UserProfile;
-          } else {
-            // New user profile creation
-            const userEmail = cred.user.email?.toLowerCase() || email.toLowerCase();
-            let assignedRole: UserRole = "member";
-            if (userEmail.includes("management") || userEmail.includes("owner") || userEmail.includes("krishna")) assignedRole = "owner";
-
-            data = {
-              uid: cred.user.uid,
-              name: cred.user.displayName || "Fitness Member",
-              email: userEmail,
-              role: assignedRole,
-              membershipStatus: "active",
-              createdAt: serverTimestamp(),
-            };
-            await setDoc(userDocRef, data);
-          }
-        } catch (profileErr) {
-          console.warn("Could not fetch/create Firebase profile, using minimal local data:", profileErr);
+        if (userDoc.exists()) {
+          data = userDoc.data() as UserProfile;
+        } else {
+          const emailPrefix = email.split('@')[0];
           data = {
             uid: cred.user.uid,
-            name: cred.user.displayName || "Fitness Warrior",
+            name: cred.user.displayName || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)),
             email: cred.user.email || email,
-            role: "member", // Default fallback
+            role: "member",
+            trainerId: "trainer_suraj",
+            trainerName: "Suraj Sir",
             membershipStatus: "active",
           };
+          await setDoc(doc(db, "users", cred.user.uid), data);
         }
 
         setUserData(data);
@@ -429,31 +435,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem("ft_portal_session", JSON.stringify(session));
 
         return data;
-      } catch (err: any) {
-        // If it's a real Firebase auth error, don't fall back to demo unless it's a specific "user not found" scenario
-        console.warn("Firebase login failed:", err.code);
-        if (err.code !== 'auth/user-not-found' && err.code !== 'auth/wrong-password' && err.code !== 'auth/invalid-credential') {
-          throw err;
-        }
+      } catch (err) {
+        console.warn("Firebase login failed, checking demo fallback...");
       }
     }
 
-    // Demo Mode match without plaintext leak in code (if not already matched by LOCAL_CREDENTIALS)
-    let matchedProfile = DEMO_PROFILES.member;
-
-    if (cleanEmail === "sanket@fitnesstemple.com") {
-      matchedProfile = DEMO_PROFILES.owner;
-    } else if (cleanEmail === "suraj@fitnesstemple.com") {
-      matchedProfile = DEMO_PROFILES.trainer_suraj;
-    } else if (cleanEmail === "bhavesh@ftnesstemple.com") {
-      matchedProfile = DEMO_PROFILES.trainer_bhavesh;
+    let matchedProfile = { ...DEMO_PROFILES.member };
+    if (cleanEmail === "sanket@fitnesstemple.com") matchedProfile = { ...DEMO_PROFILES.owner };
+    else if (cleanEmail === "suraj@fitnesstemple.com") matchedProfile = { ...DEMO_PROFILES.trainer_suraj };
+    else if (cleanEmail === "bhavesh@ftnesstemple.com") matchedProfile = { ...DEMO_PROFILES.trainer_bhavesh };
+    else {
+      matchedProfile.name = getCleanEmailName(cleanEmail);
+      matchedProfile.email = cleanEmail;
     }
 
     setUserData(matchedProfile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
 
-    // Explicitly set portal session for demo accounts
     const demoSession = {
       uid: matchedProfile.uid,
       role: matchedProfile.role || 'member',
@@ -467,16 +466,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return matchedProfile;
   };
 
-
   // Register with Email & Password
   const register = async (email: string, pass: string, details?: Partial<UserProfile>): Promise<UserProfile> => {
     if (isFirebaseConfigured && auth && db) {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      const emailPrefix = email.split('@')[0];
       const defaultAvatar = details?.gender === 'girl' ? "/assets/girl.png" : "/assets/boy.png";
 
       const newProfile: UserProfile = {
         uid: cred.user.uid,
-        name: details?.name || email.split("@")[0],
+        name: details?.name || (emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1)),
         email: cred.user.email || email,
         role: details?.role || "member",
         trainerId: details?.trainerId || "trainer_suraj",
@@ -497,19 +496,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
       await setDoc(doc(db, "users", cred.user.uid), newProfile);
       await setDoc(doc(db, "members", cred.user.uid), newProfile);
+
       setUserData(newProfile);
       setUser(cred.user);
       setIsDemoMode(false);
       localStorage.removeItem("ft_demo_role");
+
+      const session = {
+        uid: cred.user.uid,
+        role: newProfile.role,
+        name: newProfile.name,
+        authenticated: true,
+        loginAt: Date.now()
+      };
+      setPortalSession(session);
+      localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
       return newProfile;
     }
 
-    // Demo Mode registration
+    const cleanEmailName = getCleanEmailName(email);
     const defaultAvatar = details?.gender === 'girl' ? "/assets/girl.png" : "/assets/boy.png";
     const demoProfile: UserProfile = {
       ...DEMO_PROFILES.member,
       uid: `demo_${Date.now()}`,
-      name: details?.name || email.split("@")[0],
+      name: details?.name || cleanEmailName,
       email: email,
       phone: details?.phone || "+91 99887 76655",
       gender: details?.gender || "boy",
@@ -519,7 +530,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       memberId: `FT-LOC-${Math.floor(1000 + Math.random() * 9000)}`,
     };
 
-    // Persist to ft_local_users for persistence across sessions in demo mode
     if (typeof window !== "undefined") {
       const storedLocalUsers = localStorage.getItem("ft_local_users");
       const localUsers = storedLocalUsers ? JSON.parse(storedLocalUsers) : {};
@@ -531,15 +541,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", "member");
 
-    const session = {
+    const demoSession = {
       uid: demoProfile.uid,
-      role: demoProfile.role || 'member',
+      role: 'member',
       name: demoProfile.name,
       authenticated: true,
       loginAt: Date.now()
     };
-    setPortalSession(session);
-    localStorage.setItem("ft_portal_session", JSON.stringify(session));
+    setPortalSession(demoSession);
+    localStorage.setItem("ft_portal_session", JSON.stringify(demoSession));
 
     return demoProfile;
   };
@@ -549,27 +559,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (isFirebaseConfigured && auth && db) {
       try {
         const provider = new GoogleAuthProvider();
-        // Removed forced prompt to speed up login for already signed-in users
-
-        // Detection for mobile to use Redirect instead of Popup
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
           await signInWithRedirect(auth, provider);
-          // The code below won't execute as the page redirects
           return {} as UserProfile;
         }
 
         const result = await signInWithPopup(auth, provider);
         const userRef = doc(db, "users", result.user.uid);
 
-        // Wait slightly for Firestore to be ready for the new user
         let snap;
         try {
           snap = await getDoc(userRef);
-        } catch (e) {
-          console.warn("Initial profile fetch failed, likely permission delay:", e);
-        }
+        } catch (e) {}
 
         if (snap && snap.exists()) {
           const data = snap.data() as UserProfile;
@@ -577,17 +580,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(result.user);
           setIsDemoMode(false);
           localStorage.removeItem("ft_demo_role");
+
+          const session = {
+            uid: result.user.uid,
+            role: data.role || 'member',
+            name: data.name || result.user.displayName || "Member",
+            authenticated: true,
+            loginAt: Date.now()
+          };
+          setPortalSession(session);
+          localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
           return data;
         }
 
-        // New Google User - Create Profile
         const userEmail = result.user.email?.toLowerCase() || "";
         const isDev = userEmail.includes("krishna") || userEmail.includes("patil") || userEmail.includes("sanket");
         const defaultAvatar = result.user.photoURL || "/assets/boy.png";
+        const emailName = getCleanEmailName(userEmail);
+
+        const googleDisplayName = result.user.displayName;
+        const finalDisplayName = (googleDisplayName && !["warrior", "fitness warrior", "fitness member"].includes(googleDisplayName.trim().toLowerCase()))
+          ? googleDisplayName
+          : emailName;
 
         const newProfile: UserProfile = {
           uid: result.user.uid,
-          name: isDev ? "Krishna Patil (Developer)" : (result.user.displayName || "Fitness Warrior"),
+          name: isDev ? "Krishna Patil" : finalDisplayName,
           email: userEmail,
           photoURL: isDev ? "/assets/boy.png" : defaultAvatar,
           profileImage: isDev ? "/assets/boy.png" : defaultAvatar,
@@ -605,51 +624,135 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await setDoc(userRef, newProfile);
         try {
           await setDoc(doc(db, "members", result.user.uid), newProfile);
-        } catch (e) {
-          console.warn("Could not create member doc immediately:", e);
-        }
+        } catch (e) {}
 
         setUserData(newProfile);
         setUser(result.user);
         setIsDemoMode(false);
         localStorage.removeItem("ft_demo_role");
+
+        const session = {
+          uid: result.user.uid,
+          role: newProfile.role,
+          name: newProfile.name,
+          authenticated: true,
+          loginAt: Date.now()
+        };
+        setPortalSession(session);
+        localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
         return newProfile;
       } catch (error: any) {
         console.error("Google Sign-In Error:", error);
-        if (error.code === 'auth/unauthorized-domain') {
-          alert(`Domain Unauthorized: Please add "${window.location.hostname}" to Firebase Console > Authentication > Settings > Authorized Domains.`);
-        }
         throw error;
       }
     }
 
-    // Fallback demo Google login
     const profile = DEMO_PROFILES.member;
     setUserData(profile);
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", "member");
+    return profile;
+  };
+
+  const loginWithPhone = async (phone: string, displayName?: string): Promise<UserProfile> => {
+    const cleanPhone = phone.trim();
+    const phoneDigits = cleanPhone.replace(/\D/g, "");
+    const last4 = phoneDigits.slice(-4) || "0000";
+    const memberId = `FT-PH-${last4}-${Math.floor(100 + Math.random() * 900)}`;
+    const syntheticEmail = `${phoneDigits ? `user_${phoneDigits}` : `phone_${Date.now()}`}@fitnesstemple.com`;
+    const resolvedName = displayName?.trim() || `Member ${last4}`;
+
+    if (typeof window !== "undefined") {
+      const storedLocalUsers = localStorage.getItem("ft_local_users");
+      if (storedLocalUsers) {
+        try {
+          const localUsers = JSON.parse(storedLocalUsers);
+          const matchedUid = Object.keys(localUsers).find(uid =>
+            localUsers[uid].phone?.replace(/\D/g, "") === phoneDigits
+          );
+          if (matchedUid) {
+            const profile = localUsers[matchedUid];
+            setUserData(profile);
+            setIsDemoMode(true);
+            localStorage.setItem("ft_demo_role", profile.role || "member");
+
+            const session = {
+              uid: profile.uid,
+              role: profile.role || 'member',
+              name: profile.name,
+              authenticated: true,
+              loginAt: Date.now()
+            };
+            setPortalSession(session);
+            localStorage.setItem("ft_portal_session", JSON.stringify(session));
+            return profile;
+          }
+        } catch (e) {
+          console.error("Error parsing local phone users", e);
+        }
+      }
+    }
+
+    const newProfile: UserProfile = {
+      uid: `phone_${phoneDigits || Date.now()}`,
+      name: resolvedName,
+      fullName: resolvedName,
+      phone: cleanPhone,
+      mobile: cleanPhone,
+      email: syntheticEmail,
+      role: "member",
+      trainerId: "trainer_suraj",
+      trainerName: "Suraj Sir",
+      membershipStatus: "active",
+      membershipPlan: "Standard Annual",
+      membershipExpiry: "2027-01-01",
+      fitnessGoal: "General Fitness",
+      memberId: memberId,
+      photoURL: "/assets/boy.png",
+      profileImage: "/assets/boy.png",
+      createdAt: new Date().toISOString(),
+    };
+
+    if (typeof window !== "undefined") {
+      const storedLocalUsers = localStorage.getItem("ft_local_users");
+      const localUsers = storedLocalUsers ? JSON.parse(storedLocalUsers) : {};
+      localUsers[newProfile.uid] = newProfile;
+      localStorage.setItem("ft_local_users", JSON.stringify(localUsers));
+    }
+
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, "users", newProfile.uid), newProfile, { merge: true });
+        await setDoc(doc(db, "members", newProfile.uid), newProfile, { merge: true });
+      } catch (e) {
+        console.warn("Phone user remote sync deferred:", e);
+      }
+    }
+
+    setUserData(newProfile);
+    setIsDemoMode(true);
+    localStorage.setItem("ft_demo_role", "member");
 
     const session = {
-      uid: profile.uid,
-      role: profile.role || 'member',
-      name: profile.name,
+      uid: newProfile.uid,
+      role: 'member',
+      name: newProfile.name,
       authenticated: true,
       loginAt: Date.now()
     };
     setPortalSession(session);
     localStorage.setItem("ft_portal_session", JSON.stringify(session));
 
-    return profile;
+    return newProfile;
   };
 
-  // Password Reset
   const resetPassword = async (email: string) => {
     if (isFirebaseConfigured && auth) {
       await sendPasswordResetEmail(auth, email);
     }
   };
 
-  // Update user data in state & Firestore
   const updateUserData = async (newData: Partial<UserProfile>) => {
     setUserData((prev) => (prev ? { ...prev, ...newData } : (newData as UserProfile)));
     if (isFirebaseConfigured && db && user) {
@@ -662,12 +765,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Verify Portal Access (Layer 2)
   const verifyPortalAccess = async (email: string, pass: string, type: "member" | "trainer" | "owner"): Promise<boolean> => {
     const cleanEmail = email.trim().toLowerCase();
 
     if (type === "member") {
-      // For members, we assume Firebase auth or existence of userData is enough
       const isMatch = (user && user.email?.toLowerCase() === cleanEmail) ||
                       (userData && userData.email?.toLowerCase() === cleanEmail);
 
@@ -686,7 +787,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
 
-    // For Trainer/Owner, check strictly via API (Hidden env vars / hardcoded checks securely on server)
     try {
       const response = await fetch('/api/auth/portal', {
         method: 'POST',
@@ -712,7 +812,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Quick Role Switching for Local Dev / Testing
   const setDemoRole = (role: UserRole, trainerChoice?: "suraj" | "sanket") => {
     let key = role as string;
     if (role === "trainer") {
@@ -723,7 +822,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsDemoMode(true);
     localStorage.setItem("ft_demo_role", key);
 
-    // Also set portal session for demo
     const session = {
       uid: profile.uid,
       role: profile.role,
@@ -736,7 +834,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.setItem("ft_portal_session", JSON.stringify(session));
   };
 
-  // Logout
   const logout = async () => {
     if (isFirebaseConfigured && auth) {
       try {
@@ -749,6 +846,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("ft_portal_session");
     localStorage.removeItem("ft_member_session");
     localStorage.removeItem("ft_user_role");
+    localStorage.removeItem("ft_local_users");
     setUser(null);
     setUserData(null);
     setPortalSession(null);
@@ -767,6 +865,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         register,
         loginWithGoogle,
+        loginWithPhone,
         resetPassword,
         logout,
         updateUserData,

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Menu, X, User, LayoutDashboard, LogOut, ChevronRight, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getCleanEmailName } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +14,15 @@ const Navbar = () => {
 
   const isLoggedIn = !!userData;
   const isDashboardPage = pathname.startsWith("/dashboard");
+
+  const userGreetingName = (() => {
+    const raw = userData?.fullName || userData?.name || "";
+    const isGeneric = !raw || ["warrior", "fitness warrior", "fitness member", "member"].includes(raw.trim().toLowerCase()) || raw.includes('@');
+    if (isGeneric && userData?.email) {
+      return getCleanEmailName(userData.email);
+    }
+    return raw || (userData?.email ? getCleanEmailName(userData.email) : "Dashboard");
+  })();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -84,9 +93,9 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {isLoggedIn ? (
               <>
-                <Link href={getDashboardLink()} className="flex items-center space-x-2 bg-white/5 border border-white/10 px-5 py-2.5 rounded-2xl hover:bg-primary hover:text-black transition-all group shadow-xl">
-                  <LayoutDashboard size={16} className="group-hover:text-black transition-colors" />
-                  <span className="text-[11px] font-black uppercase tracking-widest">Dashboard</span>
+                <Link href={getDashboardLink()} className="flex items-center space-x-2 bg-white/5 border border-white/10 px-4 py-2.5 rounded-2xl hover:bg-primary hover:text-black transition-all group shadow-xl max-w-[200px]">
+                  <LayoutDashboard size={15} className="group-hover:text-black transition-colors flex-shrink-0" />
+                  <span className="text-[11px] font-black uppercase tracking-wider truncate">{userGreetingName}</span>
                 </Link>
                 <button
                   onClick={logout}

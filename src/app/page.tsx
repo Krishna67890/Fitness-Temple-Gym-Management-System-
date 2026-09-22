@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Hero from "@/components/Hero";
 import Stats from "@/components/Stats";
 import MembershipPreview from "@/components/MembershipPreview";
@@ -13,7 +13,27 @@ import WorkoutBuilder from "@/components/WorkoutBuilder";
 import TrialBooking from "@/components/TrialBooking";
 import GoalSelector from "@/components/GoalSelector";
 import ContactSection from "@/components/ContactSection";
-import { Dumbbell, Users, Trophy, ShieldCheck, Clock, Zap, MapPin } from "lucide-react";
+import HangerWidget from "@/components/HangerWidget";
+import {
+  Dumbbell,
+  Users,
+  Trophy,
+  ShieldCheck,
+  Clock,
+  Zap,
+  MapPin,
+  Calendar as CalendarIcon,
+  Flame,
+  Apple,
+  Droplets,
+  ChevronRight,
+  Sparkles,
+  CheckCircle2,
+  X,
+  Activity,
+  ArrowRight
+} from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   const features = [
@@ -30,6 +50,9 @@ export default function Home() {
       <GoalSelector />
       <Hero />
       <Stats />
+
+      {/* Dynamic Hanger Section with Clock, Routine & Diet */}
+      <HangerWidget />
 
       {/* Features Section */}
       <section className="py-32 relative overflow-hidden bg-[#080808]">
@@ -77,16 +100,50 @@ export default function Home() {
 
           <div className="max-w-5xl mx-auto rounded-[3.5rem] overflow-hidden border border-white/10 glass p-4 shadow-2xl relative group">
             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-[3.5rem]" />
-            <div className="aspect-video w-full rounded-[2.5rem] overflow-hidden bg-black/50">
+            <div className="sketchfab-embed-wrapper aspect-video w-full rounded-[2.5rem] overflow-hidden bg-black/50">
               <iframe
                 title="Gym Equipments"
                 className="w-full h-full"
                 frameBorder="0"
                 allowFullScreen
+                mozallowfullscreen="true"
+                webkitallowfullscreen="true"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
+                xr-spatial-tracking="true"
+                execution-while-out-of-viewport="true"
+                execution-while-not-rendered="true"
+                web-share="true"
                 src="https://sketchfab.com/models/14a4a06784d9429085b19135af75db25/embed"
               ></iframe>
             </div>
+            <p className="text-[13px] font-normal my-2 text-center text-gray-400">
+              <a
+                href="https://sketchfab.com/3d-models/gym-equipments-14a4a06784d9429085b19135af75db25"
+                target="_blank"
+                rel="nofollow noreferrer"
+                className="font-bold text-[#1CAAD9] hover:underline"
+              >
+                Gym Equipments
+              </a>{" "}
+              by{" "}
+              <a
+                href="https://sketchfab.com/elvair"
+                target="_blank"
+                rel="nofollow noreferrer"
+                className="font-bold text-[#1CAAD9] hover:underline"
+              >
+                Elvair Lima
+              </a>{" "}
+              on{" "}
+              <a
+                href="https://sketchfab.com/"
+                target="_blank"
+                rel="nofollow noreferrer"
+                className="font-bold text-[#1CAAD9] hover:underline"
+              >
+                Sketchfab
+              </a>
+            </p>
           </div>
           <div className="mt-8 text-center text-gray-500 text-xs font-bold uppercase tracking-[0.3em]">
             Explore Our Elite Equipment In Immersive 3D Space

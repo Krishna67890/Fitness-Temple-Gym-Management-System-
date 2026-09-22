@@ -21,8 +21,8 @@ import {
   Watch,
   Star
 } from "lucide-react";
+import { useAuth, getCleanEmailName } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -176,11 +176,12 @@ const Sidebar = () => {
                   <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none">{role}</p>
                   <p className="text-xs font-black italic text-white tracking-tighter truncate max-w-[120px]">
                     {(() => {
-                      let displayName = userData?.name || "Warrior";
-                      if ((displayName === "Warrior" || displayName === "Fitness Warrior" || displayName === "Fitness Member") && userData?.email) {
-                        displayName = userData.email.split("@")[0];
+                      let displayName = userData?.name || "";
+                      const isGeneric = !displayName || ["warrior", "fitness warrior", "fitness member", "member"].includes(displayName.trim().toLowerCase()) || displayName.includes('@');
+                      if (isGeneric && userData?.email) {
+                        return getCleanEmailName(userData.email);
                       }
-                      return displayName;
+                      return displayName || (userData?.email ? getCleanEmailName(userData.email) : "Member");
                     })()}
                   </p>
                </div>

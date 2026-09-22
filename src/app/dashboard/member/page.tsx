@@ -32,7 +32,7 @@ import {
   Map as MapIcon,
   Star,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getCleanEmailName } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { GymEquipment3D, EquipmentType } from "@/components/portal/GymEquipment3D";
 import { FitnessAvatar3D, ExerciseDemoType } from "@/components/portal/FitnessAvatar3D";
@@ -240,6 +240,7 @@ const MemberDashboardPage = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showTourModal, setShowTourModal] = useState(false);
   const [isWearableSyncing, setIsWearableSyncing] = useState(false);
@@ -402,10 +403,17 @@ const MemberDashboardPage = () => {
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
                   Member Portal • Private Isolation
                 </span>
-                <span className="text-[10px] font-mono text-gray-400">ID: {userData?.memberId || "FT-WARRIOR"}</span>
+                <span className="text-[10px] font-mono text-gray-400">ID: {userData?.memberId || "FT-MEMBER"}</span>
               </div>
               <h1 className="text-xl md:text-4xl font-black uppercase italic tracking-tight leading-tight">
-                Welcome Back, <span className="ft-gradient-text block sm:inline">{userData?.fullName || userData?.name || "Member"}</span>
+                Welcome Back, <span className="ft-gradient-text block sm:inline">{(() => {
+                  const raw = userData?.fullName || userData?.name || "";
+                  const isGeneric = !raw || ["warrior", "fitness warrior", "fitness member", "member"].includes(raw.trim().toLowerCase()) || raw.includes('@');
+                  if (isGeneric && userData?.email) {
+                    return getCleanEmailName(userData.email);
+                  }
+                  return raw || (userData?.email ? getCleanEmailName(userData.email) : "Member");
+                })()}</span>
               </h1>
               <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                 <Calendar size={14} className="text-primary" />
@@ -423,6 +431,13 @@ const MemberDashboardPage = () => {
             >
               <MapIcon size={16} className="text-primary" />
               <span>3D Tour</span>
+            </button>
+            <button
+              onClick={() => setShowVideoModal(true)}
+              className="px-4 py-3 bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 rounded-2xl flex items-center gap-2 text-xs font-black uppercase tracking-wider transition-all"
+            >
+              <Play size={16} className="text-primary fill-primary/20" />
+              <span>Videos</span>
             </button>
             <button
               onClick={() => setShowGalleryModal(true)}
@@ -987,11 +1002,28 @@ const MemberDashboardPage = () => {
               className="w-full max-w-5xl h-[80vh] overflow-y-auto no-scrollbar glass p-8 rounded-[3rem] border border-white/10"
             >
               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-3xl font-black uppercase italic tracking-tighter">Arena Gallery</h3>
+                <div>
+                  <h3 className="text-3xl font-black uppercase italic tracking-tighter">Arena Gallery & Videos</h3>
+                  <p className="text-xs text-primary font-bold uppercase tracking-wider mt-1">Official Media & Walkthroughs</p>
+                </div>
                 <button onClick={() => setShowGalleryModal(false)} className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20">
                   <RotateCcw size={20} />
                 </button>
               </div>
+
+              {/* Video Walkthrough Player in Gallery */}
+              <div className="mb-8 rounded-3xl overflow-hidden border border-white/10 bg-black/60 relative aspect-video max-h-[380px] w-full">
+                <video
+                  src="/assets/Fitness-Temple.mp4"
+                  className="w-full h-full object-cover"
+                  controls
+                  playsInline
+                ></video>
+                <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-wider text-primary pointer-events-none">
+                  Official Arena Walkthrough Video
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="aspect-square rounded-3xl bg-white/5 border border-white/10 overflow-hidden group">
@@ -1016,25 +1048,106 @@ const MemberDashboardPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-6xl aspect-video glass rounded-[3rem] border border-white/10 overflow-hidden relative"
+              className="w-full max-w-6xl aspect-video glass rounded-[3rem] border border-white/10 overflow-hidden relative flex flex-col"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10 pointer-events-none" />
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!4v1715694857492!6m8!1m2!1sAF1QipP_xGZ7P-4I1_m_x_z8v2hY_e8_z_z_z!2i0!3f0!4m2!1i1024!2i768!4f13.1"
-                className="w-full h-full border-0 grayscale hover:grayscale-0 transition-all duration-1000"
-                allowFullScreen
-                loading="lazy"
-              ></iframe>
-              <div className="absolute top-8 left-8 z-20">
-                <h3 className="text-2xl font-black uppercase italic text-white drop-shadow-lg">Rajarajeshwari Fitness Arena</h3>
-                <p className="text-xs text-primary font-bold tracking-widest uppercase">Virtual Reality Immersive Tour</p>
+              <div className="p-4 bg-black/50 border-b border-white/10 flex items-center justify-between z-20">
+                <div>
+                  <h3 className="text-xl font-black uppercase italic text-white">Rajarajeshwari Fitness Arena</h3>
+                  <p className="text-[10px] text-primary font-bold tracking-widest uppercase">
+                    3D Gym Equipments Arsenal (Interactive Orbit & Spatial View)
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowTourModal(false)}
+                  className="px-4 py-2 bg-white/10 hover:bg-red-500 hover:text-white border border-white/20 rounded-xl text-xs font-black uppercase transition-all"
+                >
+                  Exit Tour
+                </button>
               </div>
-              <button
-                onClick={() => setShowTourModal(false)}
-                className="absolute top-8 right-8 z-20 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-xs font-black uppercase hover:bg-primary hover:text-black transition-all"
-              >
-                Exit Tour
-              </button>
+
+              {/* 3D Sketchfab Model */}
+              <div className="flex-1 p-4 overflow-hidden flex flex-col">
+                <div className="sketchfab-embed-wrapper w-full flex-1 rounded-2xl overflow-hidden bg-black/50 border border-white/10 relative">
+                  <iframe
+                    title="Gym Equipments"
+                    frameBorder="0"
+                    allowFullScreen
+                    mozallowfullscreen="true"
+                    webkitallowfullscreen="true"
+                    allow="autoplay; fullscreen; xr-spatial-tracking"
+                    xr-spatial-tracking
+                    execution-while-out-of-viewport
+                    execution-while-not-rendered
+                    web-share
+                    src="https://sketchfab.com/models/14a4a06784d9429085b19135af75db25/embed"
+                    className="w-full h-full"
+                  ></iframe>
+                </div>
+                <p style={{ fontSize: "13px", fontWeight: "normal", margin: "8px 0 0", color: "#8A8A8A", textAlign: "center" }}>
+                  <a
+                    href="https://sketchfab.com/3d-models/gym-equipments-14a4a06784d9429085b19135af75db25"
+                    target="_blank"
+                    rel="nofollow noreferrer"
+                    style={{ fontWeight: "bold", color: "#1CAAD9" }}
+                  >
+                    Gym Equipments
+                  </a>{" "}
+                  by{" "}
+                  <a
+                    href="https://sketchfab.com/elvair"
+                    target="_blank"
+                    rel="nofollow noreferrer"
+                    style={{ fontWeight: "bold", color: "#1CAAD9" }}
+                  >
+                    Elvair Lima
+                  </a>{" "}
+                  on{" "}
+                  <a
+                    href="https://sketchfab.com/"
+                    target="_blank"
+                    rel="nofollow noreferrer"
+                    style={{ fontWeight: "bold", color: "#1CAAD9" }}
+                  >
+                    Sketchfab
+                  </a>
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Standalone Video Walkthrough Modal */}
+      <AnimatePresence>
+        {showVideoModal && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-5xl aspect-video glass rounded-[3rem] border border-white/10 overflow-hidden relative flex flex-col shadow-2xl"
+            >
+              <div className="p-4 bg-black/50 border-b border-white/10 flex items-center justify-between z-20">
+                <div>
+                  <h3 className="text-xl font-black uppercase italic text-white">Fitness Arena Video Walkthrough</h3>
+                  <p className="text-[10px] text-primary font-bold tracking-widest uppercase">HD Walkthrough & Facility Tour</p>
+                </div>
+                <button
+                  onClick={() => setShowVideoModal(false)}
+                  className="px-4 py-2 bg-white/10 hover:bg-red-500 hover:text-white border border-white/20 rounded-xl text-xs font-black uppercase transition-all"
+                >
+                  Close Video
+                </button>
+              </div>
+              <div className="flex-1 w-full h-full bg-black relative">
+                <video
+                  src="/assets/Fitness-Temple.mp4"
+                  className="w-full h-full object-contain"
+                  controls
+                  autoPlay
+                  playsInline
+                ></video>
+              </div>
             </motion.div>
           </div>
         )}
