@@ -103,16 +103,9 @@ export default function Home() {
             <div className="sketchfab-embed-wrapper aspect-video w-full rounded-[2.5rem] overflow-hidden bg-black/50">
               <iframe
                 title="Gym Equipments"
-                className="w-full h-full"
-                frameBorder="0"
+                className="w-full h-full border-0"
                 allowFullScreen
-                mozallowfullscreen="true"
-                webkitallowfullscreen="true"
                 allow="autoplay; fullscreen; xr-spatial-tracking"
-                xr-spatial-tracking="true"
-                execution-while-out-of-viewport="true"
-                execution-while-not-rendered="true"
-                web-share="true"
                 src="https://sketchfab.com/models/14a4a06784d9429085b19135af75db25/embed"
               ></iframe>
             </div>
