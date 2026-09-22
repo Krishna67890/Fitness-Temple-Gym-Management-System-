@@ -22,6 +22,8 @@ export interface GymReview {
   userPhotoURL?: string;
   rating: number; // 1 to 5
   comment: string;
+  accentColor?: string; // RGB customization
+  isGuest?: boolean;
   createdAt?: any;
   updatedAt?: any;
   status: "published" | "hidden";
@@ -85,10 +87,12 @@ export const subscribeToPublishedReviews = (
             reviews.push({
               id: docSnap.id,
               userId: data.userId || docSnap.id,
-              userName: data.userName || "Member",
+              userName: data.userName || "Guest",
               userPhotoURL: data.userPhotoURL || "",
               rating: Number(data.rating) || 5,
               comment: data.comment || "",
+              accentColor: data.accentColor || "#FFD700",
+              isGuest: data.isGuest ?? true,
               createdAt: data.createdAt,
               updatedAt: data.updatedAt,
               status: data.status || "published",
@@ -181,55 +185,48 @@ export const saveMemberReview = async ({
   userPhotoURL,
   rating,
   comment,
+  accentColor,
+  isGuest,
 }: {
   userId: string;
   userName: string;
   userPhotoURL?: string;
   rating: number;
   comment: string;
+  accentColor?: string;
+  isGuest?: boolean;
 }): Promise<void> => {
   if (!userId) throw new Error("Identification required.");
   if (rating < 1 || rating > 5) throw new Error("Rating must be between 1 and 5 stars.");
   if (!comment.trim()) throw new Error("Review comment cannot be empty.");
 
-  const isLocalUser = userId.startsWith('local_') || userId.startsWith('demo_');
+  const isLocalOrGuest = userId.startsWith('local_') || userId.startsWith('demo_') || userId.startsWith('guest_') || isGuest;
 
   const payload: any = {
     userId,
-    userName: userName || "Member",
+    userName: userName || "Guest Warrior",
     userPhotoURL: userPhotoURL || "",
     rating: Math.min(5, Math.max(1, Math.round(rating))),
     comment: comment.trim(),
+    accentColor: accentColor || "#FFD700",
+    isGuest: !!isLocalOrGuest,
     updatedAt: serverTimestamp(),
     status: "published" as const,
   };
 
   if (db) {
     try {
-      const docId = isLocalUser ? `local_${Date.now()}_${Math.random().toString(36).substr(2, 5)}` : userId;
+      const docId = userId;
       const docRef = doc(db, "reviews", docId);
 
-      // 1. Save the review
-      if (!isLocalUser) {
-        try {
-          const existing = await getDoc(docRef);
-          if (existing.exists()) {
-            await updateDoc(docRef, payload);
-          } else {
-            await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
-          }
-        } catch (getErr) {
-          await setDoc(docRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
-        }
-      } else {
-        await setDoc(docRef, { ...payload, createdAt: serverTimestamp() });
-      }
+      // 1. Save the review (Allow public set/update for custom styled pages)
+      await setDoc(docRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
 
       // 2. AUTOMATICALLY add reviewer to "members" collection so they appear in Dashboard
       const memberRef = doc(db, "members", docId);
       await setDoc(memberRef, {
         fullName: userName,
-        email: isLocalUser ? `${docId}@temporary.com` : (userId.includes('@') ? userId : `${userId}@gym.com`),
+        email: isLocalOrGuest ? `${docId}@temporary.com` : (userId.includes('@') ? userId : `${userId}@gym.com`),
         mobile: "Reviewer",
         membershipType: "Reviewer/Guest",
         status: "Active",
@@ -249,12 +246,14 @@ export const saveMemberReview = async ({
   // Backup to local storage
   const local = getLocalReviews();
   const reviewObj: GymReview = {
-    id: userId.startsWith('local_') ? `local_${Date.now()}` : userId,
+    id: userId,
     userId,
     userName,
     userPhotoURL,
     rating,
     comment,
+    accentColor: accentColor || "#FFD700",
+    isGuest: !!isLocalOrGuest,
     status: "published",
     createdAt: new Date().toISOString()
   };

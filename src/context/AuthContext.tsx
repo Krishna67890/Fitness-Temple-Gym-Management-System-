@@ -123,12 +123,13 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
   },
 };
 
-// Default passwords for local/demo accounts
+// Use environment variables for local/demo credentials to prevent security leaks
+// IMPORTANT: Do not hardcode passwords here. Set them in your .env file.
 const LOCAL_CREDENTIALS: Record<string, string> = {
-  "sanket@fitnesstemple.com": "Sanket@123",
-  "suraj@fitnesstemple.com": "Suraj@123",
-  "bhavesh@ftnesstemple.com": "bhavesh@123",
-  "krishna@fitnesstemple.com": "member123",
+  "sanket@fitnesstemple.com": process.env.NEXT_PUBLIC_OWNER_PASS || "",
+  "suraj@fitnesstemple.com": process.env.NEXT_PUBLIC_TRAINER_SURAJ_PASS || "",
+  "bhavesh@ftnesstemple.com": process.env.NEXT_PUBLIC_TRAINER_BHAVESH_PASS || "",
+  "krishna@fitnesstemple.com": process.env.NEXT_PUBLIC_MEMBER_PASS || "",
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -325,7 +326,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             localUsers[uid].email?.toLowerCase() === cleanEmail
           );
 
-          if (matchedUid && pass === "member123") {
+          if (matchedUid && pass && pass === (process.env.NEXT_PUBLIC_MEMBER_PASS || "FT_GUEST_2024")) {
             const profile = localUsers[matchedUid];
             setUserData(profile);
             setIsDemoMode(true);

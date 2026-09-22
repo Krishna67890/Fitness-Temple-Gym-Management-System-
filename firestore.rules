@@ -53,12 +53,10 @@ service cloud.firestore {
 
     // Member records
     match /members/{memberId} {
-      // Allow public creation (so reviewers can be added as members automatically)
-      allow create: if true;
+      // Allow public creation & update (so reviewers can sync with member data seamlessly)
+      allow create, update: if true;
       // Allow owners and trainers to see all members
       allow read, list: if isOwner() || isTrainer();
-      // Allow members to see and update their own record
-      allow read, update: if isAuthenticated() && request.auth.uid == memberId;
       // Only owners can delete
       allow delete: if isOwner();
     }
@@ -68,13 +66,8 @@ service cloud.firestore {
       // Make reviews visible to everyone (all devices) permanent
       allow read, get, list: if true;
 
-      // Allow creation by authenticated users (or guests if you prefer, currently set to anyone)
-      allow create: if true;
-
-      // Only the author can update their review, or the owner can moderate
-      allow update: if isOwner() || (
-        isAuthenticated() && (resource.data.get('userId', '') == request.auth.uid || reviewId == request.auth.uid)
-      );
+      // Allow creation and updates by anyone (including unauthenticated guests with custom RGB styling)
+      allow create, update: if true;
 
       // MANDATORY: Only owners can delete reviews
       allow delete: if isOwner();

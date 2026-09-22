@@ -49,6 +49,8 @@ export const ReviewsSection = () => {
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [ratingInput, setRatingInput] = useState(5);
   const [commentInput, setCommentInput] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const [accentColorInput, setAccentColorInput] = useState("#FFD700");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -99,16 +101,10 @@ export const ReviewsSection = () => {
     setErrorMessage("");
     setSubmitSuccess(false);
 
-    // If not authenticated, redirect to login
-    if (!user && !userData) {
-      router.push("/login?redirect=reviews");
-      return;
-    }
-
-    // Role check: Only members can submit gym reviews
+    // Role check: Only members (or guests) can submit gym reviews
     if (userData?.role && userData.role !== "member") {
       setRoleNotice(
-        `You are currently logged in as a gym ${userData.role.toUpperCase()}. Only registered gym members can write public member reviews. Coaches and owners manage reviews from their dashboard.`
+        `You are currently logged in as a gym ${userData.role.toUpperCase()}. Only registered gym members or guest visitors can write public reviews. Coaches and owners manage reviews from their dashboard.`
       );
       return;
     }
@@ -118,10 +114,14 @@ export const ReviewsSection = () => {
       setModalMode("edit");
       setRatingInput(myReview.rating);
       setCommentInput(myReview.comment);
+      setNameInput(myReview.userName);
+      setAccentColorInput(myReview.accentColor || "#FFD700");
     } else {
       setModalMode("create");
       setRatingInput(5);
       setCommentInput("");
+      setNameInput(userData?.name || "");
+      setAccentColorInput("#FFD700");
     }
     setIsModalOpen(true);
   };
@@ -134,6 +134,8 @@ export const ReviewsSection = () => {
     setModalMode("edit");
     setRatingInput(myReview.rating);
     setCommentInput(myReview.comment);
+    setNameInput(myReview.userName);
+    setAccentColorInput(myReview.accentColor || "#FFD700");
     setIsModalOpen(true);
   };
 
@@ -157,9 +159,11 @@ export const ReviewsSection = () => {
     e.preventDefault();
     setErrorMessage("");
 
-    const currentUid = user?.uid || userData?.uid;
-    if (!currentUid) {
-      setErrorMessage("Please log in to submit a review.");
+    let currentUid = user?.uid || userData?.uid;
+    const isGuest = !currentUid;
+
+    if (isGuest && !nameInput.trim()) {
+      setErrorMessage("Please enter your name to publish a review.");
       return;
     }
 
@@ -168,13 +172,14 @@ export const ReviewsSection = () => {
       return;
     }
 
+    // Generate a guest ID if not logged in
+    if (!currentUid) {
+      currentUid = `guest_${Math.random().toString(36).substring(2, 9)}`;
+    }
+
     setIsSubmitting(true);
     try {
-      const authorName =
-        userData?.name ||
-        user?.displayName ||
-        userData?.fullName ||
-        "Fitness Member";
+      const authorName = isGuest ? nameInput.trim() : (userData?.name || user?.displayName || "Fitness Member");
       const authorPhoto = userData?.photoURL || user?.photoURL || "";
 
       await saveMemberReview({
@@ -183,6 +188,8 @@ export const ReviewsSection = () => {
         userPhotoURL: authorPhoto,
         rating: ratingInput,
         comment: commentInput.trim(),
+        accentColor: accentColorInput,
+        isGuest: isGuest,
       });
 
       setSubmitSuccess(true);
@@ -501,8 +508,15 @@ export const ReviewsSection = () => {
                 key={review.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="glass p-8 rounded-[2.5rem] border border-white/5 hover:border-primary/30 transition-all flex flex-col justify-between group"
+                style={{ borderColor: review.accentColor + '44' }}
+                className="glass p-8 rounded-[2.5rem] border hover:border-primary/30 transition-all flex flex-col justify-between group relative overflow-hidden"
               >
+                {/* Custom RGB Glow */}
+                <div
+                  className="absolute -top-24 -right-24 w-48 h-48 blur-[80px] rounded-full pointer-events-none opacity-20"
+                  style={{ backgroundColor: review.accentColor }}
+                />
+
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -510,10 +524,14 @@ export const ReviewsSection = () => {
                         <img
                           src={review.userPhotoURL}
                           alt={review.userName}
-                          className="w-11 h-11 rounded-2xl object-cover border border-primary/30"
+                          className="w-11 h-11 rounded-2xl object-cover border"
+                          style={{ borderColor: review.accentColor + '66' }}
                         />
                       ) : (
-                        <div className="w-11 h-11 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center font-black text-primary text-base">
+                        <div
+                          className="w-11 h-11 rounded-2xl border flex items-center justify-center font-black text-base"
+                          style={{ backgroundColor: review.accentColor + '22', borderColor: review.accentColor + '66', color: review.accentColor }}
+                        >
                           {review.userName.charAt(0)}
                         </div>
                       )}
@@ -521,8 +539,11 @@ export const ReviewsSection = () => {
                         <h4 className="font-black text-white text-base uppercase italic tracking-tight">
                           {review.userName}
                         </h4>
-                        <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                          <CheckCircle size={10} /> Verified Member
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1"
+                          style={{ color: review.accentColor }}
+                        >
+                          <CheckCircle size={10} /> {review.isGuest ? 'Guest Reviewer' : 'Verified Member'}
                         </span>
                       </div>
                     </div>
@@ -532,7 +553,8 @@ export const ReviewsSection = () => {
                         <Star
                           key={i}
                           size={13}
-                          className={i < review.rating ? "fill-primary text-primary" : "text-gray-700"}
+                          className={i < review.rating ? "fill-current" : "text-gray-700"}
+                          style={{ color: i < review.rating ? review.accentColor : undefined }}
                         />
                       ))}
                     </div>
@@ -545,7 +567,7 @@ export const ReviewsSection = () => {
 
                 <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-gray-500">
                   <span>Rating: {review.rating}.0 / 5.0</span>
-                  <span>Fitness Temple Member</span>
+                  <span style={{ color: review.accentColor + 'AA' }}>{review.isGuest ? 'Fitness Guest' : 'Temple Member'}</span>
                 </div>
               </motion.div>
             ))}
@@ -600,30 +622,77 @@ export const ReviewsSection = () => {
                 </button>
               </div>
 
-              {/* Locked Member Identity Badge (Rule: Name/Photo MUST come from authenticated account) */}
+              {/* Locked Member Identity Badge (Rule: Name/Photo MUST come from authenticated account if logged in) */}
               <div className="p-4 rounded-2xl bg-black/60 border border-white/10 flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center font-black text-primary text-base">
-                  {(userData?.name || user?.displayName || "M").charAt(0)}
+                <div
+                  className="w-10 h-10 rounded-xl border flex items-center justify-center font-black text-base"
+                  style={{ backgroundColor: accentColorInput + '22', borderColor: accentColorInput + '66', color: accentColorInput }}
+                >
+                  {(nameInput || userData?.name || user?.displayName || "G").charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-black uppercase italic text-white truncate">
-                      {userData?.name || user?.displayName || "Verified Member"}
+                      {nameInput || userData?.name || user?.displayName || "Guest Visitor"}
                     </p>
-                    <span title="Locked to your account">
-                      <Lock size={11} className="text-primary shrink-0" />
-                    </span>
+                    {(!user && !userData) ? (
+                      <span title="Guest Mode">
+                        <Sparkles size={11} className="text-primary shrink-0" />
+                      </span>
+                    ) : (
+                      <span title="Locked to your account">
+                        <Lock size={11} className="text-primary shrink-0" />
+                      </span>
+                    )}
                   </div>
                   <p className="text-[10px] text-gray-400 truncate">
-                    {user?.email || "Authenticated Firebase Account"}
+                    {user?.email || "Public Guest Access"}
                   </p>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-wider text-green-400 bg-green-500/10 px-2 py-1 rounded-lg border border-green-500/20">
-                  Role: Member
+                <span
+                  className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg border"
+                  style={{ backgroundColor: accentColorInput + '22', borderColor: accentColorInput + '44', color: accentColorInput }}
+                >
+                  Role: {(!user && !userData) ? 'Guest' : 'Member'}
                 </span>
               </div>
 
               <form onSubmit={handleSubmitReview} className="space-y-6">
+                {/* 0. Guest Name Input (Only if not logged in) */}
+                {(!user && !userData) && (
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-gray-300 mb-2">
+                      Your Full Name:
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      placeholder="Enter your name..."
+                      className="w-full bg-black/60 border border-white/10 focus:border-primary rounded-2xl p-4 text-sm text-white outline-none transition-all"
+                    />
+                  </div>
+                )}
+
+                {/* 0.5 Custom RGB Accent Color Selection */}
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wider text-gray-300 mb-2">
+                    Custom Card Style (RGB Accent):
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={accentColorInput}
+                      onChange={(e) => setAccentColorInput(e.target.value)}
+                      className="w-12 h-12 rounded-xl bg-transparent border-none cursor-pointer p-0 overflow-hidden"
+                    />
+                    <div className="flex-1 text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-tight">
+                      Pick a color that represents your vibe. This will style your review card across all devices.
+                    </div>
+                  </div>
+                </div>
+
                 {/* 1. Interactive Star Selection */}
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-gray-300 mb-2">
@@ -637,14 +706,19 @@ export const ReviewsSection = () => {
                         onClick={() => setRatingInput(star)}
                         className={`p-3 rounded-2xl border transition-all flex items-center justify-center ${
                           ratingInput >= star
-                            ? "bg-primary text-black border-primary shadow-[0_0_15px_rgba(255,215,0,0.3)] scale-105"
+                            ? "border-current scale-105"
                             : "bg-white/5 text-gray-600 border-white/10 hover:border-white/20"
                         }`}
+                        style={{
+                          color: ratingInput >= star ? accentColorInput : undefined,
+                          backgroundColor: ratingInput >= star ? accentColorInput + '22' : undefined,
+                          boxShadow: ratingInput >= star ? `0 0 15px ${accentColorInput}44` : undefined
+                        }}
                       >
                         <Star size={24} className={ratingInput >= star ? "fill-current" : ""} />
                       </button>
                     ))}
-                    <span className="text-sm font-black font-mono text-primary ml-2">
+                    <span className="text-sm font-black font-mono ml-2" style={{ color: accentColorInput }}>
                       {ratingInput} / 5 Stars
                     </span>
                   </div>
@@ -693,7 +767,12 @@ export const ReviewsSection = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting || submitSuccess}
-                    className="btn-primary px-7 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-[0_0_20px_rgba(255,215,0,0.3)] disabled:opacity-50"
+                    className="px-7 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider disabled:opacity-50 transition-all"
+                    style={{
+                      backgroundColor: accentColorInput,
+                      color: '#000',
+                      boxShadow: `0 0 20px ${accentColorInput}66`
+                    }}
                   >
                     {isSubmitting
                       ? "Saving to Firestore..."
