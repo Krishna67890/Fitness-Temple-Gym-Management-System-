@@ -23,7 +23,7 @@ const trainers = [
   {
     name: "Poonam Ghode",
     role: "Fitness Consultant",
-    image: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?w=800&auto=format&fit=crop&q=60",
+    image: imageMap.poonam,
     specialty: "Female Fitness & Nutrition",
     instagram: "https://www.instagram.com/pbwagh?stkn=ZnQyOWZ5dWk1OTZi"
   }

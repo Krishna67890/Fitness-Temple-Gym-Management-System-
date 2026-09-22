@@ -6,7 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 const DashboardHeader = () => {
   const { userData } = useAuth();
 
-  const displayName = userData?.name || userData?.fullName || "Warrior";
+  let displayName = userData?.name || userData?.fullName || "Warrior";
+  if ((displayName === "Warrior" || displayName === "Fitness Warrior" || displayName === "Fitness Member") && userData?.email) {
+    displayName = userData.email.split("@")[0];
+  }
   const initials = displayName.charAt(0).toUpperCase();
 
   return (

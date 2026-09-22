@@ -64,6 +64,36 @@ export default function Home() {
 
       <EquipmentSection />
 
+      {/* 3D Tour Section */}
+      <section className="py-32 relative overflow-hidden bg-[#080808]">
+        <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-primary/5 blur-[120px] rounded-full -z-10" />
+        <div className="container px-4">
+          <div className="text-center mb-20">
+            <h2 className="text-primary font-black uppercase tracking-[0.4em] text-xs mb-4">Interactive Experience</h2>
+            <h2 className="section-title">
+              3D <span className="ft-gradient-text">GYM TOUR</span>
+            </h2>
+          </div>
+
+          <div className="max-w-5xl mx-auto rounded-[3.5rem] overflow-hidden border border-white/10 glass p-4 shadow-2xl relative group">
+            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none rounded-[3.5rem]" />
+            <div className="aspect-video w-full rounded-[2.5rem] overflow-hidden bg-black/50">
+              <iframe
+                title="Gym Equipments"
+                className="w-full h-full"
+                frameBorder="0"
+                allowFullScreen
+                allow="autoplay; fullscreen; xr-spatial-tracking"
+                src="https://sketchfab.com/models/14a4a06784d9429085b19135af75db25/embed"
+              ></iframe>
+            </div>
+          </div>
+          <div className="mt-8 text-center text-gray-500 text-xs font-bold uppercase tracking-[0.3em]">
+            Explore Our Elite Equipment In Immersive 3D Space
+          </div>
+        </div>
+      </section>
+
       <TrainersPreview />
 
       {/* Location Section */}

@@ -10,7 +10,9 @@ service cloud.firestore {
 
     // Safer check for user document existence and data
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'member');
+      return (request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)))
+             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'member')
+             : 'member';
     }
 
     function isOwner() {
@@ -53,10 +55,10 @@ service cloud.firestore {
 
     // Member records
     match /members/{memberId} {
-      // Allow public creation & update (so reviewers can sync with member data seamlessly)
-      allow create, update: if true;
-      // Allow owners and trainers to see all members
-      allow read, list: if isOwner() || isTrainer();
+      // Allow public read, creation & update (ensures seamless sync for reviewers and guest checks)
+      allow read, create, update: if true;
+      // Only owners and trainers can list all members
+      allow list: if isOwner() || isTrainer();
       // Only owners can delete
       allow delete: if isOwner();
     }

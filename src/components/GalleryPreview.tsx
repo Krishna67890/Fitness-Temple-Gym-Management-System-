@@ -9,11 +9,11 @@ const images = [
   "/assets/Fitnesstemple2.jpg",
   "/assets/Fitnesstemple3.jpg",
   "/assets/Fitnesstemple4.jpg",
-  "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1623874514711-0f321325f318?q=80&w=2070&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=2070&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=2069&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop",
+  "/assets/FitnessTempleGym.png",
+  "/assets/suraj.jpg",
+  "/assets/sanket.jpg",
+  "/assets/Poonam-ghode.jpg",
+  "/assets/FitnessTempleCertificate.png",
 ];
 
 const GalleryPreview = () => {

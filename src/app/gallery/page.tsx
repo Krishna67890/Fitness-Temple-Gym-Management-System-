@@ -6,23 +6,14 @@ import { X, Play, ZoomIn } from "lucide-react";
 const categories = ["All", "Gym Interior", "Equipment", "Transformation", "Videos"];
 
 const galleryItems = [
-  { id: 1, category: "Gym Interior", type: "image", src: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop", title: "Main Workout Floor" },
-  { id: 2, category: "Equipment", type: "image", src: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop", title: "Premium Cardio Zone" },
-  { id: 3, category: "Transformation", type: "image", src: "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop", title: "Member Success" },
-  { id: 4, category: "Gym Interior", type: "image", src: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=2069&auto=format&fit=crop", title: "Strength Area" },
-  { id: 5, category: "Equipment", type: "image", src: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop", title: "Weight Training" },
-  { id: 6, category: "Videos", type: "video", src: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop", title: "Gym Tour" },
-  { id: 7, category: "Transformation", type: "image", src: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=1887&auto=format&fit=crop", title: "Client Result" },
-  { id: 8, category: "Gym Interior", type: "image", src: "https://images.unsplash.com/photo-1590239068532-626f63434682?q=80&w=2070&auto=format&fit=crop", title: "Reception" },
-  { id: 9, category: "Equipment", type: "image", src: "https://images.unsplash.com/photo-1558017487-06bf9f82613a?q=80&w=1970&auto=format&fit=crop", title: "Cable Machines" },
-  { id: 10, category: "Gym Interior", type: "image", src: "https://images.unsplash.com/photo-1571902258288-6aee36259ad1?q=80&w=1974&auto=format&fit=crop", title: "Functional Zone" },
-  { id: 11, category: "Equipment", type: "image", src: "https://images.unsplash.com/photo-1623874514711-0f321325f318?q=80&w=2070&auto=format&fit=crop", title: "Leg Press Hub" },
-  { id: 12, category: "Transformation", type: "image", src: "https://images.unsplash.com/photo-1583454110551-21f2fa2adfcd?q=80&w=2070&auto=format&fit=crop", title: "Fat to Fit" },
-  { id: 13, category: "Gym Interior", type: "image", src: "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?q=80&w=2069&auto=format&fit=crop", title: "Upper Level View" },
-  { id: 14, category: "Equipment", type: "image", src: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=2069&auto=format&fit=crop", title: "Dumbbell Rack" },
-  { id: 15, category: "Transformation", type: "image", src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=2070&auto=format&fit=crop", title: "Body Recomp" },
-  { id: 16, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleCertificate.jpg", title: "Official Certification" },
-  { id: 17, category: "Equipment", type: "image", src: "/assets/FitnessTempleRate.jpg", title: "Membership Rates" },
+  { id: 1, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple1.jpg", title: "Elite Workout Zone" },
+  { id: 2, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple2.jpg", title: "Strength & Conditioning" },
+  { id: 3, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple3.jpg", title: "Modern Equipment Area" },
+  { id: 4, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple4.jpg", title: "Functional Training Space" },
+  { id: 5, category: "Equipment", type: "image", src: "/assets/FitnessTempleRate.png", title: "Membership Rates" },
+  { id: 6, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleCertificate.png", title: "Official Certification" },
+  { id: 7, category: "Videos", type: "video", src: "/assets/Fitness-Temple.mp4", title: "Gym Tour Promo" },
+  { id: 8, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleGym.png", title: "Fitness Temple Branding" },
 ];
 
 const GalleryPage = () => {

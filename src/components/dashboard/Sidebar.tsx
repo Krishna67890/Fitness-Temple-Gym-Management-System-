@@ -174,7 +174,15 @@ const Sidebar = () => {
                </div>
                <div className="overflow-hidden">
                   <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest leading-none">{role}</p>
-                  <p className="text-xs font-black italic text-white tracking-tighter truncate max-w-[120px]">{userData?.name || "Warrior"}</p>
+                  <p className="text-xs font-black italic text-white tracking-tighter truncate max-w-[120px]">
+                    {(() => {
+                      let displayName = userData?.name || "Warrior";
+                      if ((displayName === "Warrior" || displayName === "Fitness Warrior" || displayName === "Fitness Member") && userData?.email) {
+                        displayName = userData.email.split("@")[0];
+                      }
+                      return displayName;
+                    })()}
+                  </p>
                </div>
             </div>
           </div>

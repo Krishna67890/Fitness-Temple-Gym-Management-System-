@@ -219,27 +219,36 @@ export const saveMemberReview = async ({
       const docId = userId;
       const docRef = doc(db, "reviews", docId);
 
-      // 1. Save the review (Allow public set/update for custom styled pages)
-      await setDoc(docRef, { ...payload, createdAt: serverTimestamp() }, { merge: true });
+      // Check if document exists to preserve createdAt
+      const docSnap = await getDoc(docRef);
+      const finalPayload = {
+        ...payload,
+        createdAt: docSnap.exists() ? docSnap.data().createdAt : serverTimestamp(),
+      };
 
-      // 2. AUTOMATICALLY add reviewer to "members" collection so they appear in Dashboard
+      // 1. Save the review
+      await setDoc(docRef, finalPayload, { merge: true });
+
+      // 2. AUTOMATICALLY add reviewer to "members" collection
       const memberRef = doc(db, "members", docId);
       await setDoc(memberRef, {
         fullName: userName,
-        email: isLocalOrGuest ? `${docId}@temporary.com` : (userId.includes('@') ? userId : `${userId}@gym.com`),
+        email: isLocalOrGuest ? `${docId}@guest.fitnesstemple.com` : (userId.includes('@') ? userId : `${userId}@fitnesstemple.com`),
         mobile: "Reviewer",
         membershipType: "Reviewer/Guest",
         status: "Active",
         role: "member",
         memberId: docId.substring(0, 8).toUpperCase(),
-        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
         lastActive: serverTimestamp(),
-        source: "Review System"
+        source: "Review System",
+        ...(docSnap.exists() ? {} : { createdAt: serverTimestamp() })
       }, { merge: true });
 
     } catch (err: any) {
-      console.error("Firestore saveMemberReview error:", err);
-      throw new Error("Could not sync with gym servers. Please check your internet.");
+      console.error("Detailed Firestore Error:", err);
+      // Fallback to local if sync fails but let the user know
+      throw new Error(`Sync Error: ${err.message || "Connection lost"}`);
     }
   }
 
