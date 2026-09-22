@@ -1070,17 +1070,10 @@ const MemberDashboardPage = () => {
                 <div className="sketchfab-embed-wrapper w-full flex-1 rounded-2xl overflow-hidden bg-black/50 border border-white/10 relative">
                   <iframe
                     title="Gym Equipments"
-                    frameBorder="0"
                     allowFullScreen
-                    mozallowfullscreen="true"
-                    webkitallowfullscreen="true"
                     allow="autoplay; fullscreen; xr-spatial-tracking"
-                    xr-spatial-tracking
-                    execution-while-out-of-viewport
-                    execution-while-not-rendered
-                    web-share
                     src="https://sketchfab.com/models/14a4a06784d9429085b19135af75db25/embed"
-                    className="w-full h-full"
+                    className="w-full h-full border-0"
                   ></iframe>
                 </div>
                 <p style={{ fontSize: "13px", fontWeight: "normal", margin: "8px 0 0", color: "#8A8A8A", textAlign: "center" }}>
