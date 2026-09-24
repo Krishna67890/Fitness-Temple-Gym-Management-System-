@@ -14,6 +14,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import Link from "next/link";
+import GalleryPreview from "@/components/GalleryPreview";
 
 const plans = [
   {

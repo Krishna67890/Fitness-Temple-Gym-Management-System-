@@ -3,6 +3,7 @@ import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AIAssistant from "@/components/AIAssistant";
 import Chatbot from "@/components/Chatbot";
 import GSAPProvider from "@/components/GSAPProvider";
 import { AuthProvider } from "@/context/AuthContext";
@@ -36,6 +37,8 @@ export const metadata: Metadata = {
 
 import Script from "next/script";
 
+import GalleryPreview from "@/components/GalleryPreview";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,6 +52,7 @@ export default function RootLayout({
           <Navbar />
           <main>{children}</main>
           <Footer />
+          <AIAssistant />
           <Chatbot />
         </AuthProvider>
       </body>

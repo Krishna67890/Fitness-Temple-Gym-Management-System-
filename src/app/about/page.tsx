@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useVoice } from "@/hooks/useVoice";
+import GalleryPreview from "@/components/GalleryPreview";
 
 const trainers = [
   { name: "Suraj", role: "Expert Trainer / Bodybuilding Specialist", image: "https://images.unsplash.com/photo-1567013127542-490d757e51fe?q=80&w=1974&auto=format&fit=crop" },

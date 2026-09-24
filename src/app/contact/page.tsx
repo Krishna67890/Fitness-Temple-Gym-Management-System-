@@ -2,6 +2,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, Send, MessageCircle, X } from "lucide-react";
+import GalleryPreview from "@/components/GalleryPreview";
 
 const ContactPage = () => {
   const [whatsappModalOpen, setWhatsappModalOpen] = React.useState(false);

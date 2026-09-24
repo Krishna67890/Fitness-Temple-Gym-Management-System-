@@ -41,7 +41,7 @@ export default function Home() {
     { title: "Guru Coaching", desc: "Expert guidance from Suraj & Sanket.", icon: Users },
     { title: "Elite Facility", desc: "Premium training environment and hygiene standards.", icon: Trophy },
     { title: "Safe Training", desc: "Secure environment with 24/7 CCTV.", icon: ShieldCheck },
-    { title: "Evening Devotion", desc: "Open daily from 4:30 PM for the fitness warriors.", icon: Clock },
+    { title: "Evening Devotion", desc: "Open daily from 4:30 PM for our dedicated members.", icon: Clock },
     { title: "Rapid Results", desc: "Scientifically backed workout & diet plans.", icon: Zap }
   ];
 
@@ -205,7 +205,6 @@ export default function Home() {
       <BMICalculator />
       <ReviewsSection />
       <TrialBooking />
-      <GalleryPreview />
       <ContactSection />
     </>
   );

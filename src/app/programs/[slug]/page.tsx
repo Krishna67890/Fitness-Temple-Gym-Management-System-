@@ -318,10 +318,15 @@ const ProgramDetail = () => {
 
               <div className="mt-10 pt-10 border-t border-white/5">
                 <p className="text-gray-500 text-sm mb-6 italic">Ready to transform? Start your journey today with Fitness Temple.</p>
-                <Link href="/register" className="btn-primary w-full py-4 flex items-center justify-center gap-2">
+                <a
+                  href={`https://wa.me/919665231230?text=Hi%20Owner,%20I'm%2520interested%2520in%2520enrolling%2520in%2520the%2520${encodeURIComponent(program.title)}%2520program.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary w-full py-4 flex items-center justify-center gap-2"
+                >
                   Enroll Now
                   <ChevronRight size={18} />
-                </Link>
+                </a>
               </div>
             </motion.div>
           </div>

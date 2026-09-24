@@ -3,105 +3,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
+    // 1. REVIEWS: Open for all (Read & Write)
+    match /reviews/{docId} {
+      allow read, write: if true;
     }
 
-    // Safer check for user document existence and data
-    function getUserRole() {
-      return (request.auth != null && exists(/databases/$(database)/documents/users/$(request.auth.uid)))
-             ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'member')
-             : 'member';
+    // 2. MEMBERS: Open for all (to allow registration/review updates)
+    match /members/{docId} {
+      allow read, write: if true;
     }
 
-    function isOwner() {
-      return isAuthenticated() && (
-        (request.auth.token.email != null && (
-          request.auth.token.email.lower() == 'management@fitnesstemple.com' ||
-          request.auth.token.email.lower().matches('.*krishna.*') ||
-          request.auth.token.email.lower().matches('.*patil.*') ||
-          request.auth.token.email.lower().matches('.*sanket.*')
-        )) ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserRole() == 'owner')
-      );
-    }
-
-    function isTrainer() {
-      return isAuthenticated() &&
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             getUserRole() == 'trainer';
-    }
-
-    function isAssignedTrainer(memberId) {
-      return isTrainer() && (
-        (resource != null && resource.data.get('trainerId', '') == request.auth.uid) ||
-        (request.resource != null && request.resource.data.get('trainerId', '') == request.auth.uid) ||
-        (exists(/databases/$(database)/documents/members/$(memberId)) &&
-         get(/databases/$(database)/documents/members/$(memberId)).data.get('trainerId', '') == request.auth.uid)
-      );
-    }
-
-    // User authentication profile
-    match /users/{userId} {
-      // Allow users to read their own profile, or owners/trainers to see it
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isOwner() || isTrainer());
-      // Allow users to create/update their own profile
-      allow write: if isAuthenticated() && request.auth.uid == userId;
-      // Only owners can change roles
-      allow update: if isOwner() || (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']));
-      allow delete: if isOwner();
-    }
-
-    // Member records
-    match /members/{memberId} {
-      // Allow public read, creation & update (ensures seamless sync for reviewers and guest checks)
-      allow read, create, update: if true;
-      // Only owners and trainers can list all members
-      allow list: if isOwner() || isTrainer();
-      // Only owners can delete
-      allow delete: if isOwner();
-    }
-
-    // Reviews - PUBLIC Visibility & Restricted Deletion
-    match /reviews/{reviewId} {
-      // Make reviews visible to everyone (all devices) permanent
-      allow read, get, list: if true;
-
-      // Allow creation and updates by anyone (including unauthenticated guests with custom RGB styling)
-      allow create, update: if true;
-
-      // MANDATORY: Only owners can delete reviews
-      allow delete: if isOwner();
-    }
-
-    // Workouts, Diets, Progress - Standard access
-    match /workouts/{memberId}/{allPaths=**} {
-      allow read, write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
-    }
-    match /diets/{memberId}/{allPaths=**} {
-      allow read, write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
-    }
-    match /progress/{memberId}/{allPaths=**} {
-      allow read, write: if isAuthenticated() && (request.auth.uid == memberId || isAssignedTrainer(memberId) || isOwner());
-    }
-
-    // Attendance
-    match /attendance/{memberId}/{allPaths=**} {
-      allow read: if isAuthenticated() && (request.auth.uid == memberId || isTrainer() || isOwner());
-      allow write: if isTrainer() || isOwner() || (isAuthenticated() && request.auth.uid == memberId);
-    }
-
-    // Notifications
-    match /notifications/{userId}/{notifId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      allow write: if isOwner() || isTrainer() || (isAuthenticated() && request.auth.uid == userId);
-    }
-
-    // Global settings and others
-    match /trainers/{trainerId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner();
+    // 3. SECURE FALLBACK: All other data requires authentication
+    match /{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }

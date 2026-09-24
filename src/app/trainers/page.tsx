@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Dumbbell, ShieldCheck, Trophy, Instagram, Twitter, Linkedin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import imageMap from "../../lib/imageMap";
+import GalleryPreview from "@/components/GalleryPreview";
 
 const trainerList = [
   {

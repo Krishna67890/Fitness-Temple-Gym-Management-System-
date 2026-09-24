@@ -6,163 +6,20 @@ import {
   Dumbbell,
   Apple,
   Sparkles,
-  ChevronDown,
-  ChevronUp,
-  Maximize2,
   Minimize2,
+  Maximize2,
   Calendar,
-  Flame,
-  CheckCircle2,
   ChevronRight,
-  ShieldAlert,
-  Zap,
-  Activity,
   X,
-  ShieldCheck,
 } from "lucide-react";
-
-// Elite Weekly Routine Data For All Users
-export const WEEKLY_ROUTINES: Record<string, {
-  dayName: string;
-  focus: string;
-  intensity: string;
-  exercises: { name: string; sets: string; reps: string; target: string }[];
-  trainerTip: string;
-}> = {
-  MON: {
-    dayName: "Monday",
-    focus: "Chest & Triceps Hypertrophy",
-    intensity: "90% Max Effort",
-    exercises: [
-      { name: "Incline Barbell Bench Press", sets: "4 Sets", reps: "8-10 Reps", target: "Upper Pectorals" },
-      { name: "Flat Dumbbell Press", sets: "4 Sets", reps: "10-12 Reps", target: "Mid Chest Mass" },
-      { name: "Parallel Bar Dips (Weighted)", sets: "3 Sets", reps: "12-15 Reps", target: "Lower Chest & Triceps" },
-      { name: "Cable Tricep Pushdowns", sets: "4 Sets", reps: "12-15 Reps", target: "Triceps Lateral Head" }
-    ],
-    trainerTip: "Keep shoulders retracted and maintain a 3-second eccentric lower on all pressing motions."
-  },
-  TUE: {
-    dayName: "Tuesday",
-    focus: "Back Width & Bicep Peak",
-    intensity: "88% Max Effort",
-    exercises: [
-      { name: "Wide-Grip Lat Pulldowns", sets: "4 Sets", reps: "10-12 Reps", target: "Lats Width" },
-      { name: "T-Bar Rows / Barbell Rows", sets: "4 Sets", reps: "8-10 Reps", target: "Mid-Back Thickness" },
-      { name: "Seated Cable Rows", sets: "3 Sets", reps: "12 Reps", target: "Rhomboids & Lower Lat" },
-      { name: "Incline Dumbbell Bicep Curls", sets: "4 Sets", reps: "10-12 Reps", target: "Biceps Long Head" }
-    ],
-    trainerTip: "Initiate the pull from your elbows, squeezing the shoulder blades together at peak contraction."
-  },
-  WED: {
-    dayName: "Wednesday",
-    focus: "Legs Power & Core Stability",
-    intensity: "95% Max Effort",
-    exercises: [
-      { name: "Barbell Back Squats", sets: "5 Sets", reps: "6-8 Reps", target: "Quadriceps & Glutes" },
-      { name: "Romanian Deadlifts (RDL)", sets: "4 Sets", reps: "8-10 Reps", target: "Hamstrings & Lower Back" },
-      { name: "Leg Press (Heavy Load)", sets: "4 Sets", reps: "12 Reps", target: "Overall Leg Density" },
-      { name: "Hanging Leg Raises", sets: "4 Sets", reps: "15-20 Reps", target: "Lower Abdominal Core" }
-    ],
-    trainerTip: "Drive knees outwards over toes during squats. Maintain brace in the abdominal wall."
-  },
-  THU: {
-    dayName: "Thursday",
-    focus: "Shoulder Boulder & Traps",
-    intensity: "85% Max Effort",
-    exercises: [
-      { name: "Seated Overhead Dumbbell Press", sets: "4 Sets", reps: "8-10 Reps", target: "Anterior Deltoid" },
-      { name: "Leaning Cable Lateral Raises", sets: "4 Sets", reps: "12-15 Reps", target: "Lateral Deltoid Caps" },
-      { name: "Face Pulls with Rope", sets: "4 Sets", reps: "15-20 Reps", target: "Rear Delts & Rotator Cuff" },
-      { name: "Heavy Dumbbell Shrugs", sets: "3 Sets", reps: "12-15 Reps", target: "Upper Trapezius" }
-    ],
-    trainerTip: "Keep elbows slightly in front of the body on lateral raises to isolate the side deltoid completely."
-  },
-  FRI: {
-    dayName: "Friday",
-    focus: "Arms Supersets & Forearms",
-    intensity: "90% Max Effort",
-    exercises: [
-      { name: "EZ-Bar Preacher Curls", sets: "4 Sets", reps: "10-12 Reps", target: "Bicep Short Head Peak" },
-      { name: "Skull Crushers (Lying Triceps)", sets: "4 Sets", reps: "10-12 Reps", target: "Tricep Long Head" },
-      { name: "Hammer Curls with Rope", sets: "3 Sets", reps: "12 Reps", target: "Brachialis & Forearm" },
-      { name: "Overhead Dumbbell Extension", sets: "3 Sets", reps: "12-15 Reps", target: "Tricep Deep Stretch" }
-    ],
-    trainerTip: "Perform curls and extensions back-to-back as supersets for massive blood volume pump."
-  },
-  SAT: {
-    dayName: "Saturday",
-    focus: "Full-Body Functional HIIT & Conditioning",
-    intensity: "92% Max Effort",
-    exercises: [
-      { name: "Kettlebell Swings", sets: "4 Sets", reps: "20 Reps", target: "Posterior Chain Power" },
-      { name: "Battle Ropes Waves & Slams", sets: "5 Sets", reps: "45 Secs", target: "Cardiovascular Stamina" },
-      { name: "Medicine Ball Slams", sets: "4 Sets", reps: "15 Reps", target: "Explosive Core" },
-      { name: "Assault Bike / Sprint Intervals", sets: "5 Sets", reps: "30s Sprint / 30s Rest", target: "Aerobic Capacity" }
-    ],
-    trainerTip: "Maintain high tempo with minimum transition rest. Breathe deeply through the diaphragm."
-  },
-  SUN: {
-    dayName: "Sunday",
-    focus: "Active Recovery & Fascial Mobility",
-    intensity: "60% Restorative",
-    exercises: [
-      { name: "Full Body Foam Rolling", sets: "1 Flow", reps: "15 Mins", target: "Myofascial Release" },
-      { name: "Dynamic Hip & Hamstring Yoga Flow", sets: "1 Flow", reps: "20 Mins", target: "Joint Mobility" },
-      { name: "Incline Treadmill Zone 2 Walk", sets: "1 Set", reps: "25 Mins", target: "Lactic Acid Flush" }
-    ],
-    trainerTip: "Hydrate heavily with electrolytes today. Prepare your central nervous system for Monday's push."
-  }
-};
-
-// Advanced Warrior Diet Protocol
-export const WARRIOR_DIET_PLAN = [
-  {
-    time: "07:30 AM",
-    title: "Morning Ignition",
-    meal: "Warm Lemon Water with Himalayan Salt + 6 Soaked Almonds & 2 Walnuts",
-    macros: "P: 4g • C: 3g • F: 10g",
-    focus: "Cortisol balancing, hydration, vital minerals"
-  },
-  {
-    time: "09:00 AM",
-    title: "Power Breakfast",
-    meal: "Rolled Oats (60g) cooked in almond milk + 1 scoop Whey Protein + 1 tbsp Peanut Butter & Blueberries",
-    macros: "P: 34g • C: 52g • F: 12g",
-    focus: "Complex carbs for sustained energy and anabolic threshold"
-  },
-  {
-    time: "01:30 PM",
-    title: "Anabolic Lunch",
-    meal: "180g Grilled Chicken Breast or Spiced Paneer Tikka + 1 cup Brown Rice + Yellow Dal & Green Salad",
-    macros: "P: 42g • C: 60g • F: 14g",
-    focus: "Complete amino acid profile & digestive enzymes"
-  },
-  {
-    time: "04:00 PM",
-    title: "Pre-Workout Primer",
-    meal: "1 Double Shot Espresso or Pre-Workout + 1 Banana with 1 slice Multigrain Toast",
-    macros: "P: 5g • C: 36g • F: 2g",
-    focus: "Blood flow vasodilation & glycogen replenishment"
-  },
-  {
-    time: "06:30 PM",
-    title: "Post-Workout Window",
-    meal: "1 Scoop Whey Isolate + 5g Micronized Creatine Monohydrate with 300ml Chilled Water",
-    macros: "P: 27g • C: 2g • F: 1g",
-    focus: "Rapid muscle protein synthesis and ATP recovery"
-  },
-  {
-    time: "08:30 PM",
-    title: "Lean Recovery Dinner",
-    meal: "Grilled Fish Fillet or Steamed Tofu Bowl with Sauteed Broccoli, Zucchini, Sweet Potato & Olive Oil",
-    macros: "P: 38g • C: 28g • F: 12g",
-    focus: "Nighttime cellular repair & hormone optimization"
-  }
-];
+import { WEEKLY_ROUTINES } from "@/lib/workoutRoutines";
+import { useAuth } from "@/context/AuthContext";
+import { generateRecommendations } from "@/lib/ai-recommender";
 
 const daysMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 export default function HangerWidget() {
+  const { userData } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [timeString, setTimeString] = useState<string>("--:--:--");
   const [dateString, setDateString] = useState<string>("");
@@ -170,6 +27,15 @@ export default function HangerWidget() {
   const [selectedDay, setSelectedDay] = useState("MON");
   const [isMinimized, setIsMinimized] = useState(false);
   const [showFullPlanModal, setShowFullPlanModal] = useState(false);
+
+  // Dynamic AI nutrition suggestion state if available
+  const [aiNutrition, setAiNutrition] = useState<{
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    suggestion: string;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -198,6 +64,45 @@ export default function HangerWidget() {
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Compute AI Recommendation if user properties exist, otherwise fallback safely
+  useEffect(() => {
+    if (userData) {
+      try {
+        const weight = userData.weight ? parseFloat(userData.weight) : 70;
+        const height = userData.height ? parseFloat(userData.height) : 175;
+        const age = userData.age ? parseInt(userData.age) : 25;
+        const gender = userData.gender === "girl" ? "girl" : "boy";
+
+        let goal: "weight-loss" | "muscle-gain" | "maintenance" = "maintenance";
+        if (userData.fitnessGoal?.toLowerCase().includes("loss") || userData.fitnessGoal?.toLowerCase().includes("cut")) {
+          goal = "weight-loss";
+        } else if (userData.fitnessGoal?.toLowerCase().includes("gain") || userData.fitnessGoal?.toLowerCase().includes("bulk")) {
+          goal = "muscle-gain";
+        }
+
+        const stats = {
+          weight,
+          height,
+          age,
+          gender,
+          goal,
+          activityLevel: "moderate" as const
+        };
+
+        const res = generateRecommendations(stats);
+        setAiNutrition({
+          calories: res.calories,
+          protein: res.macros.protein,
+          carbs: res.macros.carbs,
+          fats: res.macros.fats,
+          suggestion: res.suggestion
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [userData]);
 
   const currentRoutine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES["MON"];
 
@@ -269,7 +174,7 @@ export default function HangerWidget() {
           <div className="p-6 md:p-8">
             {/* Top Control Bar */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center border-b border-white/5 pb-6">
-              {/* Real-time Clock Card (Hydration-Safe Client-Only Mounting) */}
+              {/* Real-time Clock Card */}
               <div className="lg:col-span-4 bg-white/[0.03] border border-white/10 rounded-2xl p-5 flex items-center justify-between group hover:border-primary/40 transition-all">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
@@ -388,7 +293,7 @@ export default function HangerWidget() {
                   </div>
 
                   {/* Exercises Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {currentRoutine.exercises.map((ex, idx) => (
                       <div
                         key={idx}
@@ -396,15 +301,15 @@ export default function HangerWidget() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-[9px] font-mono font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
-                            {ex.sets}
+                            {ex.sets} Sets
                           </span>
-                          <span className="text-[10px] font-bold text-gray-400">{ex.reps}</span>
+                          <span className="text-[10px] font-bold text-gray-400">{ex.reps} Reps</span>
                         </div>
                         <h4 className="text-sm font-black uppercase italic tracking-tight text-white group-hover:text-primary transition-colors">
                           {ex.name}
                         </h4>
                         <p className="text-[10px] text-gray-500 font-medium mt-1 uppercase tracking-wider">
-                          Focus: {ex.target}
+                          Muscle: {ex.muscle}
                         </p>
                       </div>
                     ))}
@@ -439,16 +344,23 @@ export default function HangerWidget() {
                         High Performance Anabolic Fuel
                       </span>
                       <h3 className="text-lg font-black uppercase italic text-white">
-                        Standard Daily Caloric & Micronutrient Protocol
+                        {aiNutrition ? "AI Custom Recommended Fuel Protocol" : "Standard Daily Caloric & Micronutrient Protocol"}
                       </h3>
                     </div>
                     <span className="px-3 py-1 bg-primary/10 border border-primary/20 text-primary text-xs font-mono font-bold rounded-xl">
-                      Daily Target: ~2,500 kcal • 160g+ Protein
+                      {aiNutrition ? `AI Target: ~${aiNutrition.calories} kcal • P: ${aiNutrition.protein}g C: ${aiNutrition.carbs}g F: ${aiNutrition.fats}g` : "Daily Target: ~2,500 kcal • 160g+ Protein"}
                     </span>
                   </div>
 
+                  {aiNutrition && (
+                    <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-xs font-medium">
+                      <strong className="uppercase font-black text-emerald-300">AI Dietitian Coach Cue: </strong>
+                      {aiNutrition.suggestion}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {WARRIOR_DIET_PLAN.map((meal, idx) => (
+                    {currentRoutine.meals.map((meal, idx) => (
                       <div
                         key={idx}
                         className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl hover:border-emerald-500/30 transition-all flex flex-col justify-between"
@@ -459,19 +371,20 @@ export default function HangerWidget() {
                               {meal.time}
                             </span>
                             <span className="text-[10px] text-gray-400 font-mono font-bold">
-                              {meal.macros}
+                              {meal.calories} kcal
                             </span>
                           </div>
                           <h4 className="text-sm font-black uppercase italic text-white mt-1">
-                            {meal.title}
+                            {meal.name}
                           </h4>
                           <p className="text-xs text-gray-300 mt-1 leading-relaxed">
-                            {meal.meal}
+                            {meal.items}
                           </p>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-500">
-                          <span className="text-primary font-bold">Purpose</span>
-                          <span>{meal.focus}</span>
+                        <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between text-[10px] text-gray-500 font-mono">
+                          <span>P: {meal.protein}</span>
+                          <span>C: {meal.carbs}</span>
+                          <span>F: {meal.fats}</span>
                         </div>
                       </div>
                     ))}
@@ -533,7 +446,7 @@ export default function HangerWidget() {
                       {r.exercises.map((ex, i) => (
                         <div key={i} className="p-3 bg-black/40 rounded-xl border border-white/5">
                           <p className="text-xs font-bold text-white">{ex.name}</p>
-                          <p className="text-[10px] text-gray-400 font-mono mt-1">{ex.sets} • {ex.reps}</p>
+                          <p className="text-[10px] text-gray-400 font-mono mt-1">{ex.sets} Sets • {ex.reps} Reps</p>
                         </div>
                       ))}
                     </div>

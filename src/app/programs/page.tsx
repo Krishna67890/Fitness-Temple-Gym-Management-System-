@@ -14,6 +14,7 @@ import {
   Sparkles
 } from "lucide-react";
 import Link from "next/link";
+import GalleryPreview from "@/components/GalleryPreview";
 
 const programsList = [
   {

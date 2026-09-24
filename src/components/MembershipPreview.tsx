@@ -108,17 +108,19 @@ const MembershipPreview = () => {
                 ))}
               </ul>
 
-              <Link
-                href="/membership"
+              <a
+                href={`https://wa.me/919665231230?text=Hi%20Owner,%20I'm%20interested%20in%20joining%20the%20${encodeURIComponent(plan.name)}.`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`w-full py-6 rounded-3xl font-black uppercase tracking-[0.2em] transition-all duration-300 transform flex items-center justify-center space-x-3 text-lg ${
                   plan.popular
                     ? "bg-primary text-black hover:bg-secondary hover:text-black shadow-[0_20px_40px_rgba(255,215,0,0.3)]"
                     : "bg-white/5 text-white border border-white/10 hover:bg-primary hover:border-primary"
                 }`}
               >
-                <span>View All Plans</span>
+                <span>Enroll Now</span>
                 <ArrowRight size={22} />
-              </Link>
+              </a>
             </motion.div>
           ))}
         </div>

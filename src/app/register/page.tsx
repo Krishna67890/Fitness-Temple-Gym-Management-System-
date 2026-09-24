@@ -1,26 +1,37 @@
 "use client";
 import React, { useState, useRef, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, Weight, Ruler, Users, Camera, Zap, CheckCircle2, Eye, EyeOff, ChevronDown, Loader2, QrCode, CreditCard, ShieldCheck, Lock, Shield, Check, Dumbbell } from "lucide-react";
+import {
+  User, Phone, Mail, MapPin, Calendar, Weight, Ruler,
+  Users, Camera, Zap, CheckCircle2, Eye, EyeOff,
+  ChevronDown, Loader2, ShieldCheck, Lock, Shield,
+  Check, Dumbbell, MessageCircle, Target
+} from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { db, auth } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
+
+const WHATSAPP_OWNER = "919665231230";
+const OWNER_NAME = "Owner";
 
 const RegisterContent = () => {
   const { register } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedPlan = searchParams.get("plan") || "basic";
-  const [step, setStep] = useState(1); // 1: Form, 2: Payment, 3: Success
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  const [whatsappModalOpen, setWhatsappModalOpen] = useState(false);
   const [memberId, setMemberId] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const planMap: Record<string, string> = {
+    basic: "basic-1",
+    standard: "basic-3",
+    annual: "basic-12",
+    cardio: "cardio-1",
+  };
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -34,23 +45,21 @@ const RegisterContent = () => {
     height: "",
     fitnessGoal: "muscle-gain",
     emergencyContact: "",
-    membershipType: selectedPlan,
-    joinDate: new Date().toISOString().split('T')[0],
+    membershipType: planMap[selectedPlan] || "basic-1",
+    joinDate: new Date().toISOString().split("T")[0],
   });
 
   useEffect(() => {
     if (selectedPlan) {
-      const planMap: Record<string, string> = {
-        'basic': 'basic-1',
-        'standard': 'basic-3',
-        'annual': 'basic-12',
-        'cardio': 'cardio-1'
-      };
-      setFormData(prev => ({ ...prev, membershipType: planMap[selectedPlan] || selectedPlan }));
+      setFormData((prev) => ({ ...prev, membershipType: planMap[selectedPlan] || "basic-1" }));
     }
   }, [selectedPlan]);
 
-  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "Empty", color: "bg-gray-800" });
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    label: "Empty",
+    color: "bg-gray-800",
+  });
 
   const checkPasswordStrength = (pass: string) => {
     let score = 0;
@@ -59,7 +68,6 @@ const RegisterContent = () => {
     if (/[A-Z]/.test(pass)) score++;
     if (/[0-9]/.test(pass)) score++;
     if (/[^A-Za-z0-9]/.test(pass)) score++;
-
     const levels = [
       { label: "Weak", color: "bg-red-500" },
       { label: "Fair", color: "bg-orange-500" },
@@ -67,24 +75,16 @@ const RegisterContent = () => {
       { label: "Strong", color: "bg-green-500" },
       { label: "Elite", color: "bg-primary" },
     ];
-
-    setPasswordStrength({
-      score,
-      label: levels[Math.min(score, 4)].label,
-      color: levels[Math.min(score, 4)].color
-    });
+    setPasswordStrength({ score, label: levels[Math.min(score, 4)].label, color: levels[Math.min(score, 4)].color });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-
-    if (name === "password") {
-      checkPasswordStrength(value);
-    }
-
+    if (name === "password") checkPasswordStrength(value);
     if (name === "mobile" || name === "emergencyContact") {
-      const numbersOnly = value.replace(/\D/g, '').slice(0, 10);
-      setFormData({ ...formData, [name]: numbersOnly });
+      setFormData({ ...formData, [name]: value.replace(/\D/g, "").slice(0, 10) });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -99,62 +99,48 @@ const RegisterContent = () => {
     }
   };
 
-  const handleInitialSubmit = (e: React.FormEvent) => {
+  const priceMap: Record<string, number> = {
+    "basic-1": 700, "basic-3": 1800, "basic-6": 3500, "basic-12": 6000,
+    "cardio-1": 800, "cardio-3": 2000, "cardio-6": 4000, "cardio-12": 7000,
+    pt: 3000,
+  };
+  const amount = priceMap[formData.membershipType] || 700;
+
+  const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.mobile.length < 10) return alert("Enter valid 10-digit mobile number");
-    if (!formData.gender) return alert("Select gender");
-    if (formData.password.length < 6) return alert("Password must be at least 6 characters");
-    setWhatsappModalOpen(true);
-  };
-
-  const handleWhatsAppChoice = async (target: 'dev' | 'owner') => {
-    setWhatsappModalOpen(false);
-
-    // Auto-register first before opening WhatsApp
-    const success = await finalizeRegistration("WHATSAPP-" + target.toUpperCase());
-
-    if (success) {
-      const phone = target === 'dev' ? '8080690631' : '9665231230';
-      const message = `Hello! I have just registered on the Fitness Temple website.
-Details:
-- Name: ${formData.fullName}
-- Mobile: ${formData.mobile}
-- Email: ${formData.email}
-- Goal: ${formData.fitnessGoal}
-- Plan: ${formData.membershipType}
-- Gender: ${formData.gender}
-- Age: ${formData.age}
-- ID: ${memberId || 'Generating...'}`;
-
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappUrl = `https://wa.me/91${phone}?text=${encodedMessage}`;
-
-      // Open WhatsApp in a new tab
-      window.open(whatsappUrl, '_blank');
+    if (formData.mobile.length < 10) {
+      alert("Please enter a valid 10-digit mobile number");
+      return;
     }
+    if (!formData.gender) {
+      alert("Please select your gender");
+      return;
+    }
+    if (formData.password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+    // Proceed to registration + WhatsApp redirect
+    handleFinalizeAndWhatsApp();
   };
 
-  const finalizeRegistration = async (paymentId: string) => {
+  const handleFinalizeAndWhatsApp = async () => {
     setLoading(true);
     try {
-      const newMemberId = `FT${Math.floor(1000 + Math.random() * 9000)}`;
+      const newMemberId = `RFA${Math.floor(1000 + Math.random() * 9000)}`;
       setMemberId(newMemberId);
 
-      // Calculate Expiry Date
       const joinDate = new Date();
       const expiryDate = new Date();
-
       const plan = formData.membershipType;
       let months = 1;
       if (plan.includes("-3")) months = 3;
       if (plan.includes("-6")) months = 6;
       if (plan.includes("-12")) months = 12;
-
       expiryDate.setMonth(joinDate.getMonth() + months);
 
-      const defaultAvatar = formData.gender === 'boy' ? "/assets/boy.png" : "/assets/girl.png";
+      const defaultAvatar = formData.gender === "boy" ? "/assets/boy.png" : "/assets/girl.png";
 
-      // Register in AuthContext
       await register(formData.email, formData.password, {
         name: formData.fullName,
         phone: formData.mobile,
@@ -162,6 +148,7 @@ Details:
         age: formData.age,
         weight: formData.weight,
         height: formData.height,
+        address: formData.address,
         fitnessGoal: formData.fitnessGoal,
         membershipPlan: formData.membershipType,
         membershipExpiry: expiryDate.toISOString(),
@@ -173,42 +160,50 @@ Details:
         memberId: newMemberId,
       });
 
+      // Open WhatsApp with owner
+      const message = `🏋️ New Registration at Rajarajeshwari Fitness Arena!
+
+📋 Details:
+• Name: ${formData.fullName}
+• Mobile: ${formData.mobile}
+• Email: ${formData.email}
+• Age: ${formData.age || "Not provided"}
+• Gender: ${formData.gender === "boy" ? "Male" : "Female"}
+• Weight: ${formData.weight ? formData.weight + "kg" : "Not provided"}
+• Height: ${formData.height ? formData.height + "cm" : "Not provided"}
+• Fitness Goal: ${formData.fitnessGoal.replace("-", " ").toUpperCase()}
+• Plan: ${formData.membershipType.toUpperCase()} (₹${amount})
+• Member ID: ${newMemberId}
+• Address: ${formData.address || "Not provided"}
+
+Please confirm my membership activation. Thank you! 🙏`;
+
+      window.open(
+        `https://wa.me/${WHATSAPP_OWNER}?text=${encodeURIComponent(message)}`,
+        "_blank"
+      );
+
       setStep(3);
-
       try {
-        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3");
         audio.play();
-      } catch (e) {}
-
-      return true;
+      } catch {}
     } catch (error: any) {
       console.error("Registration Error:", error);
-      if (error.code === 'auth/email-already-in-use') {
+      if (error.code === "auth/email-already-in-use") {
         alert("This email is already registered! Please login instead.");
         router.push("/login");
       } else {
         alert("Registration failed: " + (error.message || "Unknown error"));
       }
-      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  const handleManualPayment = async () => {
-    finalizeRegistration("FT-WHATSAPP-" + Date.now());
-  };
-
-  const priceMap: Record<string, number> = {
-    'basic-1': 700, 'basic-3': 1800, 'basic-6': 3500, 'basic-12': 6000,
-    'cardio-1': 800, 'cardio-3': 2000, 'cardio-6': 4000, 'cardio-12': 7000,
-    'pt': 3000
-  };
-  const amount = priceMap[formData.membershipType] || 700;
-
   return (
-    <div className="pt-32 pb-24 min-h-screen bg-[#050505] text-white selection:bg-primary selection:text-black">
-      <div className="container max-w-4xl px-4">
+    <div className="pt-32 pb-24 min-h-screen bg-[#050505] text-white">
+      <div className="container max-w-4xl px-4 mx-auto">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -216,249 +211,388 @@ Details:
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="glass p-6 md:p-12 rounded-[3rem] border border-white/10 relative overflow-hidden"
+              className="bg-white/3 border border-white/10 backdrop-blur-xl p-6 md:p-12 rounded-[3rem] relative overflow-hidden"
             >
-              <div className="text-center mb-12">
+              {/* Background glow */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
+
+              <div className="text-center mb-12 relative">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full mb-4 border border-primary/20">
-                  <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">Step 01: Fill Details</span>
+                  <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">
+                    Join Rajarajeshwari Fitness Arena
+                  </span>
                 </div>
-                <h1 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter mb-4">CHAT ON <span className="text-primary">WHATSAPP</span></h1>
-                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Provide your details to register via WhatsApp</p>
+                <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-3">
+                  START YOUR <span className="text-primary">JOURNEY</span>
+                </h1>
+                <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">
+                  Fill your details — We'll connect you via WhatsApp
+                </p>
               </div>
 
-              <form onSubmit={handleInitialSubmit} className="space-y-8">
-                <div className="flex flex-col items-center mb-10">
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-40 h-40 rounded-[3rem] bg-white/5 border-2 border-dashed border-primary/30 flex items-center justify-center cursor-pointer hover:border-primary transition-all overflow-hidden relative group"
-                  >
-                    {previewImage ? (
-                      <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-center">
-                        <Camera className="text-gray-500 mx-auto mb-2" size={32} />
-                        <span className="text-[9px] font-black uppercase text-gray-500">Upload Photo</span>
+              {/* Photo Upload */}
+              <div className="flex flex-col items-center mb-10">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-36 h-36 rounded-[2.5rem] bg-white/5 border-2 border-dashed border-primary/30 flex items-center justify-center cursor-pointer hover:border-primary transition-all overflow-hidden relative group"
+                >
+                  {previewImage ? (
+                    <img src={previewImage} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-center">
+                      <Camera className="text-gray-500 mx-auto mb-2" size={30} />
+                      <span className="text-[9px] font-black uppercase text-gray-500">
+                        Upload Photo
+                      </span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Camera className="text-primary" size={28} />
+                  </div>
+                </div>
+                <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest mt-3">
+                  Optional — Profile Photo
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmitForm} className="space-y-6">
+                {/* Row 1: Name + Mobile */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Full Name *
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        name="fullName" required placeholder="Your Full Name"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Mobile Number *
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        name="mobile" value={formData.mobile} required placeholder="10-digit number"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Email + Password */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Email Address *
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        type="email" name="email" required placeholder="your@email.com"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Password * (min 6 chars)
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        type={showPassword ? "text" : "password"} name="password" required placeholder="Create password"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-11 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {formData.password && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex gap-1 flex-1">
+                          {[0,1,2,3,4].map((i) => (
+                            <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i < passwordStrength.score ? passwordStrength.color : "bg-white/10"}`} />
+                          ))}
+                        </div>
+                        <span className={`text-[9px] font-black uppercase ${passwordStrength.score >= 3 ? "text-green-400" : "text-orange-400"}`}>
+                          {passwordStrength.label}
+                        </span>
                       </div>
                     )}
                   </div>
-                  <input type="file" ref={fileInputRef} hidden accept="image/*" onChange={handleImageChange} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Row 3: Gender + Plan */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Full Name</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Gender *
+                    </label>
                     <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                      <input name="fullName" required placeholder="JOHN DOE" className="ft-input" onChange={handleChange} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Mobile Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                      <input name="mobile" value={formData.mobile} required className="ft-input" onChange={handleChange} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                      <input type="email" name="email" required placeholder="WARRIOR@TEMPLE.COM" className="ft-input" onChange={handleChange} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                      <input type={showPassword ? "text" : "password"} name="password" required placeholder="••••••••" className="ft-input" onChange={handleChange} />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600">
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Gender</label>
-                    <div className="relative">
-                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                      <select name="gender" required className="ft-input appearance-none pl-12" onChange={handleChange} value={formData.gender}>
-                        <option value="" disabled>SELECT GENDER</option>
-                        <option value="boy">MALE</option>
-                        <option value="girl">FEMALE</option>
+                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <select
+                        name="gender" required
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all appearance-none cursor-pointer"
+                        onChange={handleChange} value={formData.gender}
+                      >
+                        <option value="" disabled>Select Gender</option>
+                        <option value="boy">Male</option>
+                        <option value="girl">Female</option>
                       </select>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Membership Plan</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Membership Plan *
+                    </label>
                     <div className="relative">
-                      <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={18} />
-                      <select name="membershipType" className="ft-input appearance-none pl-12" onChange={handleChange} value={formData.membershipType}>
-                        <option value="basic-1">BASIC (₹700 / 1 MONTH)</option>
-                        <option value="basic-3">QUARTERLY (₹1800 / 3 MONTHS)</option>
-                        <option value="basic-6">HALF-YEAR (₹3500 / 6 MONTHS)</option>
-                        <option value="basic-12">ANNUAL (₹6000 / 12 MONTHS)</option>
-                        <option value="cardio-1">CARDIO (₹800 / 1 MONTH)</option>
-                        <option value="cardio-3">CARDIO (₹2000 / 3 MONTHS)</option>
-                        <option value="cardio-6">CARDIO (₹4000 / 6 MONTHS)</option>
-                        <option value="cardio-12">CARDIO (₹7000 / 12 MONTHS)</option>
-                        <option value="pt">PERSONAL TRAINING (₹3000 / MO)</option>
+                      <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <select
+                        name="membershipType"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all appearance-none cursor-pointer"
+                        onChange={handleChange} value={formData.membershipType}
+                      >
+                        <option value="basic-1">Monthly Basic — ₹700 / 1 Month</option>
+                        <option value="basic-3">Quarterly — ₹1800 / 3 Months</option>
+                        <option value="basic-6">Half-Year — ₹3500 / 6 Months</option>
+                        <option value="basic-12">Annual (Best Value) — ₹6000 / Year</option>
+                        <option value="cardio-1">Gym + Cardio — ₹800 / Month</option>
+                        <option value="cardio-3">Gym + Cardio — ₹2000 / 3 Months</option>
+                        <option value="cardio-6">Gym + Cardio — ₹4000 / 6 Months</option>
+                        <option value="cardio-12">Gym + Cardio — ₹7000 / Year</option>
+                        <option value="pt">Personal Training — ₹3000 / Month</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
-                <button type="submit" className="btn-primary w-full py-6 text-xl rounded-2xl flex items-center justify-center gap-4">
-                  <span>Continue on WhatsApp</span>
-                  <Zap size={20} />
-                </button>
-              </form>
-            </motion.div>
-          )}
-
-          {step === 2 && (
-            <motion.div
-              key="payment"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              className="glass p-8 md:p-16 rounded-[4rem] border border-primary/20 text-center"
-            >
-              <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-2">COMPLETE <span className="text-primary">REGISTRATION</span></h2>
-              <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-10">Subscription Plan: {formData.membershipType.toUpperCase()}</p>
-
-              <div className="bg-primary/5 border border-primary/20 p-8 rounded-[3rem] mb-10">
-                <p className="text-sm font-bold text-gray-300 mb-4 italic">You will be registered in our system. Please make the payment via WhatsApp to activate your membership fully.</p>
-                <div className="flex items-center justify-center gap-2 text-primary">
-                  <ShieldCheck size={20} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Safe & Secure Registration</span>
+                {/* Row 4: Age + Fitness Goal */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Age
+                    </label>
+                    <div className="relative">
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        type="number" name="age" placeholder="Your age" min="10" max="80"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Fitness Goal
+                    </label>
+                    <div className="relative">
+                      <Target className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <select
+                        name="fitnessGoal"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all appearance-none cursor-pointer"
+                        onChange={handleChange} value={formData.fitnessGoal}
+                      >
+                        <option value="muscle-gain">Muscle Gain / Bodybuilding</option>
+                        <option value="fat-loss">Fat Loss / Weight Loss</option>
+                        <option value="strength">Strength & Conditioning</option>
+                        <option value="cardio">Cardio & Endurance</option>
+                        <option value="general">General Fitness</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-4">
+                {/* Row 5: Weight + Height */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Current Weight (kg)
+                    </label>
+                    <div className="relative">
+                      <Weight className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        type="number" name="weight" placeholder="e.g. 70"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                      Height (cm)
+                    </label>
+                    <div className="relative">
+                      <Ruler className="absolute left-4 top-1/2 -translate-y-1/2 text-primary" size={16} />
+                      <input
+                        type="number" name="height" placeholder="e.g. 175"
+                        className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all"
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 6: Address */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                    Home Address
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-4 text-primary" size={16} />
+                    <textarea
+                      name="address" placeholder="Your home address (optional)"
+                      rows={2}
+                      className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all resize-none"
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                {/* Plan Summary Card */}
+                <div className="bg-primary/8 border border-primary/20 rounded-2xl p-5 flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-1">
+                      Selected Plan
+                    </p>
+                    <p className="text-xl font-black text-white uppercase italic">
+                      {formData.membershipType.toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-black text-primary italic">₹{amount}</p>
+                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">
+                      One-time payment via WhatsApp
+                    </p>
+                  </div>
+                </div>
+
+                {/* WhatsApp trust note */}
+                <div className="flex items-center gap-3 p-4 bg-green-500/5 border border-green-500/15 rounded-2xl">
+                  <MessageCircle className="text-green-400 shrink-0" size={20} />
+                  <p className="text-xs text-gray-400 font-medium">
+                    After submitting, you'll be redirected to <span className="text-green-400 font-bold">WhatsApp</span> to confirm your membership with the gym owner at <span className="text-white font-bold">9665231230</span>.
+                  </p>
+                </div>
+
                 <button
-                  onClick={handleManualPayment}
+                  type="submit"
                   disabled={loading}
-                  className="w-full bg-primary text-black font-black uppercase italic py-6 rounded-2xl flex items-center justify-center gap-4 text-xl hover:scale-105 transition-all"
+                  className="btn-primary w-full py-5 text-base rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-[0_0_30px_rgba(255,215,0,0.2)]"
                 >
-                  {loading ? <Loader2 className="animate-spin" /> : <>Finalize Registration</>}
+                  {loading ? (
+                    <><Loader2 className="animate-spin" size={20} /> Registering…</>
+                  ) : (
+                    <><MessageCircle size={20} /> Register & Open WhatsApp</>
+                  )}
                 </button>
-                <button
-                  onClick={() => setStep(1)}
-                  className="w-full bg-white/5 border border-white/10 text-white font-black uppercase italic py-4 rounded-2xl hover:bg-white/10 transition-all"
-                >
-                  Go Back
-                </button>
-              </div>
+
+                <p className="text-center text-[10px] text-gray-600 font-bold uppercase tracking-widest">
+                  Already a member?{" "}
+                  <Link href="/login" className="text-primary hover:underline">
+                    Login here
+                  </Link>
+                </p>
+              </form>
             </motion.div>
           )}
 
           {step === 3 && (
             <motion.div
               key="success"
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass p-12 md:p-24 rounded-[5rem] text-center border-primary/40"
+              className="bg-white/3 border border-primary/20 backdrop-blur-xl p-12 md:p-20 rounded-[4rem] text-center relative overflow-hidden"
             >
-              <div className="w-24 h-24 bg-primary text-black rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(255,215,0,0.4)]">
-                <Check size={48} strokeWidth={4} />
-              </div>
-              <h2 className="text-6xl font-black uppercase italic tracking-tighter mb-4">CONGRATS!</h2>
-              <p className="text-primary text-xl font-black uppercase italic mb-6">You are now a part of Fitness Temple Gym</p>
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
 
-              <div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 mb-10 max-w-md mx-auto">
-                <p className="text-[10px] font-black uppercase text-gray-500 mb-2">Member Identity Card</p>
-                <p className="text-3xl font-black italic text-white mb-4">#{memberId}</p>
-                <div className="text-left space-y-2 border-t border-white/5 pt-4">
-                  <p className="text-xs font-bold flex justify-between"><span>Email:</span> <span className="text-primary">{formData.email}</span></p>
-                  <p className="text-xs font-bold flex justify-between"><span>Password:</span> <span className="text-primary">{formData.password}</span></p>
-                </div>
-              </div>
-
-              <Link href="/dashboard/member" className="btn-primary w-full py-6 text-2xl rounded-[2rem] block shadow-[0_20px_40px_rgba(255,215,0,0.2)]">
-                Access Member Portal
-              </Link>
-              <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mt-6">Use your email/password for future logins</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* WhatsApp Choice Modal */}
-        <AnimatePresence>
-          {whatsappModalOpen && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-            >
               <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                className="relative w-full max-w-lg glass p-8 md:p-12 rounded-[3rem] border-white/10 text-center"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="w-28 h-28 bg-primary text-black rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_50px_rgba(255,215,0,0.4)]"
               >
-                <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-8">
-                  <Mail className="text-primary" size={40} />
-                </div>
-                <h3 className="text-2xl font-black uppercase italic mb-4">Send to Temple</h3>
-                <p className="text-gray-400 text-sm font-bold leading-relaxed mb-8">
-                  Do you want to send this message to <span className="text-white">Developer 8080690631</span> or else <span className="text-white">Owner 96652 31230</span>?
-                </p>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => handleWhatsAppChoice('dev')}
-                    className="py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
-                  >
-                    Developer
-                  </button>
-                  <button
-                    onClick={() => handleWhatsAppChoice('owner')}
-                    className="btn-primary py-4 text-[10px]"
-                  >
-                    Owner
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => setWhatsappModalOpen(false)}
-                  className="mt-6 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
+                <Check size={52} strokeWidth={3.5} />
               </motion.div>
+
+              <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter mb-4">
+                WELCOME!
+              </h2>
+              <p className="text-primary text-xl font-black uppercase italic mb-3">
+                You are now part of Rajarajeshwari Fitness Arena 🏋️
+              </p>
+              <p className="text-gray-400 text-sm font-medium mb-10 max-w-md mx-auto">
+                Your registration is complete and WhatsApp has been opened to confirm your membership with the owner. You'll receive your activation shortly!
+              </p>
+
+              <div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 mb-10 max-w-sm mx-auto">
+                <p className="text-[10px] font-black uppercase text-gray-500 mb-2">
+                  Your Member ID
+                </p>
+                <p className="text-4xl font-black italic text-primary mb-4">#{memberId}</p>
+                <div className="text-left space-y-2 border-t border-white/5 pt-4">
+                  <p className="text-xs font-bold flex justify-between">
+                    <span className="text-gray-500">Email:</span>
+                    <span className="text-white">{formData.email}</span>
+                  </p>
+                  <p className="text-xs font-bold flex justify-between">
+                    <span className="text-gray-500">Plan:</span>
+                    <span className="text-primary">{formData.membershipType.toUpperCase()}</span>
+                  </p>
+                  <p className="text-xs font-bold flex justify-between">
+                    <span className="text-gray-500">Amount:</span>
+                    <span className="text-primary">₹{amount}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/dashboard/member"
+                  className="btn-primary px-10 py-5 text-base rounded-2xl font-black uppercase tracking-widest shadow-[0_0_30px_rgba(255,215,0,0.25)] flex items-center justify-center gap-2"
+                >
+                  <Dumbbell size={20} />
+                  Access Member Dashboard
+                </Link>
+                <Link
+                  href={`https://wa.me/${WHATSAPP_OWNER}?text=Hi! I just registered at Rajarajeshwari Fitness Arena. My Member ID is ${memberId}. Please activate my membership!`}
+                  target="_blank"
+                  className="px-8 py-5 bg-green-500/10 border border-green-500/30 text-green-400 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 hover:bg-green-500/20 transition-all"
+                >
+                  <MessageCircle size={18} />
+                  WhatsApp Owner
+                </Link>
+              </div>
+
+              <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mt-8">
+                Save your email & password for future logins
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-
-      <style jsx>{`
-        .ft-input {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 1.25rem;
-          padding: 1.25rem 1.5rem 1.25rem 3.5rem;
-          font-weight: 700;
-          color: white;
-          outline: none;
-          transition: all 0.3s;
-        }
-        .ft-input:focus {
-          border-color: #FFD700;
-          background: rgba(255, 215, 0, 0.05);
-        }
-      `}</style>
     </div>
   );
 };
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-primary animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </div>
+      }
+    >
       <RegisterContent />
     </Suspense>
   );

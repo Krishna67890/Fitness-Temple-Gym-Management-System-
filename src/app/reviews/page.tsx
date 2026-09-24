@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { saveMemberReview, subscribeToPublishedReviews, GymReview } from "@/lib/reviewsService";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import GalleryPreview from "@/components/GalleryPreview";
 
 export default function ReviewsPage() {
   const { user, userData } = useAuth();

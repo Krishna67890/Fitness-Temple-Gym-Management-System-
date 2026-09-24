@@ -96,21 +96,14 @@ export const ReviewsSection = () => {
     }
   }, [user, userData, reviews]);
 
-  // Handle "Write a Review" button click
+  // Handle "Write a Review" button click — open for ALL visitors
   const handleOpenReviewAction = () => {
     setErrorMessage("");
     setSubmitSuccess(false);
+    setRoleNotice(null);
 
-    // Role check: Only members (or guests) can submit gym reviews
-    if (userData?.role && userData.role !== "member") {
-      setRoleNotice(
-        `You are currently logged in as a gym ${userData.role.toUpperCase()}. Only registered gym members or guest visitors can write public reviews. Coaches and owners manage reviews from their dashboard.`
-      );
-      return;
-    }
-
-    // If member already has an active review, switch to edit mode
-    if (myReview) {
+    // If authenticated member already has an active review, switch to edit mode
+    if (myReview && userData?.role === "member") {
       setModalMode("edit");
       setRatingInput(myReview.rating);
       setCommentInput(myReview.comment);
@@ -120,7 +113,7 @@ export const ReviewsSection = () => {
       setModalMode("create");
       setRatingInput(5);
       setCommentInput("");
-      setNameInput(userData?.name || "");
+      setNameInput(userData?.name || user?.displayName || "");
       setAccentColorInput("#FFD700");
     }
     setIsModalOpen(true);
@@ -154,12 +147,12 @@ export const ReviewsSection = () => {
     }
   };
 
-  // Submit or update member review
+  // Submit review — works for EVERYONE (guests, members, visitors)
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
-    let currentUid = user?.uid || userData?.uid;
+    const currentUid = user?.uid || userData?.uid || ""; // empty string = guest
     const isGuest = !currentUid;
 
     if (isGuest && !nameInput.trim()) {
@@ -168,22 +161,19 @@ export const ReviewsSection = () => {
     }
 
     if (!commentInput.trim()) {
-      setErrorMessage("Please write a comment sharing your gym experience.");
+      setErrorMessage("Please write a comment sharing your experience.");
       return;
-    }
-
-    // Generate a guest ID if not logged in
-    if (!currentUid) {
-      currentUid = `guest_${Math.random().toString(36).substring(2, 9)}`;
     }
 
     setIsSubmitting(true);
     try {
-      const authorName = isGuest ? nameInput.trim() : (userData?.name || user?.displayName || "Fitness Member");
+      const authorName = isGuest
+        ? nameInput.trim()
+        : (userData?.name || user?.displayName || nameInput.trim() || "Fitness Member");
       const authorPhoto = userData?.photoURL || user?.photoURL || "";
 
       await saveMemberReview({
-        userId: currentUid,
+        userId: currentUid, // empty = guest, service generates unique ID
         userName: authorName,
         userPhotoURL: authorPhoto,
         rating: ratingInput,
@@ -197,10 +187,18 @@ export const ReviewsSection = () => {
         setIsSubmitting(false);
         setIsModalOpen(false);
         setSubmitSuccess(false);
-      }, 1500);
+      }, 2000);
     } catch (err: any) {
       setIsSubmitting(false);
-      setErrorMessage(err.message || "Failed to submit review to Firestore. Please try again.");
+      const msg = err.message || "Failed to submit. Please try again.";
+      // Check for permission-denied error and give helpful guidance
+      if (msg.includes("permission-denied") || msg.includes("Permission denied") || msg.includes("Missing or insufficient")) {
+        setErrorMessage(
+          "⚠️ Firestore rules need to be deployed. Run: firebase deploy --only firestore:rules — then try again. Your review is saved locally."
+        );
+      } else {
+        setErrorMessage(msg);
+      }
     }
   };
 
@@ -582,7 +580,7 @@ export const ReviewsSection = () => {
               Be the first member to share your Fitness Temple experience.
             </h3>
             <p className="text-xs text-gray-400 max-w-md mx-auto">
-              We value genuine feedback from real fitness warriors. Log in with your member account and
+              We value genuine feedback from our members. Log in with your member account and
               tell the community about your gains and training results.
             </p>
             <button
@@ -751,7 +749,7 @@ export const ReviewsSection = () => {
                 {submitSuccess && (
                   <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold flex items-center gap-2">
                     <CheckCircle size={14} />
-                    <span>Review submitted successfully to Firestore!</span>
+                    <span>🎉 Review published! It's now visible to everyone across all devices.</span>
                   </div>
                 )}
 

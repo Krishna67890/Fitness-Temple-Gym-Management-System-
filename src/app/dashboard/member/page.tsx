@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dumbbell,
@@ -8,230 +8,64 @@ import {
   Clock,
   Droplets,
   Flame,
-  Award,
-  TrendingUp,
   User,
   ShieldCheck,
-  ChevronRight,
   Play,
   RotateCcw,
-  Sparkles,
   Apple,
-  MessageSquare,
   QrCode,
   CalendarCheck,
-  AlertCircle,
-  Maximize2,
-  Activity,
-  Zap,
-  Coffee,
-  Heart,
-  Watch,
   Settings,
   Image as ImageIcon,
   Map as MapIcon,
   Star,
+  Instagram,
+  Sparkles,
 } from "lucide-react";
 import { useAuth, getCleanEmailName } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { GymEquipment3D, EquipmentType } from "@/components/portal/GymEquipment3D";
-import { FitnessAvatar3D, ExerciseDemoType } from "@/components/portal/FitnessAvatar3D";
+import { GymEquipment3D } from "@/components/portal/GymEquipment3D";
+import { FitnessAvatar3D } from "@/components/portal/FitnessAvatar3D";
 import { WorkoutTimer } from "@/components/portal/WorkoutTimer";
 import { WorkoutPlayer } from "@/components/portal/WorkoutPlayer";
 import Link from "next/link";
-import { gsap } from "gsap";
+import { WEEKLY_ROUTINES } from "@/lib/workoutRoutines";
+import { generateRecommendations } from "@/lib/ai-recommender";
 
-// Daily routines mapping for the calendar week
-interface DayRoutine {
-  dayName: string;
-  focus: string;
-  equipment: EquipmentType;
-  avatarDemo: ExerciseDemoType;
-  exercises: {
-    id: string;
-    name: string;
-    muscle: string;
-    equipmentName: EquipmentType;
-    sets: number;
-    reps: string;
-    targetWeight: string;
-    restSecs: number;
-    notes: string;
-  }[];
-  meals: {
-    time: string;
-    name: string;
-    items: string;
-    calories: number;
-    protein: string;
-    carbs: string;
-    fats: string;
-  }[];
-}
+const daysOfWeek = [
+  { key: "MON", label: "Mon" },
+  { key: "TUE", label: "Tue" },
+  { key: "WED", label: "Wed" },
+  { key: "THU", label: "Thu" },
+  { key: "FRI", label: "Fri" },
+  { key: "SAT", label: "Sat" },
+  { key: "SUN", label: "Sun" },
+];
 
-const WEEKLY_ROUTINES: Record<string, DayRoutine> = {
-  Mon: {
-    dayName: "Monday",
-    focus: "Chest & Triceps Hypertrophy",
-    equipment: "bench-press",
-    avatarDemo: "bench-press",
-    exercises: [
-      { id: "e1", name: "Barbell Bench Press", muscle: "Chest / Front Delts", equipmentName: "bench-press", sets: 4, reps: "12, 10, 8, 6", targetWeight: "70 kg", restSecs: 75, notes: "Retract scapula, drive with heels, 2-sec eccentric phase" },
-      { id: "e2", name: "Incline Dumbbell Press", muscle: "Upper Chest", equipmentName: "dumbbells", sets: 3, reps: "10-12", targetWeight: "24 kg", restSecs: 60, notes: "30-degree incline, full stretch at the bottom" },
-      { id: "e3", name: "Cable Chest Flyes", muscle: "Pectoralis Major", equipmentName: "cable-machine", sets: 3, reps: "15", targetWeight: "15 kg", restSecs: 45, notes: "Squeeze chest at peak contraction for 1 second" },
-      { id: "e4", name: "Triceps Rope Pushdown", muscle: "Triceps Lateral Head", equipmentName: "cable-machine", sets: 4, reps: "12", targetWeight: "25 kg", restSecs: 45, notes: "Flave rope outward at full extension" },
-      { id: "e_chest_1", name: "Dumbbell Pullover", muscle: "Upper Chest / Lats", equipmentName: "dumbbells", sets: 3, reps: "12", targetWeight: "22 kg", restSecs: 60, notes: "Focus on stretching the chest at the bottom" },
-      { id: "e_tricep_2", name: "Skull Crushers", muscle: "Triceps Long Head", equipmentName: "barbell", sets: 3, reps: "10", targetWeight: "25 kg", restSecs: 60, notes: "Keep elbows tucked and fixed" },
-    ],
-    meals: [
-      { time: "07:30 AM", name: "Breakfast", items: "Oats with skim milk, 4 egg whites, 1 banana, almonds", calories: 540, protein: "32g", carbs: "68g", fats: "14g" },
-      { time: "11:00 AM", name: "Mid-Morning", items: "Greek yogurt with mixed berries, green tea", calories: 210, protein: "18g", carbs: "24g", fats: "4g" },
-      { time: "01:30 PM", name: "Lunch", items: "Brown rice (150g), grilled chicken breast or paneer, mixed salad", calories: 620, protein: "44g", carbs: "70g", fats: "16g" },
-      { time: "05:00 PM", name: "Pre-Workout", items: "Whole wheat toast with peanut butter, black coffee", calories: 280, protein: "10g", carbs: "34g", fats: "11g" },
-      { time: "07:30 PM", name: "Post-Workout", items: "Whey isolate shake with creatine monohydrate", calories: 160, protein: "27g", carbs: "4g", fats: "2g" },
-      { time: "09:00 PM", name: "Dinner", items: "Grilled fish or soya chunks, steamed broccoli, sweet potato", calories: 510, protein: "38g", carbs: "52g", fats: "12g" },
-      { time: "10:30 PM", name: "Night Fuel", items: "Casein protein or 100g cottage cheese", calories: 120, protein: "20g", carbs: "4g", fats: "3g" },
-    ],
+const trainersData = [
+  {
+    name: "Suraj",
+    role: "Certified Fitness Trainer",
+    instagram: "https://www.instagram.com/_._s.u.r.a.j._?stkn=MWF5dzIxdmJhenN3eA=="
   },
-  Tue: {
-    dayName: "Tuesday",
-    focus: "Back & Biceps Power Split",
-    equipment: "lat-pulldown",
-    avatarDemo: "lat-pulldown",
-    exercises: [
-      { id: "e5", name: "Lat Pulldown (Wide Grip)", muscle: "Latissimus Dorsi", equipmentName: "lat-pulldown", sets: 4, reps: "10-12", targetWeight: "55 kg", restSecs: 60, notes: "Drive elbows down and back, do not swing torso" },
-      { id: "e6", name: "Barbell Bent-Over Row", muscle: "Mid Back / Rhomboids", equipmentName: "barbell", sets: 4, reps: "8-10", targetWeight: "60 kg", restSecs: 75, notes: "Maintain neutral spine, pull towards belly button" },
-      { id: "e7", name: "Seated Cable Row", muscle: "Lower Lat / Middle Traps", equipmentName: "row-machine", sets: 3, reps: "12", targetWeight: "50 kg", restSecs: 60, notes: "Full stretch on release, tight squeeze" },
-      { id: "e8", name: "Standing Barbell Bicep Curl", muscle: "Biceps Brachii", equipmentName: "barbell", sets: 4, reps: "10-12", targetWeight: "30 kg", restSecs: 45, notes: "Pin elbows to ribs, prevent shoulder recruitment" },
-      { id: "e_back_1", name: "Single Arm DB Row", muscle: "Lats / Rhomboids", equipmentName: "dumbbells", sets: 3, reps: "12 each", targetWeight: "24 kg", restSecs: 45, notes: "Full extension at the bottom" },
-      { id: "e_bicep_2", name: "Hammer Curls", muscle: "Brachialis / Forearms", equipmentName: "dumbbells", sets: 3, reps: "12", targetWeight: "14 kg", restSecs: 45, notes: "Controlled movement, no swinging" },
-    ],
-    meals: [
-      { time: "07:30 AM", name: "Breakfast", items: "Scrambled eggs, whole grain toast, apple, chia seeds", calories: 520, protein: "30g", carbs: "60g", fats: "16g" },
-      { time: "11:00 AM", name: "Mid-Morning", items: "Sprouted moong salad with lemon & cucumber", calories: 190, protein: "14g", carbs: "28g", fats: "2g" },
-      { time: "01:30 PM", name: "Lunch", items: "Quinoa bowl with paneer cubes, dal, green leafy veggies", calories: 590, protein: "36g", carbs: "68g", fats: "18g" },
-      { time: "05:00 PM", name: "Pre-Workout", items: "Banana with 10 almonds & beetroot juice", calories: 230, protein: "6g", carbs: "42g", fats: "7g" },
-      { time: "07:30 PM", name: "Post-Workout", items: "Whey protein shake with chilled water", calories: 150, protein: "26g", carbs: "3g", fats: "2g" },
-      { time: "09:00 PM", name: "Dinner", items: "Paneer tikka or grilled chicken, sautéed beans, roti", calories: 480, protein: "34g", carbs: "45g", fats: "14g" },
-      { time: "10:30 PM", name: "Night Fuel", items: "Handful of walnuts with warm milk", calories: 180, protein: "8g", carbs: "12g", fats: "12g" },
-    ],
+  {
+    name: "Sanket",
+    role: "Strength & Conditioning Coach",
+    instagram: "https://www.instagram.com/sanket_ghode10?igsh=MWwyZnF0bzJ2b3JpbQ=="
   },
-  Wed: {
-    dayName: "Wednesday",
-    focus: "Leg Day & Quadriceps Blast",
-    equipment: "squat-rack",
-    avatarDemo: "squat",
-    exercises: [
-      { id: "e9", name: "Barbell Back Squat", muscle: "Quadriceps / Glutes", equipmentName: "squat-rack", sets: 5, reps: "12, 10, 8, 6, 6", targetWeight: "85 kg", restSecs: 90, notes: "Descend below parallel, chest up, brace core" },
-      { id: "e10", name: "Leg Press 45-Degree", muscle: "Quads & Hamstrings", equipmentName: "leg-press", sets: 4, reps: "12", targetWeight: "140 kg", restSecs: 75, notes: "Do not lock knees at top of movement" },
-      { id: "e11", name: "Walking Dumbbell Lunges", muscle: "Glutes & Stabilizers", equipmentName: "dumbbells", sets: 3, reps: "20 steps", targetWeight: "16 kg each", restSecs: 60, notes: "90-degree knee bend on each forward step" },
-      { id: "e12", name: "Standing Calf Raises", muscle: "Gastrocnemius", equipmentName: "squat-rack", sets: 4, reps: "15-20", targetWeight: "60 kg", restSecs: 45, notes: "Hold stretch at bottom, peak squeeze at top" },
-      { id: "e_leg_1", name: "Leg Extensions", muscle: "Quadriceps Isolation", equipmentName: "leg-press", sets: 3, reps: "15", targetWeight: "40 kg", restSecs: 45, notes: "Hold for 1 sec at peak contraction" },
-    ],
-    meals: [
-      { time: "07:30 AM", name: "Breakfast", items: "Peanut butter banana oats with 3 boiled eggs", calories: 580, protein: "34g", carbs: "74g", fats: "18g" },
-      { time: "11:00 AM", name: "Mid-Morning", items: "Handful of walnuts, roasted chana & tender coconut water", calories: 240, protein: "11g", carbs: "30g", fats: "9g" },
-      { time: "01:30 PM", name: "Lunch", items: "Chicken biryani (low oil) or Soy chunk pulao with raita", calories: 650, protein: "42g", carbs: "82g", fats: "15g" },
-      { time: "05:00 PM", name: "Pre-Workout", items: "Boiled sweet potatoes with pinch of pink salt", calories: 220, protein: "4g", carbs: "48g", fats: "1g" },
-      { time: "07:30 PM", name: "Post-Workout", items: "Whey isolate shake + 1 rice cake with honey", calories: 210, protein: "27g", carbs: "22g", fats: "1g" },
-      { time: "09:00 PM", name: "Dinner", items: "Grilled tofu or chicken breast with stir-fried veggies", calories: 490, protein: "39g", carbs: "40g", fats: "13g" },
-      { time: "10:30 PM", name: "Night Fuel", items: "1 glass turmeric milk (Golden Milk)", calories: 150, protein: "8g", carbs: "15g", fats: "6g" },
-    ],
-  },
-  Thu: {
-    dayName: "Thursday",
-    focus: "Shoulders & Trap Overload",
-    equipment: "shoulder-press",
-    avatarDemo: "shoulder-press",
-    exercises: [
-      { id: "e13", name: "Overhead Barbell Military Press", muscle: "Anterior & Lateral Deltoids", equipmentName: "barbell", sets: 4, reps: "8-10", targetWeight: "45 kg", restSecs: 75, notes: "Strict form, lock core, press directly overhead" },
-      { id: "e14", name: "Dumbbell Lateral Raises", muscle: "Lateral Deltoids (Boulder Cap)", equipmentName: "dumbbells", sets: 4, reps: "12-15", targetWeight: "10 kg", restSecs: 45, notes: "Lead with elbows, slight forward torso lean" },
-      { id: "e15", name: "Face Pulls with Rope", muscle: "Rear Delts / Rotator Cuff", equipmentName: "cable-machine", sets: 4, reps: "15", targetWeight: "20 kg", restSecs: 45, notes: "Pull towards eyes, externally rotate shoulders" },
-      { id: "e16", name: "Dumbbell Shrugs", muscle: "Upper Trapezius", equipmentName: "dumbbells", sets: 4, reps: "12", targetWeight: "28 kg each", restSecs: 45, notes: "Straight up elevation, pause for 2 seconds at top" },
-      { id: "e_shoulder_1", name: "Front Plate Raises", muscle: "Anterior Deltoids", equipmentName: "barbell", sets: 3, reps: "12", targetWeight: "15 kg", restSecs: 45, notes: "Control the weight on the way down" },
-    ],
-    meals: [
-      { time: "07:30 AM", name: "Breakfast", items: "Omelette (3 whole + 2 whites) with spinach and toast", calories: 510, protein: "33g", carbs: "42g", fats: "21g" },
-      { time: "11:00 AM", name: "Mid-Morning", items: "Whey protein with water + handful of almonds", calories: 230, protein: "29g", carbs: "6g", fats: "10g" },
-      { time: "01:30 PM", name: "Lunch", items: "Steamed rice, chicken curry or rajma masala, green salad", calories: 600, protein: "38g", carbs: "75g", fats: "15g" },
-      { time: "05:00 PM", name: "Pre-Workout", items: "Apple slices with peanut butter", calories: 200, protein: "5g", carbs: "28g", fats: "9g" },
-      { time: "07:30 PM", name: "Post-Workout", items: "Electrolyte hydration mix + whey protein", calories: 170, protein: "26g", carbs: "12g", fats: "1g" },
-      { time: "09:00 PM", name: "Dinner", items: "Grilled fish or paneer, asparagus and pumpkin soup", calories: 460, protein: "36g", carbs: "35g", fats: "14g" },
-      { time: "10:30 PM", name: "Night Fuel", items: "Greek yogurt with a hint of honey", calories: 140, protein: "12g", carbs: "18g", fats: "2g" },
-    ],
-  },
-  Fri: {
-    dayName: "Friday",
-    focus: "Deadlift & Posterior Chain Conditioning",
-    equipment: "barbell",
-    avatarDemo: "deadlift",
-    exercises: [
-      { id: "e17", name: "Conventional Barbell Deadlift", muscle: "Erectors, Hamstrings, Glutes", equipmentName: "barbell", sets: 4, reps: "8, 6, 4, 2", targetWeight: "110 kg", restSecs: 120, notes: "Push the floor away, hip extension at lockout" },
-      { id: "e18", name: "Romanian Deadlift (Dumbbells)", muscle: "Hamstring Deep Stretch", equipmentName: "dumbbells", sets: 3, reps: "10-12", targetWeight: "26 kg each", restSecs: 60, notes: "Hinge at hips, soft knees, feel hamstring tension" },
-      { id: "e19", name: "Seated Hamstring Leg Curls", muscle: "Biceps Femoris", equipmentName: "leg-press", sets: 3, reps: "12-15", targetWeight: "45 kg", restSecs: 45, notes: "Controlled negative, don't let weight slam" },
-      { id: "e20", name: "Hanging Leg Raises", muscle: "Core & Rectus Abdominis", equipmentName: "lat-pulldown", sets: 3, reps: "15", targetWeight: "Bodyweight", restSecs: 45, notes: "Roll pelvis upward, avoid swinging" },
-      { id: "e_abs_1", name: "Plank to Failure", muscle: "Core Stability", equipmentName: "dumbbells", sets: 3, reps: "Failure", targetWeight: "Bodyweight", restSecs: 60, notes: "Keep back flat, engage glutes" },
-    ],
-    meals: [
-      { time: "07:30 AM", name: "Breakfast", items: "Muesli with milk, pumpkin seeds, whey scoop, berries", calories: 530, protein: "35g", carbs: "65g", fats: "14g" },
-      { time: "11:00 AM", name: "Mid-Morning", items: "Boiled egg chaat with tomatoes and cilantro", calories: 180, protein: "13g", carbs: "8g", fats: "10g" },
-      { time: "01:30 PM", name: "Lunch", items: "Brown rice with grilled chicken or dal makhani (light)", calories: 590, protein: "40g", carbs: "70g", fats: "14g" },
-      { time: "05:00 PM", name: "Pre-Workout", items: "Black coffee + 2 dates + dark chocolate piece", calories: 160, protein: "2g", carbs: "32g", fats: "4g" },
-      { time: "07:30 PM", name: "Post-Workout", items: "Whey protein shake with creatine", calories: 150, protein: "27g", carbs: "4g", fats: "1g" },
-      { time: "09:00 PM", name: "Dinner", items: "Egg bhurji or sautéed paneer with 2 rotis and cucumber", calories: 470, protein: "32g", carbs: "46g", fats: "14g" },
-      { time: "10:30 PM", name: "Night Fuel", items: "Casein protein shake", calories: 120, protein: "25g", carbs: "3g", fats: "1g" },
-    ],
-  },
-  Sat: {
-    dayName: "Saturday",
-    focus: "Cardio HIIT & Functional Endurance",
-    equipment: "treadmill",
-    avatarDemo: "lunge",
-    exercises: [
-      { id: "e21", name: "Interval Treadmill Sprints", muscle: "Cardiovascular System", equipmentName: "treadmill", sets: 8, reps: "30s sprint / 60s walk", targetWeight: "Speed 14 km/h", restSecs: 60, notes: "All-out high-cadence sprint on 2% incline" },
-      { id: "e22", name: "Dumbbell Walking Lunges", muscle: "Legs & Core Dynamic Balance", equipmentName: "dumbbells", sets: 3, reps: "20 steps", targetWeight: "14 kg", restSecs: 45, notes: "Keep torso upright and brace" },
-      { id: "e23", name: "Push-ups to Failure", muscle: "Chest & Shoulders", equipmentName: "bench-press", sets: 3, reps: "To failure (~25)", targetWeight: "Bodyweight", restSecs: 45, notes: "Full range of motion, touch chest to floor" },
-      { id: "e24", name: "Cable Core Woodchops", muscle: "Obliques & Transverse Abdominis", equipmentName: "cable-machine", sets: 3, reps: "15 each side", targetWeight: "18 kg", restSecs: 30, notes: "Rotate with core, not arms" },
-      { id: "e_cardio_1", name: "Battle Ropes", muscle: "Full Body / Cardio", equipmentName: "cable-machine", sets: 4, reps: "45 seconds", targetWeight: "Heavy", restSecs: 45, notes: "Maintain high intensity" },
-    ],
-    meals: [
-      { time: "07:30 AM", name: "Breakfast", items: "Avocado toast with poached eggs and orange juice", calories: 500, protein: "22g", carbs: "52g", fats: "22g" },
-      { time: "11:00 AM", name: "Mid-Morning", items: "Protein bar or roasted almonds with green tea", calories: 210, protein: "15g", carbs: "18g", fats: "8g" },
-      { time: "01:30 PM", name: "Lunch", items: "Grilled chicken sandwich or veg paneer wrap in multigrain", calories: 560, protein: "36g", carbs: "60g", fats: "16g" },
-      { time: "05:00 PM", name: "Pre-Workout", items: "Hydration electrolytes + 1 banana", calories: 120, protein: "1g", carbs: "28g", fats: "0g" },
-      { time: "07:30 PM", name: "Post-Workout", items: "Whey protein with chilled almond milk", calories: 170, protein: "28g", carbs: "6g", fats: "3g" },
-      { time: "09:00 PM", name: "Dinner", items: "Clear chicken or mushroom soup, grilled salmon or paneer", calories: 440, protein: "38g", carbs: "20g", fats: "18g" },
-      { time: "10:30 PM", name: "Night Fuel", items: "A cup of Chamomile tea with 2 walnuts", calories: 60, protein: "2g", carbs: "4g", fats: "5g" },
-    ],
-  },
-  Sun: {
-    dayName: "Sunday",
-    focus: "Active Recovery & Mobility Flow",
-    equipment: "dumbbells",
-    avatarDemo: "bicep-curl",
-    exercises: [
-      { id: "e25", name: "Light Foam Rolling & Myofascial Release", muscle: "Full Body Fascia", equipmentName: "dumbbells", sets: 1, reps: "15 mins", targetWeight: "N/A", restSecs: 0, notes: "Target IT bands, lats, thoracic spine, calves" },
-      { id: "e26", name: "Dynamic Yoga Flow & Hip Openers", muscle: "Flexibility & Joint Capsule", equipmentName: "dumbbells", sets: 1, reps: "20 mins", targetWeight: "N/A", restSecs: 0, notes: "Pigeon pose, world greatest stretch, cat-cow" },
-      { id: "e27", name: "Zone 2 Incline Treadmill Walk", muscle: "Aerobic Recovery", equipmentName: "treadmill", sets: 1, reps: "30 mins", targetWeight: "Incline 6%, Speed 5.5", restSecs: 0, notes: "Heart rate between 115-130 bpm" },
-    ],
-    meals: [
-      { time: "08:30 AM", name: "Breakfast", items: "Whole grain pancakes with blueberries and honey", calories: 510, protein: "18g", carbs: "78g", fats: "12g" },
-      { time: "11:30 AM", name: "Mid-Morning", items: "Fresh watermelon juice with chia seeds", calories: 140, protein: "3g", carbs: "30g", fats: "1g" },
-      { time: "02:00 PM", name: "Lunch", items: "Home-style balanced thali (dal, sabzi, 2 rotis, curd, salad)", calories: 580, protein: "24g", carbs: "80g", fats: "16g" },
-      { time: "05:30 PM", name: "Snack", items: "Roasted makhana (foxnuts) with green tea", calories: 150, protein: "4g", carbs: "24g", fats: "3g" },
-      { time: "08:30 PM", name: "Dinner", items: "Vegetable khichdi with ghee or light grilled chicken salad", calories: 430, protein: "22g", carbs: "55g", fats: "12g" },
-    ],
-  },
-};
-
-const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  {
+    name: "Poonam Ghode",
+    role: "Female Fitness Consultant",
+    instagram: "https://www.instagram.com/pbwagh?stkn=ZnQyOWZ5dWk1OTZi"
+  }
+];
 
 const MemberDashboardPage = () => {
   const { user, userData, loading, updateUserData } = useAuth();
   const router = useRouter();
 
-  // Calendar State
-  const [selectedDay, setSelectedDay] = useState("Mon");
+  // Calendar State using uniform upper-case keys matching WEEKLY_ROUTINES
+  const [selectedDay, setSelectedDay] = useState("MON");
 
   // Active workout execution state
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(0);
@@ -244,6 +78,54 @@ const MemberDashboardPage = () => {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showTourModal, setShowTourModal] = useState(false);
   const [isWearableSyncing, setIsWearableSyncing] = useState(false);
+
+  // AI Nutrition State
+  const [aiNutrition, setAiNutrition] = useState<{
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    suggestion: string;
+  } | null>(null);
+
+  // Compute AI Recommendation if user properties exist
+  useEffect(() => {
+    if (userData) {
+      try {
+        const weight = userData.weight ? parseFloat(userData.weight) : 70;
+        const height = userData.height ? parseFloat(userData.height) : 175;
+        const age = userData.age ? parseInt(userData.age) : 25;
+        const gender = userData.gender === "girl" ? "girl" : "boy";
+
+        let goal: "weight-loss" | "muscle-gain" | "maintenance" = "maintenance";
+        if (userData.fitnessGoal?.toLowerCase().includes("loss") || userData.fitnessGoal?.toLowerCase().includes("cut")) {
+          goal = "weight-loss";
+        } else if (userData.fitnessGoal?.toLowerCase().includes("gain") || userData.fitnessGoal?.toLowerCase().includes("bulk")) {
+          goal = "muscle-gain";
+        }
+
+        const stats = {
+          weight,
+          height,
+          age,
+          gender,
+          goal,
+          activityLevel: "moderate" as const
+        };
+
+        const res = generateRecommendations(stats);
+        setAiNutrition({
+          calories: res.calories,
+          protein: res.macros.protein,
+          carbs: res.macros.carbs,
+          fats: res.macros.fats,
+          suggestion: res.suggestion
+        });
+      } catch (e) {
+        console.error("AI Recommender Error:", e);
+      }
+    }
+  }, [userData]);
 
   // Water Tracker State
   const [waterIntakeMl, setWaterIntakeMl] = useState(1750);
@@ -294,7 +176,7 @@ const MemberDashboardPage = () => {
     );
   }
 
-  const routine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES.Mon;
+  const routine = WEEKLY_ROUTINES[selectedDay] || WEEKLY_ROUTINES.MON;
 
   // Today's Date String
   const todayFormatted = new Intl.DateTimeFormat("en-US", {
@@ -309,7 +191,6 @@ const MemberDashboardPage = () => {
   // Calculate Progress
   const totalExercises = routine.exercises.length;
   const completedCount = Object.values(completedExercises).filter(Boolean).length;
-  const progressPercent = Math.round((completedCount / (totalExercises || 1)) * 100);
 
   const toggleExerciseComplete = (id: string) => {
     setCompletedExercises((prev) => ({
@@ -365,8 +246,8 @@ const MemberDashboardPage = () => {
     setIsWearableSyncing(true);
     setTimeout(() => {
       setIsWearableSyncing(false);
-      alert("Wearable Synced: Apple Watch / Google Fit data imported successfully.");
-    }, 2000);
+      alert("Wearable Sync Success: Data fully connected.");
+    }, 1500);
   };
 
   return (
@@ -392,9 +273,6 @@ const MemberDashboardPage = () => {
               </div>
               <div className="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center z-20" title="Active">
                 <ShieldCheck size={14} className="text-black" />
-              </div>
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-2xl md:rounded-3xl transition-all">
-                <User size={24} className="text-white" />
               </div>
             </div>
 
@@ -475,7 +353,7 @@ const MemberDashboardPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4 relative overflow-hidden group cursor-pointer" onClick={handleWearableSync}>
           <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-all">
-            <Watch size={24} className={isWearableSyncing ? "animate-spin" : ""} />
+            <Clock size={24} className={isWearableSyncing ? "animate-spin" : ""} />
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Wearable Sync</p>
@@ -489,7 +367,7 @@ const MemberDashboardPage = () => {
 
         <div className="glass rounded-3xl p-5 border border-white/10 flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400">
-            <TrendingUp size={24} />
+            <Flame size={24} />
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Est. Calories</p>
@@ -540,12 +418,12 @@ const MemberDashboardPage = () => {
 
           <div className="flex items-center gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar max-w-full">
             {daysOfWeek.map((day) => {
-              const isSelected = selectedDay === day;
+              const isSelected = selectedDay === day.key;
               return (
                 <button
-                  key={day}
+                  key={day.key}
                   onClick={() => {
-                    setSelectedDay(day);
+                    setSelectedDay(day.key);
                     setActiveExerciseIndex(0);
                   }}
                   className={`px-3 md:px-5 py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
@@ -554,7 +432,7 @@ const MemberDashboardPage = () => {
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {day}
+                  {day.label}
                 </button>
               );
             })}
@@ -707,16 +585,16 @@ const MemberDashboardPage = () => {
           {/* Interactive 3D Canvas */}
           <div className="rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
             {visualMode === "equipment" ? (
-              <GymEquipment3D equipment={activeExercise.equipmentName} />
+              <GymEquipment3D equipment={routine.equipment} />
             ) : (
-              <FitnessAvatar3D exercise={activeExercise.name} />
+              <FitnessAvatar3D exercise={routine.avatarDemo} />
             )}
           </div>
 
           {/* Advanced Rest Timer Component */}
           <WorkoutTimer
-            initialSeconds={activeExercise.restSecs || 60}
-            exerciseName={activeExercise.name}
+            initialSeconds={activeExercise?.restSecs || 60}
+            exerciseName={activeExercise?.name || ""}
             onNextExercise={handleNextExercise}
           />
         </div>
@@ -726,20 +604,55 @@ const MemberDashboardPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Daily Meal Schedule (8 cols) */}
         <div className="lg:col-span-8 glass rounded-[2.5rem] p-6 md:p-8 border border-white/10 shadow-2xl space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-2.5">
               <Apple className="text-primary w-6 h-6" />
               <div>
                 <h3 className="text-xl font-black uppercase italic tracking-wider">
-                  Personalized Nutrition Blueprint
+                  {aiNutrition ? "AI Custom Fuel Blueprint" : "Personalized Nutrition Blueprint"}
                 </h3>
                 <p className="text-xs text-gray-400">Assigned meal timings, macronutrients & clean fuel</p>
               </div>
             </div>
-            <span className="text-xs font-mono text-primary bg-primary/10 px-3 py-1.5 rounded-xl border border-primary/20">
-              Total: ~2,400 kcal
-            </span>
+
+            {aiNutrition && (
+              <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-2xl flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-primary">Daily Target</p>
+                  <p className="text-sm font-black font-mono text-white">{aiNutrition.calories} KCAL</p>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="grid grid-cols-3 gap-3 text-[9px] font-mono text-gray-400">
+                  <div className="text-center">
+                    <p className="font-black text-white">{aiNutrition.protein}g</p>
+                    <p>PRO</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-black text-white">{aiNutrition.carbs}g</p>
+                    <p>CHO</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-black text-white">{aiNutrition.fats}g</p>
+                    <p>FAT</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
+
+          {aiNutrition && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-xs font-medium flex items-start gap-3"
+            >
+              <Sparkles size={16} className="mt-0.5 flex-shrink-0 text-emerald-300" />
+              <p>
+                <strong className="uppercase font-black text-emerald-300 tracking-wider mr-2">AI Dietitian:</strong>
+                {aiNutrition.suggestion}
+              </p>
+            </motion.div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {routine.meals.map((meal, idx) => (
@@ -831,7 +744,39 @@ const MemberDashboardPage = () => {
         </div>
       </div>
 
-      {/* 6. Gate Pass QR Modal */}
+      {/* 6. Trainers Instagram Assets Synchronization */}
+      <div className="glass rounded-[2.5rem] p-6 md:p-8 border border-white/10 shadow-2xl space-y-6">
+        <div>
+          <h3 className="text-xl font-black uppercase italic tracking-wider flex items-center gap-2">
+            <Instagram className="text-primary" size={22} />
+            <span>Connect with Certified Coaches</span>
+          </h3>
+          <p className="text-xs text-gray-400 mt-1">
+            Follow your favorite instructors live on Instagram for advanced transformation motivation and tips.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {trainersData.map((trainer, i) => (
+            <div key={i} className="p-5 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-between group hover:border-primary/30 transition-all">
+              <div>
+                <h4 className="text-base font-black text-white">{trainer.name}</h4>
+                <p className="text-xs text-gray-400 font-medium mt-0.5">{trainer.role}</p>
+              </div>
+              <a
+                href={trainer.instagram}
+                target="_blank"
+                rel="noreferrer"
+                className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center hover:bg-primary hover:text-black transition-all"
+              >
+                <Instagram size={18} />
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Gate Pass QR Modal */}
       <AnimatePresence>
         {showQrModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
@@ -855,10 +800,6 @@ const MemberDashboardPage = () => {
               </div>
 
               <p className="text-xs font-mono font-bold text-primary">{userData?.memberId || "FT-WARRIOR"}</p>
-              <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mt-1">
-                {userData?.membershipPlan || userData?.membershipType || "Tribe Member"}
-              </p>
-
               <button
                 onClick={() => setShowQrModal(false)}
                 className="mt-6 w-full py-3 bg-white/10 hover:bg-white/15 rounded-xl text-xs font-black uppercase tracking-wider"
@@ -880,20 +821,17 @@ const MemberDashboardPage = () => {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="glass max-w-md w-full p-8 rounded-[3rem] border border-white/10 text-center relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]"
             >
-              <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl" />
-              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl" />
-
-              <h3 className="text-2xl font-black uppercase italic tracking-wider mb-2 relative z-10">
+              <h3 className="text-2xl font-black uppercase italic tracking-wider mb-2">
                 Identify Your Profile
               </h3>
-              <p className="text-xs text-gray-400 mb-8 uppercase tracking-[0.2em] relative z-10">Select your avatar archetype</p>
+              <p className="text-xs text-gray-400 mb-8 uppercase tracking-[0.2em]">Select your avatar archetype</p>
 
-              <div className="grid grid-cols-2 gap-6 mb-8 relative z-10">
+              <div className="grid grid-cols-2 gap-6 mb-8">
                 <button
                   onClick={() => handleGenderSelection("boy")}
                   className="group flex flex-col items-center gap-4 p-6 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-inner"
                 >
-                  <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-primary transition-all bg-black p-1">
+                  <div className="w-24 h-24 rounded-3xl overflow-hidden bg-black p-1">
                     <img src="/assets/boy.png" alt="Boy" className="w-full h-full object-cover rounded-2xl" />
                   </div>
                   <span className="font-black uppercase italic tracking-widest text-sm group-hover:text-primary transition-colors">Boy</span>
@@ -903,7 +841,7 @@ const MemberDashboardPage = () => {
                   onClick={() => handleGenderSelection("girl")}
                   className="group flex flex-col items-center gap-4 p-6 rounded-[2.5rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-inner"
                 >
-                  <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-transparent group-hover:border-primary transition-all bg-black p-1">
+                  <div className="w-24 h-24 rounded-3xl overflow-hidden bg-black p-1">
                     <img src="/assets/girl.png" alt="Girl" className="w-full h-full object-cover rounded-2xl" />
                   </div>
                   <span className="font-black uppercase italic tracking-widest text-sm group-hover:text-primary transition-colors">Girl</span>
@@ -912,7 +850,7 @@ const MemberDashboardPage = () => {
 
               <button
                 onClick={() => setShowGenderModal(false)}
-                className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all relative z-10"
+                className="w-full py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all"
               >
                 Cancel & Close
               </button>
@@ -921,7 +859,7 @@ const MemberDashboardPage = () => {
         )}
       </AnimatePresence>
 
-      {/* 7. Dedicated Full-Screen Workout Execution Arena */}
+      {/* Standalone Workout Player component */}
       <AnimatePresence>
         {isWorkoutStarted && (
           <WorkoutPlayer
@@ -936,8 +874,6 @@ const MemberDashboardPage = () => {
               });
               setCompletedExercises((prev) => ({ ...prev, ...updated }));
               setIsWorkoutStarted(false);
-              // Report to owner (Mock)
-              console.log("Workout complete, syncing to owner portal...");
             }}
           />
         )}
@@ -969,7 +905,6 @@ const MemberDashboardPage = () => {
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">Full Name</p>
                     <p className="text-sm font-bold text-white">{userData?.fullName || userData?.name}</p>
                   </div>
-                  <Settings size={18} className="text-gray-600" />
                 </div>
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
                   <div>
@@ -1011,7 +946,6 @@ const MemberDashboardPage = () => {
                 </button>
               </div>
 
-              {/* Video Walkthrough Player in Gallery */}
               <div className="mb-8 rounded-3xl overflow-hidden border border-white/10 bg-black/60 relative aspect-video max-h-[380px] w-full">
                 <video
                   src="/assets/Fitness-Temple.mp4"
@@ -1019,9 +953,6 @@ const MemberDashboardPage = () => {
                   controls
                   playsInline
                 ></video>
-                <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-wider text-primary pointer-events-none">
-                  Official Arena Walkthrough Video
-                </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -1065,7 +996,6 @@ const MemberDashboardPage = () => {
                 </button>
               </div>
 
-              {/* 3D Sketchfab Model */}
               <div className="flex-1 p-4 overflow-hidden flex flex-col">
                 <div className="sketchfab-embed-wrapper w-full flex-1 rounded-2xl overflow-hidden bg-black/50 border border-white/10 relative">
                   <iframe
@@ -1076,34 +1006,6 @@ const MemberDashboardPage = () => {
                     className="w-full h-full border-0"
                   ></iframe>
                 </div>
-                <p style={{ fontSize: "13px", fontWeight: "normal", margin: "8px 0 0", color: "#8A8A8A", textAlign: "center" }}>
-                  <a
-                    href="https://sketchfab.com/3d-models/gym-equipments-14a4a06784d9429085b19135af75db25"
-                    target="_blank"
-                    rel="nofollow noreferrer"
-                    style={{ fontWeight: "bold", color: "#1CAAD9" }}
-                  >
-                    Gym Equipments
-                  </a>{" "}
-                  by{" "}
-                  <a
-                    href="https://sketchfab.com/elvair"
-                    target="_blank"
-                    rel="nofollow noreferrer"
-                    style={{ fontWeight: "bold", color: "#1CAAD9" }}
-                  >
-                    Elvair Lima
-                  </a>{" "}
-                  on{" "}
-                  <a
-                    href="https://sketchfab.com/"
-                    target="_blank"
-                    rel="nofollow noreferrer"
-                    style={{ fontWeight: "bold", color: "#1CAAD9" }}
-                  >
-                    Sketchfab
-                  </a>
-                </p>
               </div>
             </motion.div>
           </div>
