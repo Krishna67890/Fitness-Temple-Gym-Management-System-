@@ -101,21 +101,33 @@ export const syncPendingReviews = async () => {
   const pending = getPendingSync();
   if (pending.length === 0) return;
 
-  console.log(`[RFA Sync] Attempting to push ${pending.length} reviews to cloud...`);
+  console.log(`[RFA Sync] Pushing to cloud... Project: ${db.app.options.projectId}`);
   const remaining: GymReview[] = [];
   let successCount = 0;
 
   for (const review of pending) {
     try {
       const { isPending, id, syncError, ...payload } = review;
-      await addDoc(collection(db, "reviews"), {
-        ...payload,
+
+      // EXPLICIT SYNC: Ensure we send a clean object to Firestore
+      const firestorePayload = {
+        userId: payload.userId || "guest",
+        userName: payload.userName || "Guest",
+        userPhotoURL: payload.userPhotoURL || "",
+        rating: payload.rating || 5,
+        comment: payload.comment || "",
+        accentColor: payload.accentColor || "#FFD700",
+        isGuest: !!payload.isGuest,
+        status: "published", // FORCE status for cross-device visibility
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
+      };
+
+      const docRef = await addDoc(collection(db, "reviews"), firestorePayload);
+      console.log(`[RFA Sync] SUCCESS: Created document ${docRef.id}`);
       successCount++;
     } catch (err: any) {
-      console.error("[RFA Sync] Cloud push failed for review:", review.userName, err.message);
+      console.error("[RFA Sync] FAILED:", review.userName, err.message);
       remaining.push({ ...review, syncError: err.message });
     }
   }
@@ -135,22 +147,35 @@ export const subscribeToPublishedReviews = (
 
   if (db) {
     try {
-      // REMOVED orderBy here to avoid index requirements that block cross-device viewing
-      const q = query(
-        collection(db, "reviews"),
-        where("status", "==", "published")
-      );
+      // AGGRESSIVE CROSS-DEVICE LISTENER: Fetch everything from "reviews" collection
+      const q = query(collection(db, "reviews"));
+      console.log(`[RFA Sync] Listener active for project: ${db.app.options.projectId}`);
 
       const unsub = onSnapshot(q, (snapshot) => {
         const remote: GymReview[] = [];
+        lastSnapshotTime = new Date().toLocaleTimeString();
+        lastSnapshotSize = snapshot.size;
+        lastError = null;
+
+        console.log(`[RFA Sync] Real-time Update: Found ${snapshot.size} documents in cloud.`);
+
         snapshot.forEach((docSnap) => {
-          remote.push({ id: docSnap.id, ...docSnap.data() } as GymReview);
+          const data = docSnap.data();
+          // NO FILTERING: Show all documents to ensure we see "other devices reviews"
+          // We only filter out explicitly hidden ones if they have a status
+          if (data.status !== "hidden") {
+            remote.push({ id: docSnap.id, ...data } as GymReview);
+          }
         });
+
+        console.log(`[RFA Sync] Distributing ${remote.length} valid reviews to UI.`);
         setLocalCache(remote);
         notifyListeners(remote);
+        // Sync any local pending reviews whenever the cloud changes
         syncPendingReviews();
       }, (error) => {
-        console.error("🛡️ Firestore Read Error:", error.message);
+        console.error("🛡️ Firestore Sync Error:", error.code, error.message);
+        lastError = error.message;
         notifyListeners(getLocalCache());
       });
 
@@ -159,6 +184,7 @@ export const subscribeToPublishedReviews = (
         activeListeners = activeListeners.filter(l => l !== callback);
       };
     } catch (err) {
+      console.error("[RFA Sync] Listener Initialization failed:", err);
       notifyListeners(getLocalCache());
     }
   }
@@ -219,7 +245,37 @@ export const getMemberReview = async (userId: string): Promise<GymReview | null>
   return null;
 };
 
+export const SYNC_ENGINE_VERSION = "6.6-XDEVICE-CORE";
 export const isCloudAvailable = () => !!db;
+
+export const getFirestoreProjectId = () => {
+  try {
+    return db?.app.options.projectId || "Not Connected";
+  } catch {
+    return "Error";
+  }
+};
+
+export const clearLocalReviewCache = () => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(LOCAL_KEY);
+    localStorage.removeItem(PENDING_KEY);
+    window.location.reload();
+  }
+};
+
+// Internal state for diagnostics
+let lastSnapshotTime: string = "Never";
+let lastSnapshotSize: number = 0;
+let lastError: string | null = null;
+
+export const getSyncDiagnostics = () => ({
+  lastUpdate: lastSnapshotTime,
+  cloudCount: lastSnapshotSize,
+  error: lastError,
+  projectId: getFirestoreProjectId(),
+  version: SYNC_ENGINE_VERSION
+});
 
 export const deleteReviewByOwner = async (reviewId: string) => {
   if (db) {

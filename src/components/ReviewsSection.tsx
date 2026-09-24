@@ -33,6 +33,8 @@ import {
   deleteReviewByOwner,
   syncPendingReviews,
   isCloudAvailable,
+  getFirestoreProjectId,
+  clearLocalReviewCache,
   GymReview,
 } from "@/lib/reviewsService";
 import Link from "next/link";
@@ -382,12 +384,28 @@ export const ReviewsSection = () => {
 
               <div className="flex items-center gap-2">
                  <Database size={14} className={isCloudAvailable() ? 'text-blue-400' : 'text-yellow-500'} />
-                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-                    Cloud: <span className={isCloudAvailable() ? 'text-blue-400' : 'text-yellow-500'}>
-                      {isCloudAvailable() ? 'Connected' : 'Config Missing'}
-                    </span>
-                 </span>
+                 <div className="flex flex-col">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 leading-none">
+                      Cloud: <span className={isCloudAvailable() ? 'text-blue-400' : 'text-yellow-500'}>
+                        {isCloudAvailable() ? 'Connected' : 'Config Missing'}
+                      </span>
+                   </span>
+                   <span className="text-[8px] font-bold text-gray-600 uppercase tracking-tighter mt-0.5">
+                     Project: {getFirestoreProjectId()}
+                   </span>
+                 </div>
               </div>
+
+              <div className="w-px h-4 bg-white/10 hidden lg:block" />
+
+              <button
+                onClick={clearLocalReviewCache}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-red-500/10 hover:text-red-400 border border-white/10 transition-all text-gray-500"
+                title="Clear local cache and re-fetch from Cloud"
+              >
+                <Trash2 size={12} />
+                <span className="text-[9px] font-bold uppercase">Reset Cache</span>
+              </button>
 
               {reviews.some(r => r.isPending) && (
                 <>
