@@ -18,6 +18,11 @@ import {
   ShieldCheck,
   Share2,
   ExternalLink,
+  Wifi,
+  WifiOff,
+  Database,
+  RefreshCcw,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -26,6 +31,8 @@ import {
   getMemberReview,
   saveMemberReview,
   deleteReviewByOwner,
+  syncPendingReviews,
+  isCloudAvailable,
   GymReview,
 } from "@/lib/reviewsService";
 import Link from "next/link";
@@ -57,6 +64,34 @@ export const ReviewsSection = () => {
 
   // Role constraint notice for trainers/owners
   const [roleNotice, setRoleNotice] = useState<string | null>(null);
+
+  // Live Sync & Connectivity State
+  const [isOnline, setIsOnline] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleOnline = () => setIsOnline(true);
+      const handleOffline = () => setIsOnline(false);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      setIsOnline(navigator.onLine);
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []);
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    try {
+      await syncPendingReviews();
+    } catch (err) {
+      console.error("Manual sync failed", err);
+    }
+    setIsSyncing(false);
+  };
 
   // Active Carousel Index
   const [carouselIndex, setCarouselIndex] = useState(0);
@@ -318,6 +353,86 @@ export const ReviewsSection = () => {
           </div>
         </div>
 
+        {/* Live Cloud Connectivity & Sync Status Banner */}
+        <div className="mb-12 flex flex-col items-center">
+           <motion.div
+             initial={{ opacity: 0, y: 10 }}
+             animate={{ opacity: 1, y: 0 }}
+             className="glass px-6 py-3 rounded-2xl border border-white/5 flex flex-wrap items-center justify-center gap-4 md:gap-8 shadow-xl"
+           >
+              <div className="flex items-center gap-2">
+                 {isOnline ? (
+                   <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        Network: <span className="text-green-400">Online</span>
+                      </span>
+                   </div>
+                 ) : (
+                   <div className="flex items-center gap-2">
+                      <WifiOff size={14} className="text-red-500" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
+                        Network: Offline
+                      </span>
+                   </div>
+                 )}
+              </div>
+
+              <div className="w-px h-4 bg-white/10 hidden md:block" />
+
+              <div className="flex items-center gap-2">
+                 <Database size={14} className={isCloudAvailable() ? 'text-blue-400' : 'text-yellow-500'} />
+                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Cloud: <span className={isCloudAvailable() ? 'text-blue-400' : 'text-yellow-500'}>
+                      {isCloudAvailable() ? 'Connected' : 'Config Missing'}
+                    </span>
+                 </span>
+              </div>
+
+              {reviews.some(r => r.isPending) && (
+                <>
+                  <div className="w-px h-4 bg-white/10 hidden md:block" />
+                  <div className="flex items-center gap-3">
+                    <Activity size={14} className="text-primary animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                      {reviews.filter(r => r.isPending).length} Sync Pending
+                    </span>
+                    <button
+                      onClick={handleManualSync}
+                      disabled={isSyncing || !isOnline}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all disabled:opacity-50"
+                    >
+                      <RefreshCcw size={12} className={isSyncing ? 'animate-spin' : ''} />
+                      <span className="text-[9px] font-bold uppercase tracking-tighter">Sync Now</span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {reviews.some(r => r.syncError) && (
+                <>
+                  <div className="w-px h-4 bg-white/10 hidden md:block" />
+                  <div className="flex items-center gap-2 text-red-400 group relative">
+                    <AlertCircle size={14} />
+                    <span className="text-[9px] font-black uppercase tracking-widest cursor-help">
+                      Sync Error
+                    </span>
+                    {/* Tooltip for first error */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-red-950 border border-red-500/30 rounded-lg text-[8px] font-bold text-red-200 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl">
+                      {reviews.find(r => r.syncError)?.syncError || "Check Firestore permissions"}
+                    </div>
+                  </div>
+                </>
+              )}
+           </motion.div>
+
+           {!isCloudAvailable() && (
+             <p className="mt-4 text-[10px] font-bold text-yellow-500/70 uppercase tracking-[0.2em] text-center max-w-xl px-4">
+               ⚠️ Cloud environment variables (Vercel) are missing or invalid. Reviews created here will be stored locally and won't be visible to other members.
+             </p>
+           )}
+        </div>
+
         {/* 2. Logged-in Member's Active Review Card (If Exists) */}
         {myReview && (
           <motion.div
@@ -331,6 +446,12 @@ export const ReviewsSection = () => {
                 <span className="text-[11px] font-black uppercase tracking-widest text-primary">
                   Your Published Member Review
                 </span>
+                {myReview.isPending && (
+                  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[8px] font-black ml-2 animate-pulse ${myReview.syncError ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-primary/10 border-primary/30 text-primary'}`}>
+                    {myReview.syncError ? <AlertCircle size={8} /> : <RefreshCcw size={8} className="animate-spin" />}
+                    {myReview.syncError ? 'SYNC ERROR' : 'SYNCING...'}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -514,6 +635,15 @@ export const ReviewsSection = () => {
                   className="absolute -top-24 -right-24 w-48 h-48 blur-[80px] rounded-full pointer-events-none opacity-20"
                   style={{ backgroundColor: review.accentColor }}
                 />
+
+                {review.isPending && (
+                  <div className={`absolute top-6 right-6 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-lg border shadow-lg ${review.syncError ? 'bg-red-500/10 border-red-500/30 text-red-400' : 'bg-primary/10 border-primary/30 text-primary'}`}>
+                     {review.syncError ? <AlertCircle size={10} /> : <RefreshCcw size={10} className="animate-spin" />}
+                     <span className="text-[8px] font-black uppercase tracking-tighter">
+                       {review.syncError ? 'Sync Failed' : 'Sync Pending'}
+                     </span>
+                  </div>
+                )}
 
                 <div>
                   <div className="flex items-center justify-between mb-4">

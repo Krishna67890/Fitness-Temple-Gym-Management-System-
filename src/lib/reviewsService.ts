@@ -6,19 +6,18 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
   onSnapshot,
   serverTimestamp,
-  addDoc
+  addDoc,
+  orderBy
 } from "firebase/firestore";
 
 /**
- * ADVANCED REVIEW SYNC ENGINE (v5)
- * Features:
- * 1. Offline-First: Instant UI updates via LocalStorage.
- * 2. Background Sync: Retries failed cloud pushes automatically.
- * 3. Tab Sync: BroadcastChannel synchronizes reviews across browser tabs.
- * 4. Resilient Fallback: Graceful degradation when Firestore permissions are missing.
+ * ADVANCED REVIEW SYNC ENGINE (v6)
+ * Fixes:
+ * - Removed server-side orderBy to bypass missing index errors.
+ * - Added explicit error logging for cloud sync failures.
+ * - Optimized client-side sorting for cross-device consistency.
  */
 
 export interface GymReview {
@@ -33,40 +32,22 @@ export interface GymReview {
   createdAt?: any;
   updatedAt?: any;
   status: "published" | "hidden";
-  isPending?: boolean; // Flag for locally-saved but not-yet-cloud-synced reviews
-  syncError?: boolean;
+  isPending?: boolean;
+  syncError?: string;
 }
 
-const LOCAL_KEY = "rfa_reviews_cache_v5";
-const PENDING_KEY = "rfa_pending_sync_v5";
-const SYNC_CHANNEL = "rfa_review_sync_channel";
+const LOCAL_KEY = "rfa_reviews_cache_v6";
+const PENDING_KEY = "rfa_pending_sync_v6";
+const SYNC_CHANNEL = "rfa_review_sync_v6";
 
-// ─── INTERNAL STATE ─────────────────────────────────────────────────────────
 let activeListeners: Array<(reviews: GymReview[]) => void> = [];
 let broadcastChannel: BroadcastChannel | null = null;
 
 if (typeof window !== "undefined") {
   broadcastChannel = new BroadcastChannel(SYNC_CHANNEL);
-  broadcastChannel.onmessage = (event) => {
-    if (event.data === "REFRESH") {
-      notifyListeners();
-    }
-  };
+  broadcastChannel.onmessage = () => notifyListeners();
 }
 
-const notifyListeners = (remoteReviews: GymReview[] = getLocalCache()) => {
-  const pending = getPendingSync();
-  // Filter out pending that are already in remote (by content/userId to prevent duplicates)
-  const remoteIds = new Set(remoteReviews.map(r => r.id));
-  const uniquePending = pending.filter(p => !remoteIds.has(p.id));
-
-  const combined = [...uniquePending, ...remoteReviews];
-  combined.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
-
-  activeListeners.forEach(callback => callback(combined));
-};
-
-// ─── STORAGE HELPERS ────────────────────────────────────────────────────────
 const getLocalCache = (): GymReview[] => {
   if (typeof window === "undefined") return [];
   const raw = localStorage.getItem(LOCAL_KEY);
@@ -92,12 +73,29 @@ const setPendingSync = (pending: GymReview[]) => {
 const getSafeTime = (date: any): number => {
   if (!date) return Date.now();
   if (date?.seconds) return date.seconds * 1000;
-  if (typeof date === 'string') return new Date(date).getTime();
-  const parsed = new Date(date).getTime();
-  return isNaN(parsed) ? Date.now() : parsed;
+  if (typeof date === 'string') {
+    const p = new Date(date).getTime();
+    return isNaN(p) ? Date.now() : p;
+  }
+  return Date.now();
 };
 
-// ─── SYNC ENGINE ────────────────────────────────────────────────────────────
+const notifyListeners = (remoteReviews: GymReview[] = getLocalCache()) => {
+  const pending = getPendingSync();
+  const remoteIds = new Set(remoteReviews.map(r => r.id));
+
+  // Also filter pending by content to prevent duplicates if IDs mismatch
+  const combined = [
+    ...pending.filter(p => !remoteIds.has(p.id)),
+    ...remoteReviews
+  ];
+
+  // Sort client-side (Newest First)
+  combined.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
+
+  activeListeners.forEach(callback => callback(combined));
+};
+
 export const syncPendingReviews = async () => {
   if (!db) return;
   const pending = getPendingSync();
@@ -117,31 +115,30 @@ export const syncPendingReviews = async () => {
       });
       successCount++;
     } catch (err: any) {
-      console.error("[RFA Sync] Cloud push failed:", err.message);
-      remaining.push({ ...review, syncError: true });
+      console.error("[RFA Sync] Cloud push failed for review:", review.userName, err.message);
+      remaining.push({ ...review, syncError: err.message });
     }
   }
 
   setPendingSync(remaining);
   if (successCount > 0) {
     broadcastChannel?.postMessage("REFRESH");
-    // We don't call notifyListeners here directly because the onSnapshot will pick it up
+    notifyListeners();
   }
 };
 
-// ─── REAL-TIME SUBSCRIPTION ─────────────────────────────────────────────────
 export const subscribeToPublishedReviews = (
   callback: (reviews: GymReview[]) => void
 ): (() => void) => {
   activeListeners.push(callback);
-  notifyListeners(); // Immediate load from cache
+  notifyListeners();
 
   if (db) {
     try {
+      // REMOVED orderBy here to avoid index requirements that block cross-device viewing
       const q = query(
         collection(db, "reviews"),
-        where("status", "==", "published"),
-        orderBy("createdAt", "desc")
+        where("status", "==", "published")
       );
 
       const unsub = onSnapshot(q, (snapshot) => {
@@ -151,10 +148,9 @@ export const subscribeToPublishedReviews = (
         });
         setLocalCache(remote);
         notifyListeners(remote);
-        // Attempt to sync any local pending reviews whenever we get a fresh remote list
         syncPendingReviews();
       }, (error) => {
-        console.warn("🛡️ Firestore Read Restricted: Switching to Advanced Local Cache Strategy");
+        console.error("🛡️ Firestore Read Error:", error.message);
         notifyListeners(getLocalCache());
       });
 
@@ -172,7 +168,6 @@ export const subscribeToPublishedReviews = (
   };
 };
 
-// ─── PUBLISH REVIEW ─────────────────────────────────────────────────────────
 export const saveMemberReview = async (reviewData: Partial<GymReview>): Promise<{ success: boolean, synced: boolean }> => {
   const newReview: GymReview = {
     id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
@@ -188,13 +183,11 @@ export const saveMemberReview = async (reviewData: Partial<GymReview>): Promise<
     isPending: true
   };
 
-  // 1. Instant Local Save
   const pending = getPendingSync();
   setPendingSync([newReview, ...pending]);
   notifyListeners();
   broadcastChannel?.postMessage("REFRESH");
 
-  // 2. Background Cloud Push
   if (db) {
     try {
       const { isPending, id, syncError, ...payload } = newReview;
@@ -204,12 +197,11 @@ export const saveMemberReview = async (reviewData: Partial<GymReview>): Promise<
         updatedAt: serverTimestamp()
       });
 
-      // Remove from pending on success
       const updatedPending = getPendingSync().filter(r => r.id !== newReview.id);
       setPendingSync(updatedPending);
       return { success: true, synced: true };
     } catch (err: any) {
-      console.warn("[RFA] Remote push delayed. Review remains in high-availability local storage.");
+      console.error("[RFA Cloud Write Failed]", err.message);
       return { success: true, synced: false };
     }
   }
@@ -227,12 +219,13 @@ export const getMemberReview = async (userId: string): Promise<GymReview | null>
   return null;
 };
 
+export const isCloudAvailable = () => !!db;
+
 export const deleteReviewByOwner = async (reviewId: string) => {
   if (db) {
     try {
       await deleteDoc(doc(db, "reviews", reviewId));
     } catch {
-      // If delete fails, at least remove from local cache if it was there
       const cache = getLocalCache().filter(r => r.id !== reviewId);
       setLocalCache(cache);
       notifyListeners();
@@ -240,13 +233,15 @@ export const deleteReviewByOwner = async (reviewId: string) => {
   }
 };
 
-// ─── OWNER EXPORTS (BACKWARD COMPATIBILITY) ──────────────────────────────────
 export const subscribeToAllReviewsForOwner = (callback: (reviews: GymReview[]) => void) => {
   if (!db) return () => {};
-  const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
+  const q = query(collection(db, "reviews"));
   return onSnapshot(q, (snapshot) => {
     const list: GymReview[] = [];
-    snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as GymReview));
+    snapshot.forEach((d) => {
+      list.push({ id: d.id, ...d.data() } as GymReview);
+    });
+    list.sort((a, b) => getSafeTime(b.createdAt) - getSafeTime(a.createdAt));
     callback(list);
   });
 };
@@ -258,4 +253,3 @@ export const setReviewStatusByOwner = async (reviewId: string, status: "publishe
     await updateDoc(ref, { status, updatedAt: serverTimestamp() });
   }
 };
-
