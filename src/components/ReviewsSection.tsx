@@ -25,7 +25,7 @@ import {
   subscribeToPublishedReviews,
   getMemberReview,
   saveMemberReview,
-  deleteMemberReview,
+  deleteReviewByOwner,
   GymReview,
 } from "@/lib/reviewsService";
 import Link from "next/link";
@@ -139,7 +139,7 @@ export const ReviewsSection = () => {
 
     if (confirm("Are you sure you want to delete your review? Note: Only administrators have final deletion authority in some cases.")) {
       try {
-        await deleteMemberReview(currentUid);
+        await deleteReviewByOwner(myReview.id);
         setMyReview(null);
       } catch (err: any) {
         alert("Failed to delete review: " + (err.message || "Unknown error"));

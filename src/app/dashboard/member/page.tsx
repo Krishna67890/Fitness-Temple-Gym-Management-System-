@@ -104,13 +104,20 @@ const MemberDashboardPage = () => {
           goal = "muscle-gain";
         }
 
-        const stats = {
+        const stats: {
+          weight: number;
+          height: number;
+          age: number;
+          gender: "boy" | "girl";
+          goal: "weight-loss" | "muscle-gain" | "maintenance";
+          activityLevel: "sedentary" | "moderate" | "active";
+        } = {
           weight,
           height,
           age,
           gender,
           goal,
-          activityLevel: "moderate" as const
+          activityLevel: "moderate"
         };
 
         const res = generateRecommendations(stats);

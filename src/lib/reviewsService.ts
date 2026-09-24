@@ -239,3 +239,23 @@ export const deleteReviewByOwner = async (reviewId: string) => {
     }
   }
 };
+
+// ─── OWNER EXPORTS (BACKWARD COMPATIBILITY) ──────────────────────────────────
+export const subscribeToAllReviewsForOwner = (callback: (reviews: GymReview[]) => void) => {
+  if (!db) return () => {};
+  const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
+  return onSnapshot(q, (snapshot) => {
+    const list: GymReview[] = [];
+    snapshot.forEach((d) => list.push({ id: d.id, ...d.data() } as GymReview));
+    callback(list);
+  });
+};
+
+export const setReviewStatusByOwner = async (reviewId: string, status: "published" | "hidden") => {
+  if (db) {
+    const ref = doc(db, "reviews", reviewId);
+    const { updateDoc } = await import("firebase/firestore");
+    await updateDoc(ref, { status, updatedAt: serverTimestamp() });
+  }
+};
+
