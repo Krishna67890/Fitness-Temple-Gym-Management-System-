@@ -135,7 +135,7 @@ export const ReviewsSection = () => {
   // Handle Delete existing review
   const handleDeleteMyReview = async () => {
     const currentUid = user?.uid || userData?.uid;
-    if (!currentUid) return;
+    if (!currentUid || !myReview) return;
 
     if (confirm("Are you sure you want to delete your review? Note: Only administrators have final deletion authority in some cases.")) {
       try {
