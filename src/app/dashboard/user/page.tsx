@@ -73,10 +73,18 @@ const UserDashboard = () => {
 
   useEffect(() => {
     if (memberData) {
-      const stats = {
+      const stats: {
+        weight: number;
+        height: number;
+        age: number;
+        gender: "boy" | "girl" | undefined;
+        goal: "weight-loss" | "muscle-gain" | "maintenance";
+        activityLevel: "sedentary" | "moderate" | "active";
+      } = {
         weight: parseFloat(memberData.weight || "70"),
         height: parseFloat(memberData.height || "170"),
         age: parseFloat(memberData.age || "25"),
+        gender: undefined,
         goal: (memberData.fitnessGoal === "muscle-gain" || memberData.fitnessGoal === "weight-loss")
               ? (memberData.fitnessGoal as "muscle-gain" | "weight-loss")
               : ("maintenance" as const),
