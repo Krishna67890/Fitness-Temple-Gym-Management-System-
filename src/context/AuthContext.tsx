@@ -14,6 +14,15 @@ import {
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  GYM_NAME,
+  OWNER_NAME,
+  OWNER_PHONE,
+  OWNER_EMAIL,
+  TRAINERS,
+  DEFAULT_AVATARS,
+  PRICING
+} from "@/lib/constants";
 
 export type UserRole = "member" | "trainer" | "owner";
 
@@ -81,22 +90,22 @@ export const getCleanEmailName = (email?: string | null): string => {
 const DEMO_PROFILES: Record<string, UserProfile> = {
   owner: {
     uid: "local_owner_001",
-    name: "Sanket Sir (Owner)",
-    email: "sanket@fitnesstemple.com",
+    name: `${OWNER_NAME} (Owner)`,
+    email: OWNER_EMAIL,
     role: "owner",
-    phone: "+91 96652 31230",
+    phone: OWNER_PHONE,
     membershipStatus: "active",
     fitnessGoal: "Gym Director & Founder",
-    photoURL: "/assets/FitnessTempleGym.png",
-    profileImage: "/assets/FitnessTempleGym.png",
+    photoURL: DEFAULT_AVATARS.GYM,
+    profileImage: DEFAULT_AVATARS.GYM,
   },
   trainer_suraj: {
     uid: "local_trainer_suraj",
-    name: "Suraj Sir",
-    email: "suraj@fitnesstemple.com",
+    name: TRAINERS.SURAJ.name,
+    email: TRAINERS.SURAJ.email,
     role: "trainer",
-    phone: "+91 91234 56789",
-    trainerId: "trainer_suraj",
+    phone: TRAINERS.SURAJ.phone,
+    trainerId: TRAINERS.SURAJ.id,
     membershipStatus: "active",
     fitnessGoal: "Senior Strength & Conditioning Coach",
     photoURL: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?w=200&auto=format&fit=crop&q=80",
@@ -104,11 +113,11 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
   },
   trainer_bhavesh: {
     uid: "local_trainer_bhavesh",
-    name: "Bhavesh Sir",
-    email: "Bhavesh@ftnesstemple.com",
+    name: TRAINERS.BHAVESH.name,
+    email: TRAINERS.BHAVESH.email,
     role: "trainer",
-    phone: "+91 93456 78901",
-    trainerId: "trainer_bhavesh",
+    phone: TRAINERS.BHAVESH.phone,
+    trainerId: TRAINERS.BHAVESH.id,
     membershipStatus: "active",
     fitnessGoal: "Transformation Specialist",
     photoURL: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=200&auto=format&fit=crop&q=80",
@@ -120,8 +129,8 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
     email: "krishna@fitnesstemple.com",
     role: "member",
     phone: "+91 98765 43210",
-    trainerId: "trainer_suraj",
-    trainerName: "Suraj Sir",
+    trainerId: TRAINERS.SURAJ.id,
+    trainerName: TRAINERS.SURAJ.name,
     membershipStatus: "active",
     membershipPlan: "Gold Annual Elite",
     membershipExpiry: "2026-12-31",
@@ -136,12 +145,14 @@ const DEMO_PROFILES: Record<string, UserProfile> = {
   },
 };
 
-// Default passwords for local/demo accounts
+// Default passwords for local/demo accounts (Handled via portal route or .env in production)
+const LOCAL_PASSWORD_PLACEHOLDER = "********";
+
 const LOCAL_CREDENTIALS: Record<string, string> = {
-  "sanket@fitnesstemple.com": "Sanket@123",
-  "suraj@fitnesstemple.com": "Suraj@123",
-  "bhavesh@ftnesstemple.com": "bhavesh@123",
-  "krishna@fitnesstemple.com": "member123",
+  [OWNER_EMAIL]: LOCAL_PASSWORD_PLACEHOLDER,
+  [TRAINERS.SURAJ.email]: LOCAL_PASSWORD_PLACEHOLDER,
+  [TRAINERS.BHAVESH.email]: LOCAL_PASSWORD_PLACEHOLDER,
+  "krishna@fitnesstemple.com": LOCAL_PASSWORD_PLACEHOLDER,
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -373,27 +384,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // 2. Check hardcoded Local Credentials for staff/demo accounts
-    if (LOCAL_CREDENTIALS[cleanEmail] && LOCAL_CREDENTIALS[cleanEmail] === pass) {
-      let matchedProfile = DEMO_PROFILES.member;
-      if (cleanEmail === "sanket@fitnesstemple.com") matchedProfile = DEMO_PROFILES.owner;
-      else if (cleanEmail === "suraj@fitnesstemple.com") matchedProfile = DEMO_PROFILES.trainer_suraj;
-      else if (cleanEmail === "bhavesh@ftnesstemple.com") matchedProfile = DEMO_PROFILES.trainer_bhavesh;
+    const isLocalDemoAccount = [OWNER_EMAIL, TRAINERS.SURAJ.email, TRAINERS.BHAVESH.email, "krishna@fitnesstemple.com"].includes(cleanEmail);
 
-      setUserData(matchedProfile);
-      setIsDemoMode(true);
-      localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
+    if (isLocalDemoAccount) {
+      try {
+        const portalType = cleanEmail === OWNER_EMAIL ? 'owner' :
+                          (cleanEmail.includes('suraj') || cleanEmail.includes('bhavesh')) ? 'trainer' : 'member';
 
-      const session = {
-        uid: matchedProfile.uid,
-        role: matchedProfile.role || 'member',
-        name: matchedProfile.name,
-        authenticated: true,
-        loginAt: Date.now()
-      };
-      setPortalSession(session);
-      localStorage.setItem("ft_portal_session", JSON.stringify(session));
+        const response = await fetch('/api/auth/portal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: cleanEmail, password: pass, portalType }),
+        });
 
-      return matchedProfile;
+        const data = await response.json();
+
+        if (data.success) {
+          let matchedProfile = DEMO_PROFILES.member;
+          if (cleanEmail === OWNER_EMAIL) matchedProfile = DEMO_PROFILES.owner;
+          else if (cleanEmail === TRAINERS.SURAJ.email) matchedProfile = DEMO_PROFILES.trainer_suraj;
+          else if (cleanEmail === TRAINERS.BHAVESH.email) matchedProfile = DEMO_PROFILES.trainer_bhavesh;
+          else if (cleanEmail === "krishna@fitnesstemple.com") matchedProfile = DEMO_PROFILES.member;
+
+          setUserData(matchedProfile);
+          setIsDemoMode(true);
+          localStorage.setItem("ft_demo_role", matchedProfile.trainerId ? matchedProfile.trainerId : matchedProfile.role);
+
+          const session = {
+            uid: matchedProfile.uid,
+            role: matchedProfile.role || 'member',
+            name: matchedProfile.name,
+            authenticated: true,
+            loginAt: Date.now()
+          };
+          setPortalSession(session);
+          localStorage.setItem("ft_portal_session", JSON.stringify(session));
+
+          return matchedProfile;
+        }
+      } catch (error) {
+        console.error("Local account verification failed", error);
+      }
     }
 
     // Check if live Firebase is ready
@@ -596,7 +627,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         const userEmail = result.user.email?.toLowerCase() || "";
         const isDev = userEmail.includes("krishna") || userEmail.includes("patil") || userEmail.includes("sanket");
-        const defaultAvatar = result.user.photoURL || "/assets/boy.png";
+        const defaultAvatar = result.user.photoURL || DEFAULT_AVATARS.BOY;
         const emailName = getCleanEmailName(userEmail);
 
         const googleDisplayName = result.user.displayName;
@@ -608,11 +639,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           uid: result.user.uid,
           name: isDev ? "Krishna Patil" : finalDisplayName,
           email: userEmail,
-          photoURL: isDev ? "/assets/boy.png" : defaultAvatar,
-          profileImage: isDev ? "/assets/boy.png" : defaultAvatar,
+          photoURL: isDev ? DEFAULT_AVATARS.BOY : defaultAvatar,
+          profileImage: isDev ? DEFAULT_AVATARS.BOY : defaultAvatar,
           role: isDev ? "owner" : "member",
-          trainerId: "trainer_suraj",
-          trainerName: "Suraj Sir",
+          trainerId: TRAINERS.SURAJ.id,
+          trainerName: TRAINERS.SURAJ.name,
           membershipStatus: "active",
           membershipPlan: isDev ? "Developer Access" : "Standard Member",
           membershipExpiry: "2026-12-31",
@@ -702,15 +733,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mobile: cleanPhone,
       email: syntheticEmail,
       role: "member",
-      trainerId: "trainer_suraj",
-      trainerName: "Suraj Sir",
+      trainerId: TRAINERS.SURAJ.id,
+      trainerName: TRAINERS.SURAJ.name,
       membershipStatus: "active",
       membershipPlan: "Standard Annual",
       membershipExpiry: "2027-01-01",
       fitnessGoal: "General Fitness",
       memberId: memberId,
-      photoURL: "/assets/boy.png",
-      profileImage: "/assets/boy.png",
+      photoURL: DEFAULT_AVATARS.BOY,
+      profileImage: DEFAULT_AVATARS.BOY,
       createdAt: new Date().toISOString(),
     };
 

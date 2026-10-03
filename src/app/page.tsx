@@ -7,7 +7,6 @@ import MembershipPreview from "@/components/MembershipPreview";
 import TrainersPreview from "@/components/TrainersPreview";
 import EquipmentSection from "@/components/EquipmentSection";
 import BMICalculator from "@/components/BMICalculator";
-import GalleryPreview from "@/components/GalleryPreview";
 import ReviewsSection from "@/components/ReviewsSection";
 import WorkoutBuilder from "@/components/WorkoutBuilder";
 import TrialBooking from "@/components/TrialBooking";

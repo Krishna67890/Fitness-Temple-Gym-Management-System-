@@ -5,6 +5,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, ShieldCheck, Dumbbell, Sp
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, UserRole, getCleanEmailName } from "@/context/AuthContext";
+import { DEFAULT_AVATARS, GYM_NAME } from "@/lib/constants";
 import { gsap } from "gsap";
 
 const LoginPage = () => {
@@ -251,7 +252,7 @@ const LoginPage = () => {
   const handleStartDevWorkout = async () => {
     setDemoRole('member');
 
-    const avatarPath = devGender === 'boy' ? "/assets/boy.png" : "/assets/girl.png";
+    const avatarPath = devGender === 'boy' ? DEFAULT_AVATARS.BOY : DEFAULT_AVATARS.GIRL;
 
     // Update profile data in state immediately
     await updateUserData({
@@ -327,13 +328,13 @@ const LoginPage = () => {
                 <div className="relative w-16 h-16 mb-2 transition-transform duration-300 group-hover:scale-105">
                   <div className="absolute inset-0 bg-primary/20 rounded-full blur-md" />
                   <img
-                    src="/assets/FitnessTempleGym.png"
-                    alt="Fitness Temple Logo"
+                    src={DEFAULT_AVATARS.GYM}
+                    alt={`${GYM_NAME} Logo`}
                     className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,215,0,0.5)] relative z-10"
                   />
                 </div>
                 <span className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic">
-                  FITNESS TEMPLE <span className="text-primary">PORTAL</span>
+                  {GYM_NAME.split(' ').slice(0, 2).join(' ')} <span className="text-primary">PORTAL</span>
                 </span>
               </Link>
               <p className="text-gray-400 text-xs font-medium tracking-wide">
@@ -844,7 +845,7 @@ const LoginPage = () => {
                         : 'bg-white/5 border-white/10 text-gray-500 grayscale hover:grayscale-0'
                       }`}
                     >
-                      <img src="/assets/boy.png" alt="Boy" className="w-12 h-12 object-contain" />
+                      <img src={DEFAULT_AVATARS.BOY} alt="Boy" className="w-12 h-12 object-contain" />
                       <span className="text-[10px] font-black uppercase tracking-widest">Boy</span>
                     </button>
                     <button
@@ -855,7 +856,7 @@ const LoginPage = () => {
                         : 'bg-white/5 border-white/10 text-gray-500 grayscale hover:grayscale-0'
                       }`}
                     >
-                      <img src="/assets/girl.png" alt="Girl" className="w-12 h-12 object-contain" />
+                      <img src={DEFAULT_AVATARS.GIRL} alt="Girl" className="w-12 h-12 object-contain" />
                       <span className="text-[10px] font-black uppercase tracking-widest">Girl</span>
                     </button>
                   </div>

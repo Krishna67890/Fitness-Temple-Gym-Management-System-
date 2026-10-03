@@ -16,10 +16,10 @@ const PAGE_GREETINGS: Record<string, string> = {
   "/about-us": "Welcome to the About page. Here, you'll learn about our legacy and our expert coaches, Suraj Sir and Sanket Sir. You can read about our philosophy of building warriors. Would you like to know more about our trainers' specialties?",
   "/programs": "This is our Training Programs hub. You can find detailed plans for Bodybuilding, Fat Loss, and Strength & Conditioning. Click on any program to see the specific workout routines. Which goal are you chasing?",
   "/trainers": "Meet our professional coaches here. Coach Suraj is our Bodybuilding expert, and Coach Sanket specializes in Strength and Conditioning. You can see their certifications and success stories. Need help choosing a personal trainer?",
-  "/membership": "You're at the Membership center. We have plans ranging from Monthly at 700 rupees to our best-value Annual plan at 6000 rupees. You can enroll in any plan instantly via WhatsApp. Which plan interests you?",
+  "/membership": "You're at the Membership center. We have plans ranging from Monthly at 800 rupees to our best-value Annual plan at 7000 rupees. You can enroll in any plan instantly via WhatsApp. Which plan interests you?",
   "/gallery": "Welcome to our Visual Gallery. You can view high-definition photos of our equipment, member transformations, and facility walkthroughs. Take a look at the hard work our members put in!",
   "/reviews": "This is our Live Review Portal. Here, you can read honest feedback from our members. You can also publish your own review instantly—it will be visible to everyone on all devices. Go ahead, share your experience!",
-  "/contact": "Need to reach us? On this page, you can find our exact location on Google Maps, our WhatsApp contact, and gym timings. We're open from 4:30 PM for the evening session. Shall I give you the owner's WhatsApp number?",
+  "/contact": "Need to reach us? On this page, you can find our exact location on Google Maps, our official contacts (Sanket, Punam, Suraj), and gym timings. We're open from 6:00 AM - 11:30 AM and 4:30 PM - 10:00 PM. Shall I give you the owner's WhatsApp number?",
   "/register": "Ready to join the family? Fill out this registration form to get started. Once you submit, I'll redirect you to WhatsApp to confirm your membership with the owner. It only takes a minute!",
   "/login": "Welcome back, Warrior! Log in here to access your personalized dashboard, track your daily calories, and view your workout history. Let's get to work!",
 };
@@ -37,7 +37,7 @@ const PAGE_TIPS: Record<string, string[]> = {
     "🏆 Strength & Conditioning is best for athletes and functional power."
   ],
   "/membership": [
-    "💎 The Annual Plan is the most popular—it saves you 2400 rupees a year!",
+    "💎 The Annual Plan is the most popular—it saves you 2600 rupees a year compared to monthly renewals!",
     "📞 All 'Enroll' buttons connect you directly to the owner on WhatsApp.",
     "⚡ Membership activation is instant after payment confirmation."
   ],
@@ -50,7 +50,7 @@ const PAGE_TIPS: Record<string, string[]> = {
 
 const GYM_KNOWLEDGE = {
   // MEMBERSHIP
-  membership: `Our membership plans: Monthly Basic ₹700, Quarterly ₹1800 for 3 months, Half-Year ₹3500 for 6 months, Annual ₹6000 for 12 months which is the best value at ₹500 per month. We also offer Gym plus Cardio plans: Monthly ₹800, Quarterly ₹2000, Half-Year ₹4000, Annual ₹7000. Personal Training with Coach Suraj or Sanket costs ₹3000 per month. All memberships are enrolled directly via WhatsApp for instant activation!`,
+  membership: `Our membership plans: 1 Day ₹200, 1 Month ₹800, 2 Months ₹1500, 3 Months ₹2000, 6 Months ₹4000, 12 Months ₹7000 which is the best value at around ₹583 per month. Personal Training with Coach Suraj or Sanket costs ₹4000 per month. All memberships are enrolled directly via WhatsApp for instant activation!`,
 
   // WORKOUTS
   pushDay: `Push Day — Chest, Shoulders & Triceps workout: Start with Barbell Bench Press 4 sets of 8 to 12 reps. Then Incline Dumbbell Press 3 sets of 10 reps. Shoulder Press 3 sets of 10. Lateral Raises 3 sets of 15. Tricep Pushdowns 3 sets of 12. Overhead Tricep Extension 3 sets of 12. Rest 60 to 90 seconds between sets. This routine builds a strong upper body push strength!`,
@@ -77,15 +77,15 @@ const GYM_KNOWLEDGE = {
   muscleGain: `Muscle Gain Plan: Eat in a calorie surplus of 300 to 500 calories. Focus on compound movements — squats, deadlifts, bench press, rows, overhead press. Train each muscle group twice per week. Get 7 to 9 hours of sleep for muscle recovery. Progressive overload is key — add weight or reps each week. Consistency beats intensity. Our Muscle Gain program at Fitness Arena takes 3 to 6 months to see significant transformation. Trust the process!`,
 
   // TRAINERS
-  suraj: `Coach Suraj is an ACE Certified Fitness Trainer specializing in Bodybuilding and Weight Loss with 8 plus years of experience. He is an expert in form correction, personalized diet plans, and transformation programs. Coach Suraj has helped 500 plus members achieve their fitness goals. He is available for Personal Training sessions at ₹3000 per month. Connect on WhatsApp or visit the gym to book a session!`,
+  suraj: `Coach Suraj is an ACE Certified Fitness Trainer specializing in Bodybuilding and Weight Loss with 8 plus years of experience. He is an expert in form correction, personalized diet plans, and transformation programs. Coach Suraj has helped 500 plus members achieve their fitness goals. He is available for Personal Training sessions at ₹4000 per month. Connect on WhatsApp or visit the gym to book a session!`,
 
-  sanket: `Coach Sanket is a certified Strength and Conditioning Coach with expertise in functional fitness, sports performance, and powerlifting. With 8 plus years of coaching experience, he specializes in building raw strength and athletic performance. Coach Sanket is available for Personal Training at ₹3000 per month. He is also known for his motivational coaching style that pushes members beyond their limits!`,
+  sanket: `Coach Sanket is a certified Strength and Conditioning Coach with expertise in functional fitness, sports performance, and powerlifting. With 8 plus years of coaching experience, he specializes in building raw strength and athletic performance. Coach Sanket is available for Personal Training at ₹4000 per month. He is also known for his motivational coaching style that pushes members beyond their limits!`,
 
   // GYM INFO
   gymInfo: `Rajarajeshwari Fitness Arena is a premium gym facility with air-conditioned workout area, separate cardio zone, heavy weight training section, functional training area, personal training pods, clean locker facility, drinking water, and a hygienic environment. We have 500 plus active members and have achieved 1000 plus transformations. Our gym is open for all fitness levels from beginners to advanced athletes!`,
 
   // ENROLL
-  enroll: `To join Rajarajeshwari Fitness Arena, simply go to our Membership page and click any Enroll Now button. This opens WhatsApp directly with the owner at 9665231230. Choose your plan — Monthly at ₹700, Quarterly at ₹1800, Half-Year at ₹3500, or Annual at ₹6000. Payment is made through WhatsApp and your membership is activated instantly. Join today and start your transformation journey!`,
+  enroll: `To join Fitness Temple Gym, simply go to our Membership page and click any Enroll Now button. This opens WhatsApp directly with the owner at 9665231230. Choose your plan — 1 Month at ₹800, 2 Months at ₹1500, Quarterly at ₹2000, Half-Year at ₹4000, or Annual at ₹7000. Payment is made through WhatsApp and your membership is activated instantly. Join today and start your transformation journey!`,
 
   // REVIEWS
   reviews: `To write a review, go to the Reviews page and click Write a Review. You do NOT need to log in — anyone can post! Enter your name, pick your star rating, choose a custom color for your review card, write your experience, and hit Publish. Your review appears instantly on all devices worldwide and stays until the owner removes it. Share your fitness journey and inspire others!`,
@@ -94,7 +94,7 @@ const GYM_KNOWLEDGE = {
   bodybuilding: "Our Bodybuilding program is a hyper-focused hypertrophy plan designed by Coach Suraj. It features a 5-day split: Chest, Back, Shoulders, Legs, and Arms. We focus on isolation movements and high volume to carve muscle definition. You'll receive a monthly mass-gaining diet chart and weekly progress check-ins. Perfect for those looking to compete or build a powerhouse physique!",
   strengthConditioning: "Strength & Conditioning at Fitness Arena is led by Coach Sanket. This program uses functional movements, compound lifts, and explosive drills to improve athletic performance. We use methodologies like 5-3-1 and linear periodization. It's ideal for athletes, martial artists, or anyone who wants to be as strong as they look!",
   muscleGainPro: "The Muscle Gain Pro plan is our most popular for beginners. It includes a 3-day full-body split transitioning to a 4-day upper/lower split. You get a personalized protein-rich diet plan, supplement guidance, and form coaching for the big three lifts: Squat, Bench, and Deadlift. Expect to gain significant lean mass in 12 weeks!",
-  personalTraining: "Our 1-on-1 Personal Training is the elite experience. For ₹3000/month, you get a dedicated coach (Suraj or Sanket) for 1 hour daily, a dynamic nutrition plan that changes weekly, priority equipment access, and daily accountability. This is the fastest way to reach any fitness goal with zero guesswork!",
+  personalTraining: "Our 1-on-1 Personal Training is the elite experience. For ₹4000/month, you get a dedicated coach (Suraj or Sanket) for 1 hour daily, a dynamic nutrition plan that changes weekly, priority equipment access, and daily accountability. This is the fastest way to reach any fitness goal with zero guesswork!",
 };
 
 // ─── Detect which knowledge to use from user's voice input ───────────────────
@@ -134,14 +134,14 @@ const processVoiceInput = (input: string, pathname: string): string => {
   if (txt.includes("diet") || txt.includes("food") || txt.includes("nutrition") || txt.includes("meal") || txt.includes("eat")) return GYM_KNOWLEDGE.diet;
 
   // Membership & Pricing
-  if (txt.includes("annual") || txt.includes("yearly") || txt.includes("6000")) {
-    return "Our Annual Membership is ₹6000 for 12 months — that's only ₹500 per month, the best value! It includes full gym access, all-season guidance, and legacy member status. Enroll now via WhatsApp at 9665231230!";
+  if (txt.includes("annual") || txt.includes("yearly") || txt.includes("7000")) {
+    return "Our Annual Membership is ₹7000 for 12 months — that's only ₹583 per month, the best value! It includes full gym access, all-season guidance, and legacy member status. Fees once paid will not be refunded. Enroll now via WhatsApp at 9665231230!";
   }
-  if (txt.includes("monthly") || txt.includes("month") || txt.includes("700") || txt.includes("1 month")) {
-    return "Our Monthly Basic Plan is ₹700 for 1 month, giving you full gym access and basic workout guidance. Perfect for trying out the gym! Enroll via WhatsApp at 9665231230.";
+  if (txt.includes("monthly") || txt.includes("month") || txt.includes("800") || txt.includes("1 month")) {
+    return "Our Monthly Basic Plan is ₹800 for 1 month, giving you full gym access and basic workout guidance. Perfect for trying out the gym! Enroll via WhatsApp at 9665231230.";
   }
-  if (txt.includes("quarterly") || txt.includes("3 month") || txt.includes("1800")) {
-    return "Our Quarterly Plan is ₹1800 for 3 months. It includes full workout guidance, diet consultation, and progress tracking. Our most popular plan! Enroll via WhatsApp at 9665231230.";
+  if (txt.includes("quarterly") || txt.includes("3 month") || txt.includes("2000")) {
+    return "Our Quarterly Plan is ₹2000 for 3 months. It includes full workout guidance, diet consultation, and progress tracking. Our most popular plan! Enroll via WhatsApp at 9665231230.";
   }
   if (txt.includes("plan") || txt.includes("price") || txt.includes("cost") || txt.includes("fee") || txt.includes("member") || txt.includes("join")) {
     return GYM_KNOWLEDGE.membership;
@@ -151,7 +151,7 @@ const processVoiceInput = (input: string, pathname: string): string => {
   if (txt.includes("suraj")) return GYM_KNOWLEDGE.suraj;
   if (txt.includes("sanket")) return GYM_KNOWLEDGE.sanket;
   if (txt.includes("trainer") || txt.includes("coach") || txt.includes("personal training") || txt.includes("instructor")) {
-    return "We have two expert coaches! Coach Suraj specializes in Bodybuilding and Weight Loss. Coach Sanket is a Strength & Conditioning expert. Both are available for Personal Training at ₹3000 per month. Visit the Trainers page to learn more or WhatsApp us at 9665231230!";
+    return "We have two expert coaches! Coach Suraj specializes in Bodybuilding and Weight Loss. Coach Sanket is a Strength & Conditioning expert. Both are available for Personal Training at ₹4000 per month. Visit the Trainers page to learn more or WhatsApp us at 9665231230!";
   }
 
   // Gym info
@@ -170,7 +170,7 @@ const processVoiceInput = (input: string, pathname: string): string => {
 
   // Contact / WhatsApp
   if (txt.includes("contact") || txt.includes("whatsapp") || txt.includes("phone") || txt.includes("number") || txt.includes("call")) {
-    return "Contact Rajarajeshwari Fitness Arena directly on WhatsApp at 9665231230. The owner and coaches are available to answer all your queries about memberships, training programs, and schedules. You can also visit our Contact page for the gym address!";
+    return "Contact Fitness Temple Gym directly on WhatsApp. Sanket: 9665231230, Punam: 9503161788, Suraj: 9049176600. The coaches are available to answer all your queries. You can also visit our Contact page for the gym address!";
   }
 
   // Default
@@ -301,8 +301,8 @@ const AIAssistant = () => {
         { label: "Fat Loss", icon: Dumbbell, cmd: "fat loss plan weight loss" },
       ],
       "/membership": [
-        { label: "Monthly", icon: CreditCard, cmd: "monthly plan 700" },
-        { label: "Annual", icon: CreditCard, cmd: "annual plan 6000" },
+        { label: "Monthly", icon: CreditCard, cmd: "monthly plan 800" },
+        { label: "Annual", icon: CreditCard, cmd: "annual plan 7000" },
         { label: "Cardio+", icon: Dumbbell, cmd: "cardio plan" },
         { label: "Personal", icon: Users, cmd: "personal training coach" },
       ],

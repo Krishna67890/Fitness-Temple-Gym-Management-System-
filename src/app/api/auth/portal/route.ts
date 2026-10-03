@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { OWNER_EMAIL, OWNER_NAME, TRAINERS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   try {
@@ -12,12 +13,12 @@ export async function POST(request: Request) {
     );
 
     if (portalType === 'owner') {
-      if (cleanEmail === 'sanket@fitnesstemple.com' && password === process.env.OWNER_SECURITY_KEY) {
+      if (cleanEmail === OWNER_EMAIL && password === process.env.OWNER_SECURITY_KEY) {
         return NextResponse.json({
           success: true,
           role: 'owner',
-          name: 'Sanket Sir (Owner)',
-          email: 'sanket@fitnesstemple.com',
+          name: `${OWNER_NAME} (Owner)`,
+          email: OWNER_EMAIL,
           id: 'owner_admin'
         });
       }
@@ -25,25 +26,39 @@ export async function POST(request: Request) {
     }
 
     if (portalType === 'trainer') {
-      if (cleanEmail === 'suraj@fitnesstemple.com' && password === process.env.TRAINER_SURAJ_SECURITY_KEY) {
+      if (cleanEmail === TRAINERS.SURAJ.email && password === process.env.TRAINER_SURAJ_SECURITY_KEY) {
         return NextResponse.json({
           success: true,
           role: 'trainer',
-          trainerId: 'trainer_suraj',
-          name: 'Suraj Sir',
-          email: 'suraj@fitnesstemple.com'
+          trainerId: TRAINERS.SURAJ.id,
+          name: TRAINERS.SURAJ.name,
+          email: TRAINERS.SURAJ.email
         });
       }
       if (
-        (cleanEmail === 'bhavesh@fitnesstemple.com' || cleanEmail === 'bhavesh@ftnesstemple.com') &&
+        (cleanEmail === TRAINERS.BHAVESH.email || cleanEmail === 'bhavesh@ftnesstemple.com') &&
         password === process.env.TRAINER_BHAVESH_SECURITY_KEY
       ) {
         return NextResponse.json({
           success: true,
           role: 'trainer',
-          trainerId: 'trainer_bhavesh',
-          name: 'Bhavesh Sir',
-          email: 'bhavesh@ftnesstemple.com'
+          trainerId: TRAINERS.BHAVESH.id,
+          name: TRAINERS.BHAVESH.name,
+          email: TRAINERS.BHAVESH.email
+        });
+      }
+      return invalidResponse();
+    }
+
+    if (portalType === 'member') {
+      // Demo member account
+      if (cleanEmail === 'krishna@fitnesstemple.com' && password === process.env.MEMBER_SECURITY_KEY) {
+        return NextResponse.json({
+          success: true,
+          role: 'member',
+          name: 'Krishna Patil Rajput',
+          email: 'krishna@fitnesstemple.com',
+          id: 'local_member_001'
         });
       }
       return invalidResponse();

@@ -37,8 +37,6 @@ export const metadata: Metadata = {
 
 import Script from "next/script";
 
-import GalleryPreview from "@/components/GalleryPreview";
-
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -2,7 +2,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, MapPin, Clock, Send, MessageCircle, X } from "lucide-react";
-import GalleryPreview from "@/components/GalleryPreview";
 
 const ContactPage = () => {
   const [whatsappModalOpen, setWhatsappModalOpen] = React.useState(false);
@@ -10,7 +9,7 @@ const ContactPage = () => {
     fullName: "",
     phone: "",
     email: "",
-    interest: "1 Month Plan (₹700)",
+    interest: "1 Month Plan (₹800)",
     message: ""
   });
 
@@ -52,7 +51,7 @@ const ContactPage = () => {
         </motion.h1>
         <p className="text-gray-400 max-w-2xl mx-auto text-lg font-medium text-white">
           Have a question about our memberships, trainers, or facilities?
-          Our team (Omkar, Siddhant, Suraj & Sanket) is here to help you start your transformation.
+          Our team (Sanket, Punam & Suraj) is here to help you start your transformation.
         </p>
       </section>
 
@@ -66,7 +65,8 @@ const ContactPage = () => {
             <p className="text-gray-400 text-sm mb-6">Direct support from the Arena</p>
             <div className="space-y-1">
               <p className="text-white font-black text-xl tracking-tight">+91 96652 31230</p>
-              <p className="text-white font-black text-xl tracking-tight">+91 80806 90631</p>
+              <p className="text-white font-black text-xl tracking-tight">+91 95031 61788</p>
+              <p className="text-white font-black text-xl tracking-tight">+91 90491 76600</p>
             </div>
           </div>
 
@@ -147,13 +147,13 @@ const ContactPage = () => {
                     onChange={(e) => setFormData({...formData, interest: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 focus:border-primary focus:bg-white/10 transition-all outline-none text-white appearance-none cursor-pointer"
                   >
-                    <option className="bg-black">1 Month Plan (₹700)</option>
-                    <option className="bg-black">3 Month Plan (₹1800)</option>
-                    <option className="bg-black">6 Month Plan (₹3500)</option>
-                    <option className="bg-black">12 Month Plan (₹6000)</option>
-                    <option className="bg-black">Bodybuilding</option>
-                    <option className="bg-black">Fat Loss</option>
-                    <option className="bg-black">Personal Training</option>
+                    <option className="bg-black">1 Day Plan (₹200)</option>
+                    <option className="bg-black">1 Month Plan (₹800)</option>
+                    <option className="bg-black">2 Month Plan (₹1500)</option>
+                    <option className="bg-black">3 Month Plan (₹2000)</option>
+                    <option className="bg-black">6 Month Plan (₹4000)</option>
+                    <option className="bg-black">12 Month Plan (₹7000)</option>
+                    <option className="bg-black">Personal Training (₹4000)</option>
                   </select>
                   <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path></svg>
@@ -183,8 +183,8 @@ const ContactPage = () => {
               <h3 className="text-2xl font-black uppercase italic mb-6 text-white">Temple <span className="text-primary">Hours</span></h3>
               <div className="space-y-4">
                 {[
-                  { day: "Monday - Saturday", hours: "05:00 AM - 10:00 PM" },
-                  { day: "Sunday", hours: "06:00 AM - 12:00 PM" },
+                  { day: "Monday - Saturday", hours: "06:00 AM - 11:30 AM | 04:30 PM - 10:00 PM" },
+                  { day: "Sunday", hours: "Closed" },
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4">
                     <span className="font-bold text-gray-300">{item.day}</span>
@@ -205,7 +205,7 @@ const ContactPage = () => {
 
                   <div className="grid grid-cols-1 gap-3">
                     <a
-                      href="https://wa.me/919370335293?text=Hi%20Sanket%20Sir,%20I'm%20interested%20in%20joining%20Fitness%20Temple%20Gym."
+                      href="https://wa.me/919665231230?text=Hi%20Sanket%20Sir,%20I'm%20interested%20in%20joining%20Fitness%20Temple%20Gym."
                       target="_blank"
                       className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest flex items-center justify-between group/wa hover:scale-[1.02] transition-all"
                     >
@@ -214,20 +214,20 @@ const ContactPage = () => {
                     </a>
 
                     <a
-                      href="https://wa.me/91XXXXXXXXXX?text=Hi%20Suraj%20Sir,%20I'd%20like%20to%20know%20more%20about%20personal%20training."
+                      href="https://wa.me/919503161788?text=Hi%20Punam%20Ma'am,%20I'd%20like%20to%20know%20more%20about%20membership."
                       target="_blank"
                       className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest flex items-center justify-between group/wa hover:scale-[1.02] transition-all"
                     >
-                      <span className="text-xs">Coach Suraj</span>
+                      <span className="text-xs">Coach Punam</span>
                       <MessageCircle size={18} className="text-green-500" />
                     </a>
 
                     <a
-                      href="https://wa.me/919665231230?text=Hi%20Owner,%20I%20have%20a%20business%20inquiry%20regarding%20Fitness%20Temple%20Gym."
+                      href="https://wa.me/919049176600?text=Hi%20Suraj%20Sir,%20I%20have%20an%20inquiry%20regarding%20Fitness%20Temple%20Gym."
                       target="_blank"
                       className="bg-black text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest flex items-center justify-between group/wa hover:scale-[1.02] transition-all"
                     >
-                      <span className="text-xs">Gym Owner</span>
+                      <span className="text-xs">Coach Suraj</span>
                       <MessageCircle size={18} className="text-green-500" />
                     </a>
                   </div>

@@ -14,14 +14,24 @@ import {
   ChevronRight
 } from "lucide-react";
 import Link from "next/link";
-import GalleryPreview from "@/components/GalleryPreview";
+import { PRICING, OWNER_WHATSAPP, GYM_NAME } from "@/lib/constants";
 
 const plans = [
+  {
+    id: "basic-1-day",
+    name: "1 Day Pass",
+    icon: Zap,
+    price: PRICING.ONE_DAY.toString(),
+    duration: "1 Day",
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    features: ["Single Day Access", "Standard Gym Rules", "All Equipment Use", "No Commitment"],
+  },
   {
     id: "basic-1",
     name: "Monthly Plan",
     icon: Shield,
-    price: "700",
+    price: PRICING.MONTHLY.toString(),
     duration: "1 Month",
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
@@ -31,7 +41,7 @@ const plans = [
     id: "basic-3",
     name: "Quarterly Plan",
     icon: Star,
-    price: "1800",
+    price: PRICING.QUARTERLY.toString(),
     duration: "3 Months",
     color: "text-primary",
     bgColor: "bg-primary/10",
@@ -39,33 +49,25 @@ const plans = [
     features: ["Gym Access", "Full Workout Guidance", "Diet Consultation", "Progress Tracking"],
   },
   {
-    id: "basic-6",
-    name: "Half-Year Plan",
-    icon: Activity,
-    price: "3500",
-    duration: "6 Months",
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-    features: ["All Quarterly Features", "Priority Support", "Personalized Adjustments", "Free Assessment"],
-  },
-  {
     id: "basic-12",
     name: "Annual Plan",
     icon: Crown,
-    price: "6000",
+    price: PRICING.ANNUAL.toString(),
     duration: "12 Months",
     color: "text-yellow-500",
     bgColor: "bg-yellow-500/10",
     bestValue: true,
-    features: ["Best Value (₹500/Mo)", "Full Temple Access", "All-Season Guidance", "Legacy Status"],
+    features: ["Best Value (₹583/Mo)", "Full Temple Access", "All-Season Guidance", "Legacy Status"],
   },
 ];
 
 const cardioPlans = [
-  { name: "Monthly + Cardio", price: "800", duration: "1 Month" },
-  { name: "Quarterly + Cardio", price: "2000", duration: "3 Months" },
-  { name: "Half-Year + Cardio", price: "4000", duration: "6 Months" },
-  { name: "Annual + Cardio", price: "7000", duration: "12 Months" },
+  { name: "1 Day Membership", price: PRICING.ONE_DAY.toString(), duration: "1 Day" },
+  { name: "1 Month Membership", price: PRICING.MONTHLY.toString(), duration: "1 Month" },
+  { name: "2 Months Membership", price: PRICING.TWO_MONTHS.toString(), duration: "2 Months" },
+  { name: "3 Months Membership", price: PRICING.QUARTERLY.toString(), duration: "3 Months" },
+  { name: "6 Months Membership", price: PRICING.HALF_YEARLY.toString(), duration: "6 Months" },
+  { name: "12 Months Membership", price: PRICING.ANNUAL.toString(), duration: "12 Months" },
 ];
 
 const MembershipPage = () => {
@@ -113,11 +115,11 @@ const MembershipPage = () => {
               </div>
               <div>
                 <h3 className="text-2xl font-black uppercase italic leading-none mb-1 text-white">Best Value Selection</h3>
-                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">Annual Membership Only ₹6000 (₹500/Month)</p>
+                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest">Annual Membership Only ₹{PRICING.ANNUAL} (₹583/Month)</p>
               </div>
             </div>
             <div className="flex flex-col items-end">
-              <Link href="https://wa.me/919665231230?text=Hi!%20I%20want%20to%20enroll%20in%20the%20Annual%20Plan%20at%20Rajarajeshwari%20Fitness%20Arena." className="btn-primary px-8 py-3 rounded-xl text-xs font-black uppercase italic text-center flex items-center justify-center">
+              <Link href={`https://wa.me/${OWNER_WHATSAPP}?text=Hi!%20I%20want%20to%20enroll%20in%20the%20Annual%20Plan%20at%20${encodeURIComponent(GYM_NAME)}.`} className="btn-primary px-8 py-3 rounded-xl text-xs font-black uppercase italic text-center flex items-center justify-center">
                 Get Annual Deal
               </Link>
             </div>
@@ -169,7 +171,7 @@ const MembershipPage = () => {
               </div>
 
               <Link
-                href={`https://wa.me/919665231230?text=Hi!%20I%20want%20to%20enroll%20in%20the%20${encodeURIComponent(plan.name)}%20(₹${plan.price})%20at%20Rajarajeshwari%20Fitness%20Arena.`}
+                href={`https://wa.me/${OWNER_WHATSAPP}?text=Hi!%20I%20want%20to%20enroll%20in%20the%20${encodeURIComponent(plan.name)}%20(₹${plan.price})%20at%20${encodeURIComponent(GYM_NAME)}.`}
                 className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all text-center flex items-center justify-center ${
                   plan.popular ? "bg-primary text-black" : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
                 }`}
@@ -189,7 +191,7 @@ const MembershipPage = () => {
              <div className="relative z-10">
                <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-8 flex items-center gap-4">
                   <Activity className="text-primary" size={32} />
-                  🏃 GYM + <span className="text-primary">CARDIO</span>
+                  🏋️ FITNESS <span className="text-primary">PLANS</span>
                </h3>
                <div className="space-y-4 mb-10">
                  {cardioPlans.map((plan, i) => (
@@ -202,9 +204,12 @@ const MembershipPage = () => {
                    </div>
                  ))}
                </div>
-               <Link href="https://wa.me/919665231230?text=Hi!%20I%20want%20to%20enroll%20in%20the%20Gym%20%2B%20Cardio%20Plan%20at%20Rajarajeshwari%20Fitness%20Arena." className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center flex items-center justify-center">
-                  Enroll In Cardio Plan
+               <Link href={`https://wa.me/${OWNER_WHATSAPP}?text=Hi!%20I%20want%20to%20enroll%20in%20a%20Fitness%20Plan%20at%20${encodeURIComponent(GYM_NAME)}.`} className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center flex items-center justify-center">
+                  Enroll In Gym Plan
                </Link>
+               <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-red-500/80 bg-red-500/5 py-2 rounded-lg border border-red-500/10">
+                 ⚠️ Note: Fees once paid will not refunded.
+               </p>
              </div>
           </div>
 
@@ -219,20 +224,20 @@ const MembershipPage = () => {
                   👨‍🏫 PERSONAL <span className="text-primary">TRAINING</span>
                </h3>
                <p className="text-gray-400 font-medium italic text-lg mb-8 leading-relaxed">
-                 Work directly with Coach Suraj or Coach Sanket for a completely customized fitness experience tailored to your unique biology.
+                 Work directly with Coach Sanket for a completely customized fitness experience tailored to your unique biology.
                </p>
 
                <div className="bg-black/40 backdrop-blur-xl p-8 rounded-[3rem] border border-primary/20 mb-8 flex items-center justify-between mt-auto">
                   <div>
                     <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-2">Service Fee</p>
-                    <p className="text-5xl font-black italic tracking-tighter text-white">₹3000 <span className="text-sm text-gray-500 uppercase">/ Month</span></p>
+                    <p className="text-5xl font-black italic tracking-tighter text-white">₹{PRICING.PERSONAL_TRAINING} <span className="text-sm text-gray-500 uppercase">/ Month</span></p>
                   </div>
                   <div className="p-4 bg-primary/20 rounded-full">
                      <Star size={32} className="text-primary animate-pulse" fill="currentColor" />
                   </div>
                </div>
 
-               <Link href="https://wa.me/919665231230?text=I'm interested in Personal Training with Coach Suraj/Sanket" className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center">
+               <Link href={`https://wa.me/${OWNER_WHATSAPP}?text=I'm%20interested%20in%20Personal%20Training%20at%20${encodeURIComponent(GYM_NAME)}`} className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center">
                   Book Professional Coach
                </Link>
              </div>

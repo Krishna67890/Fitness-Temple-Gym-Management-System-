@@ -4,11 +4,12 @@ import { Check, ArrowRight, Star, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import MembershipWizard from "./MembershipWizard";
+import { PRICING, OWNER_WHATSAPP, GYM_NAME } from "@/lib/constants";
 
 const plans = [
   {
     name: "Monthly Plan",
-    price: "700",
+    price: PRICING.MONTHLY.toLocaleString(),
     duration: "1 Month",
     description: "🥉 Essential training for beginners.",
     features: ["Gym Access", "Basic Workout Guidance", "Attendance Tracking", "Locker Access"],
@@ -17,9 +18,9 @@ const plans = [
   },
   {
     name: "Annual Plan",
-    price: "6,000",
+    price: PRICING.ANNUAL.toLocaleString(),
     duration: "12 Months",
-    description: "💎 Best value at ₹500/Month.",
+    description: "💎 Best value at ₹583/Month.",
     features: ["Full Gym Access", "Full Workout Guidance", "Legacy Member Status", "Attendance Tracking", "Diet Consultation"],
     popular: true,
     color: "from-yellow-400 to-yellow-700"
@@ -42,12 +43,12 @@ const MembershipPreview = () => {
           <div className="bg-black rounded-[calc(1.5rem-1px)] p-6 text-center">
             <h3 className="text-xl md:text-2xl font-black uppercase italic tracking-widest flex items-center justify-center gap-4 text-white">
               <Zap className="text-secondary animate-pulse" />
-              🎉 Join Fitness Temple Gym Today!
-              <span className="text-primary"> ₹700 (1 Mo) | ₹1800 (3 Mo) | ₹6000 (12 Mo)</span>
+              🎉 Join {GYM_NAME} Today!
+              <span className="text-primary"> ₹{PRICING.MONTHLY} (1 Mo) | ₹{PRICING.QUARTERLY} (3 Mo) | ₹{PRICING.ANNUAL} (12 Mo)</span>
               <Zap className="text-secondary animate-pulse" />
             </h3>
             <p className="text-gray-400 mt-2 font-bold uppercase tracking-tighter">
-              Train with Experts <span className="text-white">Suraj & Sanket</span> under the guidance of Owners <span className="text-white">Omkar & Siddhant</span>. 💪⚡
+              Train with Experts <span className="text-white">Suraj & Sanket</span> under the guidance of Coach <span className="text-white">Punam</span>. 💪⚡
             </p>
           </div>
         </motion.div>
@@ -109,7 +110,7 @@ const MembershipPreview = () => {
               </ul>
 
               <a
-                href={`https://wa.me/919665231230?text=Hi%20Owner,%20I'm%20interested%20in%20joining%20the%20${encodeURIComponent(plan.name)}.`}
+                href={`https://wa.me/${OWNER_WHATSAPP}?text=Hi%20Owner,%20I'm%20interested%20in%20joining%20the%20${encodeURIComponent(plan.name)}%20at%20${encodeURIComponent(GYM_NAME)}.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`w-full py-6 rounded-3xl font-black uppercase tracking-[0.2em] transition-all duration-300 transform flex items-center justify-center space-x-3 text-lg ${

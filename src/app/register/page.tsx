@@ -10,9 +10,16 @@ import {
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import {
+  OWNER_WHATSAPP,
+  OWNER_NAME,
+  PRICING,
+  DEFAULT_AVATARS,
+  TRAINERS,
+  GYM_NAME
+} from "@/lib/constants";
 
-const WHATSAPP_OWNER = "919665231230";
-const OWNER_NAME = "Owner";
+const WHATSAPP_OWNER = OWNER_WHATSAPP;
 
 const RegisterContent = () => {
   const { register } = useAuth();
@@ -100,11 +107,11 @@ const RegisterContent = () => {
   };
 
   const priceMap: Record<string, number> = {
-    "basic-1": 700, "basic-3": 1800, "basic-6": 3500, "basic-12": 6000,
-    "cardio-1": 800, "cardio-3": 2000, "cardio-6": 4000, "cardio-12": 7000,
-    pt: 3000,
+    "basic-1": 800, "basic-2": 1500, "basic-3": 2000, "basic-6": 4000, "basic-12": 7000,
+    "cardio-1": 800, "cardio-2": 1500, "cardio-3": 2000, "cardio-6": 4000, "cardio-12": 7000,
+    pt: 4000,
   };
-  const amount = priceMap[formData.membershipType] || 700;
+  const amount = priceMap[formData.membershipType] || 800;
 
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,19 +134,20 @@ const RegisterContent = () => {
   const handleFinalizeAndWhatsApp = async () => {
     setLoading(true);
     try {
-      const newMemberId = `RFA${Math.floor(1000 + Math.random() * 9000)}`;
+      const newMemberId = `FT${Math.floor(1000 + Math.random() * 9000)}`;
       setMemberId(newMemberId);
 
       const joinDate = new Date();
       const expiryDate = new Date();
       const plan = formData.membershipType;
       let months = 1;
+      if (plan.includes("-2")) months = 2;
       if (plan.includes("-3")) months = 3;
       if (plan.includes("-6")) months = 6;
       if (plan.includes("-12")) months = 12;
       expiryDate.setMonth(joinDate.getMonth() + months);
 
-      const defaultAvatar = formData.gender === "boy" ? "/assets/boy.png" : "/assets/girl.png";
+      const defaultAvatar = formData.gender === "boy" ? DEFAULT_AVATARS.BOY : DEFAULT_AVATARS.GIRL;
 
       await register(formData.email, formData.password, {
         name: formData.fullName,
@@ -153,15 +161,15 @@ const RegisterContent = () => {
         membershipPlan: formData.membershipType,
         membershipExpiry: expiryDate.toISOString(),
         role: "member",
-        trainerId: "trainer_suraj",
-        trainerName: "Suraj Sir",
+        trainerId: TRAINERS.SURAJ.id,
+        trainerName: TRAINERS.SURAJ.name,
         photoURL: previewImage || defaultAvatar,
         profileImage: previewImage || defaultAvatar,
         memberId: newMemberId,
       });
 
       // Open WhatsApp with owner
-      const message = `🏋️ New Registration at Rajarajeshwari Fitness Arena!
+      const message = `🏋️ New Registration at ${GYM_NAME}!
 
 📋 Details:
 • Name: ${formData.fullName}
@@ -219,7 +227,7 @@ Please confirm my membership activation. Thank you! 🙏`;
               <div className="text-center mb-12 relative">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full mb-4 border border-primary/20">
                   <span className="text-primary text-[10px] font-black uppercase tracking-[0.3em]">
-                    Join Rajarajeshwari Fitness Arena
+                    Join Fitness Temple Gym
                   </span>
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-3">
@@ -362,15 +370,12 @@ Please confirm my membership activation. Thank you! 🙏`;
                         className="w-full bg-white/3 border border-white/10 rounded-2xl py-4 pl-11 pr-4 text-sm font-bold text-white outline-none focus:border-primary focus:bg-primary/5 transition-all appearance-none cursor-pointer"
                         onChange={handleChange} value={formData.membershipType}
                       >
-                        <option value="basic-1">Monthly Basic — ₹700 / 1 Month</option>
-                        <option value="basic-3">Quarterly — ₹1800 / 3 Months</option>
-                        <option value="basic-6">Half-Year — ₹3500 / 6 Months</option>
-                        <option value="basic-12">Annual (Best Value) — ₹6000 / Year</option>
-                        <option value="cardio-1">Gym + Cardio — ₹800 / Month</option>
-                        <option value="cardio-3">Gym + Cardio — ₹2000 / 3 Months</option>
-                        <option value="cardio-6">Gym + Cardio — ₹4000 / 6 Months</option>
-                        <option value="cardio-12">Gym + Cardio — ₹7000 / Year</option>
-                        <option value="pt">Personal Training — ₹3000 / Month</option>
+                        <option value="basic-1">Monthly — ₹{PRICING.MONTHLY} / 1 Month</option>
+                        <option value="basic-2">2 Months — ₹{PRICING.TWO_MONTHS} / 2 Months</option>
+                        <option value="basic-3">Quarterly — ₹{PRICING.QUARTERLY} / 3 Months</option>
+                        <option value="basic-6">Half-Year — ₹{PRICING.HALF_YEARLY} / 6 Months</option>
+                        <option value="basic-12">Annual (Best Value) — ₹{PRICING.ANNUAL} / Year</option>
+                        <option value="pt">Personal Training — ₹{PRICING.PERSONAL_TRAINING} / Month</option>
                       </select>
                     </div>
                   </div>
@@ -528,7 +533,7 @@ Please confirm my membership activation. Thank you! 🙏`;
                 WELCOME!
               </h2>
               <p className="text-primary text-xl font-black uppercase italic mb-3">
-                You are now part of Rajarajeshwari Fitness Arena 🏋️
+                You are now part of Fitness Temple Gym 🏋️
               </p>
               <p className="text-gray-400 text-sm font-medium mb-10 max-w-md mx-auto">
                 Your registration is complete and WhatsApp has been opened to confirm your membership with the owner. You'll receive your activation shortly!
@@ -564,7 +569,7 @@ Please confirm my membership activation. Thank you! 🙏`;
                   Access Member Dashboard
                 </Link>
                 <Link
-                  href={`https://wa.me/${WHATSAPP_OWNER}?text=Hi! I just registered at Rajarajeshwari Fitness Arena. My Member ID is ${memberId}. Please activate my membership!`}
+                  href={`https://wa.me/${WHATSAPP_OWNER}?text=Hi! I just registered at Fitness Temple Gym. My Member ID is ${memberId}. Please activate my membership!`}
                   target="_blank"
                   className="px-8 py-5 bg-green-500/10 border border-green-500/30 text-green-400 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 hover:bg-green-500/20 transition-all"
                 >
