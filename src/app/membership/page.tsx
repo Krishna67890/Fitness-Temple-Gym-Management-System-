@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PRICING, OWNER_WHATSAPP, GYM_NAME } from "@/lib/constants";
+import imageMap from "@/lib/imageMap";
 
 const plans = [
   {
@@ -71,6 +72,10 @@ const cardioPlans = [
 ];
 
 const MembershipPage = () => {
+  const [selectedPlanIndex, setSelectedPlanIndex] = React.useState(2); // Default to 3 Months
+
+  const selectedPlan = cardioPlans[selectedPlanIndex];
+
   return (
     <div className="pt-32 pb-24 min-h-screen">
       <div className="container px-4">
@@ -195,17 +200,33 @@ const MembershipPage = () => {
                </h3>
                <div className="space-y-4 mb-10">
                  {cardioPlans.map((plan, i) => (
-                   <div key={i} className="flex items-center justify-between p-5 bg-white/5 border border-white/5 rounded-3xl group hover:border-primary/50 transition-all">
-                     <div>
-                       <p className="text-lg font-black uppercase italic text-white leading-none mb-1">{plan.name}</p>
-                       <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{plan.duration}</p>
+                   <button
+                     key={i}
+                     onClick={() => setSelectedPlanIndex(i)}
+                     className={`w-full flex items-center justify-between p-5 border rounded-3xl transition-all group text-left ${
+                       selectedPlanIndex === i
+                       ? "bg-primary/20 border-primary shadow-[0_0_20px_rgba(255,215,0,0.1)]"
+                       : "bg-white/5 border-white/5 hover:border-white/20"
+                     }`}
+                   >
+                     <div className="flex items-center gap-4">
+                        <div className={`w-3 h-3 rounded-full border-2 transition-all ${selectedPlanIndex === i ? "bg-primary border-primary scale-125" : "border-gray-600"}`} />
+                        <div>
+                          <p className="text-lg font-black uppercase italic text-white leading-none mb-1">{plan.name}</p>
+                          <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{plan.duration}</p>
+                        </div>
                      </div>
-                     <span className="text-2xl font-black text-primary italic tracking-tighter group-hover:scale-110 transition-transform">₹{plan.price}</span>
-                   </div>
+                     <span className={`text-2xl font-black italic tracking-tighter transition-transform group-hover:scale-110 ${selectedPlanIndex === i ? "text-white" : "text-primary"}`}>
+                       ₹{plan.price}
+                     </span>
+                   </button>
                  ))}
                </div>
-               <Link href={`https://wa.me/${OWNER_WHATSAPP}?text=Hi!%20I%20want%20to%20enroll%20in%20a%20Fitness%20Plan%20at%20${encodeURIComponent(GYM_NAME)}.`} className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center flex items-center justify-center">
-                  Enroll In Gym Plan
+               <Link
+                 href={`https://wa.me/${OWNER_WHATSAPP}?text=Hi!%20I%20want%20to%20enroll%20in%20the%20${encodeURIComponent(selectedPlan.name)}%20(₹${selectedPlan.price})%20at%20${encodeURIComponent(GYM_NAME)}.`}
+                 className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center flex items-center justify-center shadow-[0_10px_30px_rgba(255,215,0,0.2)]"
+               >
+                  Enroll In {selectedPlan.name}
                </Link>
                <p className="mt-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-red-500/80 bg-red-500/5 py-2 rounded-lg border border-red-500/10">
                  ⚠️ Note: Fees once paid will not refunded.
@@ -214,18 +235,39 @@ const MembershipPage = () => {
           </div>
 
           {/* Personal Training Section */}
-          <div className="glass p-10 rounded-[4rem] border-white/5 relative overflow-hidden bg-gradient-to-br from-primary/10 to-transparent">
-             <div className="absolute top-0 right-0 p-10 opacity-10 -rotate-12">
+          <div className="glass p-10 rounded-[4rem] border-white/5 relative overflow-hidden bg-gradient-to-br from-primary/10 to-transparent group">
+             <div className="absolute top-0 right-0 p-10 opacity-10 -rotate-12 group-hover:rotate-0 transition-transform duration-700">
                 <Dumbbell size={200} />
              </div>
+
              <div className="relative z-10 h-full flex flex-col">
-               <h3 className="text-4xl font-black uppercase italic tracking-tighter mb-4 flex items-center gap-4">
-                  <Target className="text-primary" size={32} />
-                  👨‍🏫 PERSONAL <span className="text-primary">TRAINING</span>
-               </h3>
-               <p className="text-gray-400 font-medium italic text-lg mb-8 leading-relaxed">
+               <div className="flex flex-col md:flex-row md:items-center gap-6 mb-8">
+                  <div>
+                    <h3 className="text-4xl font-black uppercase italic tracking-tighter flex items-center gap-4">
+                        <Target className="text-primary" size={32} />
+                        👨‍🏫 PERSONAL <span className="text-primary">TRAINING</span>
+                    </h3>
+                    <p className="text-primary font-black uppercase tracking-[0.2em] text-[10px] mt-1">Lead by Coach Sanket Sir</p>
+                  </div>
+               </div>
+
+               <p className="text-gray-400 font-medium italic text-lg mb-8 leading-relaxed max-w-md">
                  Work directly with Coach Sanket for a completely customized fitness experience tailored to your unique biology.
                </p>
+
+               <div className="mb-8 w-full h-[576px] rounded-[3.5rem] overflow-hidden border border-primary/20 shadow-[0_0_80px_rgba(255,215,0,0.25)] relative group">
+                  {/* Photo adjusted to 6 inches (576px) height for a premium print feel */}
+                  <img
+                    src={imageMap.sanket}
+                    alt="Coach Sanket"
+                    className="w-full h-full object-cover object-[center_10%] group-hover:scale-105 transition-transform duration-[3s] ease-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-transparent to-transparent opacity-90" />
+
+                  {/* Decorative corner accent */}
+                  <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-primary/30 rounded-tr-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute bottom-6 left-6 w-12 h-12 border-b-2 border-l-2 border-primary/30 rounded-bl-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+               </div>
 
                <div className="bg-black/40 backdrop-blur-xl p-8 rounded-[3rem] border border-primary/20 mb-8 flex items-center justify-between mt-auto">
                   <div>
@@ -237,8 +279,8 @@ const MembershipPage = () => {
                   </div>
                </div>
 
-               <Link href={`https://wa.me/${OWNER_WHATSAPP}?text=I'm%20interested%20in%20Personal%20Training%20at%20${encodeURIComponent(GYM_NAME)}`} className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center">
-                  Book Professional Coach
+               <Link href={`https://wa.me/${OWNER_WHATSAPP}?text=I'm%20interested%20in%20Personal%20Training%20with%20Sanket%20Sir%20at%20${encodeURIComponent(GYM_NAME)}`} className="btn-primary w-full py-5 rounded-2xl text-sm font-black uppercase italic text-center">
+                  Book Sanket Sir
                </Link>
              </div>
           </div>

@@ -32,6 +32,8 @@ import Link from "next/link";
 import { WEEKLY_ROUTINES } from "@/lib/workoutRoutines";
 import { generateRecommendations } from "@/lib/ai-recommender";
 
+import { galleryData } from "@/lib/gymData";
+
 const daysOfWeek = [
   { key: "MON", label: "Mon" },
   { key: "TUE", label: "Tue" },
@@ -963,13 +965,26 @@ const MemberDashboardPage = () => {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {[1,2,3,4,5,6].map(i => (
+                {galleryData.slice(0, 9).map((item, i) => (
                   <div key={i} className="aspect-square rounded-3xl bg-white/5 border border-white/10 overflow-hidden group">
-                    <img
-                      src={`https://images.unsplash.com/photo-${1534438327276 + i}-1091f1a12463?w=500&auto=format&fit=crop&q=80`}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
-                      alt="Gym"
-                    />
+                    {item.type === "video" ? (
+                      <div className="w-full h-full relative">
+                        <video
+                          src={item.src}
+                          muted
+                          className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Play className="text-primary w-8 h-8 opacity-60 group-hover:opacity-100" />
+                        </div>
+                      </div>
+                    ) : (
+                      <img
+                        src={item.src}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 group-hover:opacity-100"
+                        alt={item.title}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

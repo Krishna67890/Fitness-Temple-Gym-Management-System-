@@ -4,14 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, ZoomIn } from "lucide-react";
 import Link from "next/link";
 
-const previewItems = [
-  { type: "image", src: "/assets/Fitnesstemple1.jpg", title: "Elite Workout Zone", category: "Gym Interior" },
-  { type: "image", src: "/assets/Fitnesstemple2.jpg", title: "Strength Area", category: "Gym Interior" },
-  { type: "image", src: "/assets/Poonam-ghode.jpg", title: "Member Transformation", category: "Transformation" },
-  { type: "image", src: "/assets/sanket.jpg", title: "Coach Sanket Conditioning", category: "Transformation" },
-  { type: "video", src: "/assets/Fitness-Temple.mp4", title: "Video Walkthrough", category: "Videos" },
-  { type: "image", src: "/assets/FitnessTempleCertificate.png", title: "Official Certification", category: "Equipment" },
-];
+import { galleryData } from "@/lib/gymData";
+
+const previewItems = galleryData.slice(0, 6);
 
 const GalleryPreview = () => {
   const [selectedItem, setSelectedItem] = useState<any>(null);

@@ -3,29 +3,17 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Play, ZoomIn } from "lucide-react";
 
-const categories = ["All", "Gym Interior", "Equipment", "Transformation", "Videos"];
+import { galleryData } from "@/lib/gymData";
 
-const galleryItems = [
-  { id: 1, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple1.jpg", title: "Elite Workout Zone" },
-  { id: 2, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple2.jpg", title: "Strength & Conditioning" },
-  { id: 3, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple3.jpg", title: "Modern Equipment Area" },
-  { id: 4, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple4.jpg", title: "Functional Training Space" },
-  { id: 5, category: "Transformation", type: "image", src: "/assets/Poonam-ghode.jpg", title: "Incredible Member Transformation" },
-  { id: 6, category: "Transformation", type: "image", src: "/assets/sanket.jpg", title: "Coach Sanket Fitness Form" },
-  { id: 7, category: "Transformation", type: "image", src: "/assets/suraj.jpg", title: "Coach Suraj Conditioning" },
-  { id: 8, category: "Equipment", type: "image", src: "/assets/FitnessTempleRate.png", title: "Membership Rates & Plans" },
-  { id: 9, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleCertificate.png", title: "Official Certification" },
-  { id: 10, category: "Videos", type: "video", src: "/assets/Fitness-Temple.mp4", title: "Fitness Arena Video Walkthrough" },
-  { id: 11, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleGym.png", title: "Fitness Temple Elite Branding" },
-];
+const categories = ["All", "Gym Interior", "Equipment", "Transformation", "Videos"];
 
 const GalleryPage = () => {
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedItem, setSelectedItem] = useState<any>(null);
 
   const filteredItems = activeCategory === "All"
-    ? galleryItems
-    : galleryItems.filter(item => item.category === activeCategory);
+    ? galleryData
+    : galleryData.filter(item => item.category === activeCategory);
 
   return (
     <div className="pt-32 pb-20 min-h-screen">

@@ -401,6 +401,20 @@ export const scheduleData = [
   }
 ];
 
+export const galleryData = [
+  { id: 1, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple1.jpg", title: "Elite Workout Zone" },
+  { id: 2, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple2.jpg", title: "Strength & Conditioning" },
+  { id: 3, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple3.jpg", title: "Modern Equipment Area" },
+  { id: 4, category: "Gym Interior", type: "image", src: "/assets/Fitnesstemple4.jpg", title: "Functional Training Space" },
+  { id: 5, category: "Transformation", type: "image", src: "/assets/Poonam-ghode.jpg", title: "Incredible Member Transformation" },
+  { id: 6, category: "Transformation", type: "image", src: "/assets/sanket.jpg", title: "Coach Sanket Fitness Form" },
+  { id: 7, category: "Transformation", type: "image", src: "/assets/suraj.jpg", title: "Coach Suraj Conditioning" },
+  { id: 8, category: "Equipment", type: "image", src: "/assets/FitnessTempleRate.png", title: "Membership Rates & Plans" },
+  { id: 9, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleCertificate.png", title: "Official Certification" },
+  { id: 10, category: "Videos", type: "video", src: "/assets/Fitness-Temple.mp4", title: "Fitness Arena Video Walkthrough" },
+  { id: 11, category: "Gym Interior", type: "image", src: "/assets/FitnessTempleGym.png", title: "Fitness Temple Elite Branding" },
+];
+
 // Real reviews are fetched dynamically from Firestore 'reviews' collection.
 // Zero fake reviews allowed.
 export const reviewsData: any[] = [];
